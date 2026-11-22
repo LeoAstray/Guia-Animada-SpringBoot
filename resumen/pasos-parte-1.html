@@ -1,0 +1,217 @@
+<!-- GUÍA RESUMIDA · PARTE 1 (pasos 1 a 17)
+     Cada <article data-paso="N"> es el resumen del paso N de la guía completa.
+     El título del paso y el enlace a la guía completa los pone construir.py solos.
+
+     CÓDIGO: para mostrar un bloque de código de la guía completa, escribe en el punto donde va:
+         [[codigo:N:texto]]
+     N es el número del paso y "texto" es un trozo que aparezca dentro del bloque que quieres
+     (el primer bloque del paso N que lo contenga). El código NO se copia aquí: se toma de la guía
+     completa al construir, así que si lo corriges allí, cambia también aquí.
+     Los bloques de más de 60 líneas salen plegados dentro de un desplegable.
+
+     Dentro del texto, escribe &lt; en vez de < y &gt; en vez de >. -->
+
+<article data-paso="1">
+<ol>
+<li>Abre <code>start.spring.io</code>.</li>
+<li>Elige <b>Maven</b>, <b>Java</b> y Spring Boot <b>4.1.3</b>.</li>
+<li>Rellena: Group <code>leo.astray</code>, Artifact <code>examen</code>, Package <code>leo.astray.examen</code>, Jar y Java 21.</li>
+<li>En <b>Add Dependencies</b> añade Spring Data JPA, MySQL Driver, Spring Boot DevTools, Spring Web y Validation.</li>
+<li>Pulsa <b>Generate</b> y guarda el ZIP.</li>
+</ol>
+</article>
+
+<article data-paso="2">
+<ol>
+<li>Extrae el ZIP con clic derecho &gt; <b>Extraer todo</b>. No trabajes dentro del ZIP.</li>
+<li>En VS Code: <b>File &gt; Open Folder</b> y elige la carpeta extraída.</li>
+<li>Acepta importar el proyecto Maven y espera a que descargue las dependencias (necesita Internet).</li>
+<li>Reconoce las carpetas: <code>pom.xml</code> (dependencias), <code>src/main/java</code> (tu código), <code>src/main/resources</code> (configuración) y <code>ExamenApplication.java</code> (arranque).</li>
+</ol>
+</article>
+
+<article data-paso="3">
+<ol>
+<li>Abre <code>src/main/resources/application.properties</code>.</li>
+<li>Pega esta configuración. Cambia usuario, contraseña, puerto (aquí <code>3308</code>) y <code>spring.application.name</code>, que debe ser el mismo nombre que el Artifact.
+[[codigo:3:spring.application.name=examen]]</li>
+<li>Guarda con <code>Ctrl+S</code>.</li>
+<li>Spring Web (que ya marcaste en el paso 1) mantiene la aplicación arrancada para poder mirar phpMyAdmin.</li>
+</ol>
+</article>
+
+<article data-paso="4">
+<ol>
+<li>Despliega <code>src/main/java/leo/astray/examen</code>.</li>
+<li>Clic derecho &gt; <b>New Java Package</b>: crea <code>model</code> y, dentro, <code>entity</code>, <code>enums</code> y <code>repository</code>. Quedará así:
+[[codigo:4:leo/astray/examen/]]</li>
+<li>Recuerda qué es cada tipo: <b>class</b> es un molde de objetos, <b>interface</b> un contrato y <b>enum</b> una lista cerrada de valores.</li>
+<li>Para crear cada uno: clic derecho sobre la carpeta &gt; <b>New Java File</b> &gt; Class, Interface o Enum.</li>
+</ol>
+</article>
+
+<article data-paso="5">
+<ol>
+<li>Clic derecho en <code>enums</code> &gt; <b>New Java File &gt; Enum</b> y escribe <code>Posicion</code>.</li>
+<li>Sustituye el contenido por este código y guarda.
+[[codigo:5:public enum Posicion]]</li>
+<li>En Java se usa <code>Posicion.PORTERO</code>; en SQL, el texto exacto <code>'PORTERO'</code>.</li>
+</ol>
+</article>
+
+<article data-paso="6">
+<ol>
+<li>Clic derecho en <code>entity</code> &gt; <b>New Java File &gt; Class</b> y escribe <code>Jugador</code>.</li>
+<li>Pega el archivo completo.
+[[codigo:6:public class Jugador]]</li>
+<li>Marca <code>@Entity</code> y <code>@Table</code> la clase, <code>@Id</code> y <code>@GeneratedValue(IDENTITY)</code> el <code>id</code>, y <code>@Enumerated(EnumType.STRING)</code> la posición. El constructor vacío lo necesita JPA.</li>
+<li>Abre <b>Problems</b> con <code>Ctrl+Shift+M</code>: no debe haber errores.</li>
+</ol>
+</article>
+
+<article data-paso="7">
+<ol>
+<li>Clic derecho en <code>repository</code> &gt; <b>New Java File &gt; Interface</b> y escribe <code>IJugadorRepository</code>.</li>
+<li>Pega el archivo completo.
+[[codigo:7:public interface IJugadorRepository]]</li>
+<li>Sin escribir más código ya tienes <code>save</code>, <code>findById</code>, <code>findAll</code>, <code>existsById</code>, <code>count</code> y <code>deleteById</code>.</li>
+</ol>
+</article>
+
+<article data-paso="8">
+<ol>
+<li>Abre <code>ExamenApplication.java</code> y sustituye su contenido por este código.
+[[codigo:8:public class ExamenApplication]]</li>
+<li>Si <code>count() == 0</code>, crea y guarda un jugador. Después recorre <code>findAll()</code> e imprime los nombres.</li>
+<li>Guarda todo (<b>File &gt; Save All</b>) y ejecuta.</li>
+<li>Comprueba la consola y, en phpMyAdmin, <code>examen &gt; jugadores</code>.</li>
+</ol>
+</article>
+
+<article data-paso="9">
+<ol>
+<li>Añade este import en <code>ExamenApplication</code>, antes de <code>@SpringBootApplication</code>.
+[[codigo:9:import java.util.Optional;]]</li>
+<li><b>Buscar y cambiar un nombre.</b> Pégalo dentro de <code>run</code>, después del <code>for</code> anterior. Si el jugador tiene otro ID, cambia <code>1L</code>.
+[[codigo:9:resultado.isPresent()]]</li>
+<li><b>Borrar un jugador temporal.</b> Debajo del bloque anterior, todavía dentro de <code>run</code>:
+[[codigo:9:Jugador temporal]]
+Debe imprimir <code>¿Sigue existiendo? false</code>.</li>
+</ol>
+</article>
+
+<article data-paso="10">
+<ol>
+<li>Deja <code>IJugadorRepository</code> así (solo las firmas, sin cuerpo; el nombre del método usa el nombre exacto del campo Java).
+[[codigo:10:public interface IJugadorRepository]]</li>
+<li>Pruébala dentro de <code>run</code>. <code>findByMote</code> devuelve <code>null</code> si no encuentra nada.
+[[codigo:10:jugadorRepository.findByMote("Rayo")]]</li>
+<li>Y la segunda consulta:
+[[codigo:10:jugadorRepository.findByPosicionAndNombre(]]</li>
+</ol>
+</article>
+
+<article data-paso="11">
+<ol>
+<li>Vacía las pruebas antiguas de <code>run</code> y deja solo esta línea.
+[[codigo:11:Preparando las relaciones]]</li>
+<li>Crea la clase <code>PerfilEstadistico</code> en <code>entity</code> con este código.
+[[codigo:11:public class PerfilEstadistico]]</li>
+<li>En <code>Jugador</code> añade este campo, dentro de la clase y fuera de cualquier método.
+[[codigo:11:@OneToOne(cascade]]</li>
+<li>Añade su getter y su setter junto a los demás.
+[[codigo:11:public PerfilEstadistico getPerfil()]]</li>
+<li><b>Sustituye</b> el constructor de 3 parámetros por este de 4. Conserva el constructor vacío.
+[[codigo:11:public Jugador(String nombre, String mote,]]</li>
+<li>Así se guarda un jugador desde <code>run</code>: primero el perfil y después el jugador con él.
+[[codigo:11:PerfilEstadistico perfil = new PerfilEstadistico(]]</li>
+</ol>
+</article>
+
+<article data-paso="12">
+<ol>
+<li>Crea <code>Estadio</code> en <code>entity</code>.
+[[codigo:12:public class Estadio]]</li>
+<li>Crea <code>Equipo</code> con su lista de estadios.
+[[codigo:12:public class Equipo]]</li>
+<li>Para hacerla bidireccional, añade esto en <code>Estadio</code>.
+[[codigo:12:@ManyToOne(fetch = FetchType.LAZY, optional = false)]]</li>
+<li>En <code>Equipo</code>, <b>sustituye</b> las dos anotaciones de la lista <code>estadios</code> por esta y quita el <code>@JoinColumn</code> antiguo.
+[[codigo:12:@OneToMany(mappedBy = "equipo", cascade]]
+<code>mappedBy</code> apunta al campo Java <code>equipo</code>, no a la columna SQL.</li>
+</ol>
+</article>
+
+<article data-paso="13">
+<ol>
+<li>Aquí no basta con un <code>@ManyToMany</code>, porque la relación lleva datos propios (temporada, precio…). Por eso se crea la entidad <code>Fichaje</code>. Primero, dos enums en <code>enums</code>.
+[[codigo:13:public enum PeriodoMercado]]
+[[codigo:13:public enum TipoOperacion]]</li>
+<li>Crea <code>Fichaje</code> en <code>entity</code>.
+[[codigo:13:public class Fichaje]]</li>
+<li>En <code>Jugador</code> añade la lista <code>fichajes</code> (con imports de <code>List</code> y <code>ArrayList</code>), su getter y <code>addFichaje</code>.
+[[codigo:13:@OneToMany(mappedBy = "jugador"]]</li>
+<li>En <code>Equipo</code> añade su lista y su getter.
+[[codigo:13:@OneToMany(mappedBy = "equipo")]]</li>
+<li>No vuelvas a generar constructores: <code>Jugador</code> conserva el vacío y el de 4 parámetros.</li>
+</ol>
+</article>
+
+<article data-paso="14">
+<ol>
+<li>Detén la aplicación. En <code>application.properties</code> sustituye la línea de <code>ddl-auto</code> y añade las otras dos (deja una sola línea de cada propiedad).
+[[codigo:14:create-drop]]</li>
+<li>Crea <code>src/main/resources/data.sql</code> (clic derecho &gt; <b>New File</b>). El orden de los <code>INSERT</code> importa.
+[[codigo:14:INSERT INTO perfiles_estadisticos]]</li>
+<li>Crea <code>IEquipoRepository</code> (<b>New Java File &gt; Interface</b>).
+[[codigo:14:public interface IEquipoRepository]]</li>
+<li>Deja solo esta línea dentro de <code>run</code>, ejecuta y mira las tablas en phpMyAdmin (2 filas en cada una).
+[[codigo:14:Datos iniciales cargados]]</li>
+<li>Cierra con <code>Ctrl+C</code>: <code>create-drop</code> borra las tablas al cerrar.</li>
+</ol>
+</article>
+
+<article data-paso="15">
+<ol>
+<li>El repositorio <b>declara</b> la búsqueda y <code>run</code> la <b>ejecuta</b>.</li>
+<li>Añade estos imports a <code>IJugadorRepository</code>.
+[[codigo:15:import java.util.List;]]</li>
+<li><b>Posición y trozo del nombre.</b> En el repositorio, dentro de la interfaz:
+[[codigo:15:List<Jugador> buscarPorPosicionYNombre();]]
+Y en <code>run</code>:
+[[codigo:15:jugadorRepository.buscarPorPosicionYNombre()]]</li>
+<li><b>Jugadores con fichaje en equipos de una ciudad</b> (<code>JOIN</code> y <code>DISTINCT</code>). En el repositorio:
+[[codigo:15:buscarPorCiudad(@Param]]
+Y en <code>run</code>:
+[[codigo:15:jugadorRepository.buscarPorCiudad("Madrid")]]</li>
+<li><b>Cambiar la posición</b> de los jugadores de un equipo (<code>@Modifying</code>, devuelve un <code>int</code>). En el repositorio:
+[[codigo:15:int cambiarPosicionPorEquipo(]]
+Y al final de <code>run</code>:
+[[codigo:15:int cambiados =]]</li>
+<li><b>Si piden JPQL</b> (clases y atributos Java en vez de tablas y columnas):
+[[codigo:15:buscarJPQL]]</li>
+</ol>
+</article>
+
+<article data-paso="16">
+<ol>
+<li>Abre <b>Problems</b> (<code>Ctrl+Shift+M</code>) y corrige primero los errores de Java.</li>
+<li>Revisa el JDK 21, las dependencias del <code>pom.xml</code> y la conexión a MySQL (puerto, usuario, contraseña).</li>
+<li>Si falla un <code>INSERT</code>, mira la causa en la terminal y revisa el orden de <code>data.sql</code>.</li>
+<li>Ejecuta las pruebas, desde la carpeta del <code>pom.xml</code>:
+[[codigo:16:mvnw.cmd test]]</li>
+<li>Construye el JAR (si dice <code>BUILD SUCCESS</code>, está en <code>target</code>):
+[[codigo:16:mvnw.cmd clean package]]</li>
+<li>Ejecútalo, ajustando el nombre al del archivo generado:
+[[codigo:16:java -jar]]</li>
+<li>Para entregar incluye <code>pom.xml</code>, <code>src</code>, <code>mvnw</code>, <code>mvnw.cmd</code> y la carpeta <code>.mvn</code>.</li>
+</ol>
+</article>
+
+<article data-paso="17">
+<ol>
+<li>Consulta la documentación oficial: consultas de Spring Data JPA, inicialización de la base de datos, transacciones, <code>start.spring.io</code> y el servidor web.</li>
+<li>Al adaptar un ejemplo, revisa paquetes, imports, columnas e identificadores.</li>
+<li>En el examen respeta los nombres, tipos y restricciones del enunciado, incluido <code>Optional</code> si lo pide.</li>
+</ol>
+</article>

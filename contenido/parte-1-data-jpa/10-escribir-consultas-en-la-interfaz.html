@@ -1,0 +1,63 @@
+<section id="paso-10">
+<h2>10 Escribir consultas en la interfaz</h2>
+<p class="paso">1. Abre <code>IJugadorRepository.java</code>. Dentro de esta interfaz escribimos las búsquedas que necesitamos. Para estas consultas, <b>Spring Data prepara el código que consulta MySQL a partir del nombre del método</b>. Deja el archivo así, manteniendo el paquete de tu proyecto:</p>
+<pre data-f="repository/IJugadorRepository.java">package leo.astray.examen.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import leo.astray.examen.entity.Jugador;
+import leo.astray.examen.enums.Posicion;
+
+public interface IJugadorRepository
+        extends JpaRepository&lt;Jugador, Long&gt; {
+
+    Jugador findByMote(String mote);
+
+    List&lt;Jugador&gt; findByPosicionAndNombre(
+        Posicion posicion, String nombre
+    );
+}</pre>
+
+<p class="paso">2. Entiende la primera consulta: buscar por mote.</p>
+<pre>Jugador findByMote(String mote);</pre>
+<div class="kid">Se lee así: «Busca un jugador cuyo mote coincida con el texto que te doy».</div>
+<ul>
+<li><code>Jugador</code>: devuelve un jugador.</li>
+<li><code>findByMote</code>: significa «buscar por el campo <code>mote</code>».</li>
+<li><code>String mote</code>: es el texto que recibirá para buscar.</li>
+<li><code>;</code>: termina la declaración. Aquí no escribimos el código de la búsqueda.</li>
+</ul>
+<p>Como el mote es único, no debería haber dos jugadores con el mismo mote. <b>Si no encuentra ninguno, este método devuelve <code>null</code>.</b></p>
+
+<p class="paso">3. Prueba esa consulta en <code>ExamenApplication.java</code>. Dentro de <code>run</code>, añade:</p>
+<pre data-f="ExamenApplication.java (dentro de run)">Jugador encontrado = jugadorRepository.findByMote("Rayo");
+
+if (encontrado != null) {
+    System.out.println(encontrado.getNombre());
+} else {
+    System.out.println("No existe ningún jugador con ese mote");
+}</pre>
+<p><code>encontrado != null</code> comprueba que hemos encontrado un jugador antes de pedirle su nombre.</p>
+
+<p class="paso">4. Entiende la segunda consulta: buscar por posición y nombre.</p>
+<pre>List&lt;Jugador&gt; findByPosicionAndNombre(
+    Posicion posicion, String nombre
+);</pre>
+<div class="kid">Se lee así: «Busca los jugadores que tengan esta posición <b>y también</b> este nombre».</div>
+<p><code>And</code> significa <b>y</b>: deben cumplirse las dos condiciones. Aquí utilizamos <code>List&lt;Jugador&gt;</code> porque puede haber varios jugadores con el mismo nombre y posición. Es simplemente una lista de resultados.</p>
+
+<p class="paso">5. Pruébala también dentro de <code>run</code>.</p>
+<pre data-f="ExamenApplication.java (dentro de run)">for (Jugador jugador :
+        jugadorRepository.findByPosicionAndNombre(
+            Posicion.DELANTERO, "Ana García")) {
+
+    System.out.println(jugador.getNombre());
+    System.out.println(jugador.getMote());
+}</pre>
+<p>El <code>for</code> muestra los jugadores encontrados, uno a uno. Si no hay coincidencias, no entra en el bucle. Escribe el nombre exactamente como lo tengas guardado.</p>
+<p class="paso">6. Guarda y ejecuta.</p>
+<div class="why">Escribe los nombres de los <b>campos Java</b> correctamente, sino puede que no funcione el método: <code>findByMote</code> busca por <code>mote</code> y <code>findByPosicionAndNombre</code> busca por <code>posicion</code> y <code>nombre</code>.</div>
+<p>Con estas dos consultas puedes entender el mecanismo. Añade las demás cuando el ejercicio las pida. Si un enunciado exige expresamente <code>Optional&lt;Jugador&gt;</code>, tendrás que respetar ese requisito.</p>
+</section>

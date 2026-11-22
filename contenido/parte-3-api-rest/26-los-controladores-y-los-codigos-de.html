@@ -1,0 +1,241 @@
+<section id="s24">
+<h2>26 Los controladores y los códigos de estado</h2>
+<p>Elegir bien el código HTTP forma parte del ejercicio. El controlador <b>no tiene lógica de negocio</b>: llama al IService y traduce su respuesta con <code>ResponseEntity</code>. Los comentarios de cada método dicen los códigos que puede devolver.</p>
+<details open><summary>LibroController.java</summary>
+<pre class="code" data-f="controller/LibroController.java">package edu.rico.biblioteca.controller;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import edu.rico.biblioteca.dto.FichaLibroDTO;
+import edu.rico.biblioteca.dto.LibroRequestDTO;
+import edu.rico.biblioteca.dto.LibroResponseDTO;
+import edu.rico.biblioteca.service.ILibroService;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/libros")
+public class LibroController {
+
+    @Autowired
+    private ILibroService libroService;
+
+    // POST /api/libros → 201 + Location | 400 | 404
+    @PostMapping
+    public ResponseEntity&lt;LibroResponseDTO&gt; crear(@Valid @RequestBody LibroRequestDTO dto) {
+        try {
+            LibroResponseDTO creado = libroService.crear(dto);
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(creado.id())
+                    .toUri();
+            return ResponseEntity.created(location).body(creado);
+        } catch (IllegalArgumentException ex) {
+            // Si la causa es un recurso relacionado inexistente
+            if (ex.getMessage() != null &amp;&amp; ex.getMessage().contains("no existe")) {
+                return ResponseEntity.notFound().build(); // 404
+            }
+            return ResponseEntity.badRequest().build(); // 400
+        }
+    }
+
+    // GET /api/libros/{id} → 200 (LibroResponseDTO) | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;LibroResponseDTO&gt; obtenerPorId(@PathVariable Long id) {
+        Optional&lt;LibroResponseDTO&gt; opt = libroService.obtenerPorId(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // GET /api/libros?editorialId= → 200 | 404 si la editorial no existe
+    @GetMapping
+    public ResponseEntity&lt;List&lt;LibroResponseDTO&gt;&gt; listarPorEditorial(@RequestParam Long editorialId) {
+        Optional&lt;List&lt;LibroResponseDTO&gt;&gt; opt = libroService.listarPorEditorial(editorialId);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // PUT /api/libros/{id}/ficha → 200 | 404
+    @PutMapping("/{id}/ficha")
+    public ResponseEntity&lt;LibroResponseDTO&gt; actualizarFicha(
+            @PathVariable Long id,
+            @Valid @RequestBody FichaLibroDTO fichaDTO) {
+
+        Optional&lt;LibroResponseDTO&gt; opt = libroService.actualizarFicha(id, fichaDTO);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // POST /api/libros/{id}/autores/{autorId} → 200 | 404
+    @PostMapping("/{id}/autores/{autorId}")
+    public ResponseEntity&lt;LibroResponseDTO&gt; asociarAutor(
+            @PathVariable Long id,
+            @PathVariable Long autorId) {
+
+        Optional&lt;LibroResponseDTO&gt; opt = libroService.asociarAutor(id, autorId);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // DELETE /api/libros/{id}/autores/{autorId} → 204 | 404
+    @DeleteMapping("/{id}/autores/{autorId}")
+    public ResponseEntity&lt;Void&gt; desasociarAutor(
+            @PathVariable Long id,
+            @PathVariable Long autorId) {
+
+        boolean desasociado = libroService.desasociarAutor(id, autorId);
+        if (desasociado) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}</pre></details>
+<details><summary>EditorialController.java</summary>
+<pre class="code" data-f="controller/EditorialController.java">package edu.rico.biblioteca.controller;
+
+import java.net.URI;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import edu.rico.biblioteca.dto.EditorialRequestDTO;
+import edu.rico.biblioteca.dto.EditorialResponseDTO;
+import edu.rico.biblioteca.service.IEditorialService;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/editoriales")
+public class EditorialController {
+
+    @Autowired
+    private IEditorialService editorialService;
+
+    // POST /api/editoriales → 201 + Location | 400
+    @PostMapping
+    public ResponseEntity&lt;EditorialResponseDTO&gt; crear(@Valid @RequestBody EditorialRequestDTO dto) {
+        EditorialResponseDTO creada = editorialService.crear(dto);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(creada.id())
+                .toUri();
+        return ResponseEntity.created(location).body(creada);
+    }
+
+    // GET /api/editoriales/{id} → 200 | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;EditorialResponseDTO&gt; obtenerPorId(@PathVariable Long id) {
+        Optional&lt;EditorialResponseDTO&gt; opt = editorialService.obtenerPorId(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // DELETE /api/editoriales/{id} → 204 | 404 | 409
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        int resultado = editorialService.eliminar(id);
+        if (resultado == 1) {
+            return ResponseEntity.noContent().build(); // 204
+        } else if (resultado == -1) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
+        }
+        return ResponseEntity.notFound().build(); // 404
+    }
+}</pre></details>
+<details><summary>AutorController.java</summary>
+<pre class="code" data-f="controller/AutorController.java">package edu.rico.biblioteca.controller;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import edu.rico.biblioteca.dto.AutorRequestDTO;
+import edu.rico.biblioteca.dto.AutorResponseDTO;
+import edu.rico.biblioteca.dto.LibroResumenDTO;
+import edu.rico.biblioteca.service.IAutorService;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/autores")
+public class AutorController {
+
+    @Autowired
+    private IAutorService autorService;
+
+    // POST /api/autores → 201 + Location | 400
+    @PostMapping
+    public ResponseEntity&lt;AutorResponseDTO&gt; crear(@Valid @RequestBody AutorRequestDTO dto) {
+        AutorResponseDTO creado = autorService.crear(dto);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(creado.id())
+                .toUri();
+        return ResponseEntity.created(location).body(creado);
+    }
+
+    // GET /api/autores/{id}/libros → 200 (LibroResumenDTO) | 404
+    @GetMapping("/{id}/libros")
+    public ResponseEntity&lt;List&lt;LibroResumenDTO&gt;&gt; obtenerLibrosPorAutor(@PathVariable Long id) {
+        Optional&lt;List&lt;LibroResumenDTO&gt;&gt; opt = autorService.obtenerLibrosPorAutor(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+}</pre></details>
+<table>
+<tr><th>Pieza</th><th>Qué hace</th></tr>
+<tr><td><code>ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")…</code></td><td>Construye la URL del recurso creado (<code>/api/libros/7</code>) a partir de la petición actual, para la cabecera <code>Location</code>.</td></tr>
+<tr><td><code>ResponseEntity.created(location).body(creado)</code></td><td><b>201</b> con la cabecera y el DTO creado en el cuerpo.</td></tr>
+<tr><td><code>Optional.isPresent()</code> y <code>opt.get()</code></td><td>Si hay valor, 200 con él; si no, 404.</td></tr>
+<tr><td><code>try/catch (IllegalArgumentException)</code> solo en <code>LibroController.crear</code></td><td>El servicio avisa con ese error cuando la editorial o un autor no existen; si el mensaje contiene «no existe», el controlador responde 404, y si no, 400.</td></tr>
+<tr><td><code>@RequestParam Long editorialId</code></td><td>El filtro <code>?editorialId=</code>. Es obligatorio: sin él Spring responde 400.</td></tr>
+<tr><td>El controlador solo importa DTO e IService</td><td>Cumple la regla «el RestController nunca importa una Entity».</td></tr>
+</table>
+</section>

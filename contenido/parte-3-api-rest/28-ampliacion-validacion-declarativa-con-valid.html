@@ -1,0 +1,157 @@
+<section id="s26">
+<h2>28 Ampliación: validación declarativa con <code>@Valid</code></h2>
+<h3>¿Para qué sirve <code>@Valid</code>?</h3>
+<p>Hasta ahora la validación se hacía a mano en el servicio, con sentencias <code>if (dto.nombre() == null || dto.nombre().isBlank())</code> que lanzaban <code>IllegalArgumentException</code>. Eso ensucia la lógica de negocio con comprobaciones básicas de formato.</p>
+<p>La especificación <b>Jakarta Bean Validation</b> (con la anotación <code>@Valid</code>) permite delegar esas comprobaciones en el propio framework, <b>justo cuando el JSON entra en el controlador</b>. Si el cuerpo no cumple las reglas, Spring intercepta la petición antes de llamar al servicio y devuelve automáticamente un <b>400 Bad Request</b>.</p>
+
+<h3>Antes y después</h3>
+<pre class="code" data-f="ANTES: validación a mano dentro del servicio">@Transactional
+public EditorialResponseDTO crear(EditorialRequestDTO dto) {
+    if (dto.nombre() == null || dto.nombre().isBlank() || dto.pais() == null || dto.pais().isBlank()) {
+        throw new IllegalArgumentException("El nombre y el país no pueden estar vacíos");
+    }
+    Editorial editorial = new Editorial(dto.nombre(), dto.pais());
+    ...
+}
+
+// y en el controlador, un try/catch para convertirlo en 400
+try { ... } catch (IllegalArgumentException ex) { return ResponseEntity.badRequest().build(); }</pre>
+<pre class="code" data-f="DESPUÉS: el servicio ya no valida y el controlador no necesita try/catch">// Servicio: solo la lógica
+@Transactional
+public EditorialResponseDTO crear(EditorialRequestDTO dto) {
+    Editorial editorial = new Editorial(dto.nombre(), dto.pais());
+    ...
+}
+
+// Controlador: @Valid delante de @RequestBody
+@PostMapping
+public ResponseEntity&lt;EditorialResponseDTO&gt; crear(@Valid @RequestBody EditorialRequestDTO dto) { ... }</pre>
+
+<h3>Los tres pasos</h3>
+<p><span class="step">1</span><b>Dependencia</b> en el <code>pom.xml</code> (la que se marcó como «Validation» en Initializr):</p>
+<pre class="code" data-f="pom.xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-validation&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre>
+<p><span class="step">2</span><b>Anotaciones en los records</b> (las restricciones se ponen en cada componente del record). Estos son los DTO <b>finales</b>:</p>
+<details open><summary>EditorialRequestDTO, FichaLibroDTO y LibroRequestDTO</summary>
+<pre class="code" data-f="dto/EditorialRequestDTO.java">package edu.rico.biblioteca.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record EditorialRequestDTO(
+    @NotBlank(message = "El nombre de la editorial es obligatorio")
+    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
+    String nombre,
+
+    @NotBlank(message = "El país de origen es obligatorio")
+    String pais
+) {}</pre>
+<pre class="code" data-f="dto/FichaLibroDTO.java">package edu.rico.biblioteca.dto;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public record FichaLibroDTO(
+    @NotBlank(message = "El ISBN es obligatorio")
+    @Pattern(regexp = "^(97(8|9))?\\d{9}(\\d|X)$", message = "Formato de ISBN inválido")
+    String isbn,
+
+    @Min(value = 1, message = "El libro debe tener al menos una página")
+    int paginas,
+
+    @Min(value = 1450, message = "El año no puede ser anterior a la invención de la imprenta")
+    @Max(value = 2026, message = "El año no puede ser superior al año actual")
+    int anio
+) {}</pre>
+<pre class="code" data-f="dto/LibroRequestDTO.java">package edu.rico.biblioteca.dto;
+
+import java.util.Set;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+public record LibroRequestDTO(
+    @NotBlank(message = "El título es obligatorio")
+    String titulo,
+
+    @NotNull(message = "Debe indicarse la editorial")
+    Long editorialId,
+
+    @NotEmpty(message = "El libro debe tener al menos un autor asignado")
+    Set&lt;Long&gt; autoresIds,
+
+    @Valid // Valida recursivamente las restricciones internas de FichaLibroDTO
+    @NotNull(message = "La ficha técnica es obligatoria")
+    FichaLibroDTO ficha
+) {}</pre></details>
+<details><summary>AutorRequestDTO y el resto de DTO</summary>
+<pre class="code" data-f="dto/AutorRequestDTO.java">package edu.rico.biblioteca.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record AutorRequestDTO(
+    @NotBlank(message = "El nombre del autor es obligatorio")
+    String nombre,
+
+    @NotBlank(message = "La nacionalidad es obligatoria")
+    String nacionalidad
+) {}</pre>
+<pre class="code" data-f="dto/AutorResponseDTO.java">package edu.rico.biblioteca.dto;
+
+import java.util.List;
+
+public record AutorResponseDTO(
+    Long id,
+    String nombre,
+    String nacionalidad,
+    List&lt;LibroResumenDTO&gt; libros
+) {}</pre>
+<pre class="code" data-f="dto/EditorialResponseDTO.java">package edu.rico.biblioteca.dto;
+
+public record EditorialResponseDTO(
+    Long id,
+    String nombre,
+    String pais
+) {}</pre>
+<pre class="code" data-f="dto/EditorialResumenDTO.java">package edu.rico.biblioteca.dto;
+
+public record EditorialResumenDTO(Long id, String nombre) {}</pre>
+<pre class="code" data-f="dto/AutorResumenDTO.java">package edu.rico.biblioteca.dto;
+
+public record AutorResumenDTO(Long id, String nombre) {}</pre>
+<pre class="code" data-f="dto/LibroResumenDTO.java">package edu.rico.biblioteca.dto;
+
+public record LibroResumenDTO(Long id, String titulo) {}</pre>
+<pre class="code" data-f="dto/LibroResponseDTO.java">package edu.rico.biblioteca.dto;
+
+import java.util.List;
+
+public record LibroResponseDTO(
+    Long id,
+    String titulo,
+    EditorialResumenDTO editorial,
+    List&lt;AutorResumenDTO&gt; autores,
+    FichaLibroDTO ficha
+) {}</pre></details>
+<p><span class="step">3</span><b>Activación en el controlador</b>: <code>@Valid</code> delante de <code>@RequestBody</code> en cada método que recibe un DTO (ya está puesto en los controladores de la sección 26).</p>
+
+<h3>Qué hace cada anotación</h3>
+<table>
+<tr><th>Anotación</th><th>Qué exige</th><th>Dónde se usa</th></tr>
+<tr><td><code>@NotBlank</code></td><td>Texto no nulo, no vacío y no solo espacios</td><td>nombre, país, título, isbn</td></tr>
+<tr><td><code>@NotNull</code></td><td>El valor debe venir (no <code>null</code>)</td><td><code>editorialId</code>, <code>ficha</code></td></tr>
+<tr><td><code>@NotEmpty</code></td><td>Una colección no puede venir vacía</td><td><code>autoresIds</code></td></tr>
+<tr><td><code>@Size(min, max)</code></td><td>Longitud de un texto</td><td>nombre de la editorial (2 a 100)</td></tr>
+<tr><td><code>@Pattern(regexp)</code></td><td>El texto debe cumplir una expresión regular</td><td>ISBN: <code>^(97(8|9))?\d{9}(\d|X)$</code> (10 o 13 cifras, sin guiones)</td></tr>
+<tr><td><code>@Min</code> y <code>@Max</code></td><td>Rango numérico</td><td>páginas ≥ 1; año entre 1450 y 2026</td></tr>
+<tr><td><code>@Valid</code> sobre un campo</td><td>Valida <b>recursivamente</b> el objeto anidado</td><td><code>ficha</code> dentro de <code>LibroRequestDTO</code></td></tr>
+</table>
+<div class="kid">Es como el portero de una discoteca. Antes, cada sala comprobaba a mano si tenías entrada. Ahora hay un portero en la puerta (<code>@Valid</code>): si tu entrada no es válida, ni siquiera entras. Las salas (los servicios) solo atienden a quien ya pasó el control.</div>
+<div class="ok">Al enviar un JSON con <code>nombre: ""</code>, o sin el campo <code>pais</code>, Spring MVC rechaza la petición con <b>400</b> antes de ejecutar una sola línea del servicio. Probado: ISBN con formato inválido, año 1400, lista de autores vacía, ficha ausente y PUT de ficha inválida devuelven 400.</div>
+</section>

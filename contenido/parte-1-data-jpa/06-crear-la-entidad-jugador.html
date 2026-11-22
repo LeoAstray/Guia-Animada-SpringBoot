@@ -1,0 +1,55 @@
+<section id="paso-6">
+<h2>6 Crear la entidad Jugador</h2>
+<p class="paso">1. Clic derecho en <code>entity</code> &gt; <b>New Java File &gt; Class</b> y escribe <code>Jugador</code>.</p>
+<p class="paso">2. Pega este archivo completo. Las anotaciones empiezan por <code>@</code>: son etiquetas que explican a JPA cómo guardar la clase.</p>
+<pre data-f="entity/Jugador.java">package leo.astray.examen.entity;
+
+import leo.astray.examen.enums.Posicion;
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "jugadores")
+public class Jugador {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_jugador")
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String mote;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Posicion posicion;
+
+    public Jugador() {}
+
+    public Jugador(String nombre, String mote, Posicion posicion) {
+        this.nombre = nombre;
+        this.mote = mote;
+        this.posicion = posicion;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getMote() { return mote; }
+    public Posicion getPosicion() { return posicion; }
+
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setMote(String mote) { this.mote = mote; }
+    public void setPosicion(Posicion posicion) {
+        this.posicion = posicion;
+    }
+}</pre>
+
+<p>Una <b>entidad</b> es una clase que JPA sabe relacionar con la base. Normalmente cada objeto guardado (nombre, mote, posicion...) corresponde a una fila de su tabla.</p>
+<p><code>@Entity</code> marca la entidad. <code>@Table</code> fija el nombre SQL. <code>@Id</code> señala la <b>clave primaria</b>, el número que identifica una fila sin confundirla con otra. <code>IDENTITY</code> deja que MySQL genere ese número al insertar. El objeto nuevo tiene <code>id = null</code> hasta que se guarda; no le inventes un identificador para una inserción normal.</p>
+<p><code>Long</code> es un tipo numérico que también admite <code>null</code>. <code>String</code> guarda texto. <code>private</code> protege los campos para acceder a ellos mediante métodos. <code>@Column(nullable=false)</code> prohíbe SQL <code>NULL</code>; no impide por sí sola una cadena vacía. <code>unique=true</code> impide repetir el mote y <code>length</code> fija la longitud de la columna al generar el esquema.</p>
+<p><code>@Enumerated(EnumType.STRING)</code> guarda <code>DELANTERO</code> como texto. Guardar una posición por número sería más frágil si luego cambias el orden de los valores del enum.</p>
+<p>Los <b>constructores</b> se llaman como la clase y no tienen tipo de retorno. El vacío permite a JPA crear el objeto al leerlo; el otro permite rellenarlo al fabricarlo tú. <code>this.nombre</code> es el campo del objeto y <code>nombre</code> es el dato recibido. Los <b>getters</b> devuelven información; los <b>setters</b> la cambian. <code>return</code> entrega un resultado y <code>void</code> significa que el método no devuelve uno.</p>
+<p>Para generar Getters y Setters en VS Code: coloca el cursor dentro de la clase, clic derecho &gt; <b>Source Action &gt; Generate Getters and Setters</b>, selecciona los campos y acepta. Para constructores, <b>Source Action &gt; Generate Constructors</b>.</p>
+<div class="ok"><code>Ctrl+Shift+M</code> abre <b>Problems</b>. No deben quedar errores rojos. <code>jakarta.persistence</code> es el paquete usado aquí; no aceptes un import antiguo <code>javax.persistence</code>. Un <code>import</code> indica la dirección de un tipo de otro paquete, no crea otra copia del archivo.</div>
+</section>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Spring Boot de cero a REST · guía animada</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0d0a1f; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: none; background: #0d0a1f; }
+  iframe.activo { display: block; }
+</style>
+</head>
+<body>
+<script>
+/* ARCHIVO ÚNICO. Cada página de la guía (inicio, completa, resumida y ejercicios) va dentro de su propio
+   marco, con sus estilos y su código, igual que en la carpeta. Aquí solo se decide cuál se ve, según la
+   dirección:  #/  ·  #/completa  ·  #/completa/paso-11  ·  #/resumida  ·  #/ejercicios  ·  #/ejercicios/solucion-1
+
+   Al abrir el archivo directamente (file://) el navegador no deja que esta página lea ni toque el interior de
+   los marcos, así que todo se hace con mensajes (postMessage):
+     - un enlace de una página hacia otra ("#/...") llega aquí con el puente que construir.py añade a cada página;
+     - para llevar a una página ya abierta a su ancla, se le envía un mensaje;
+     - la ancla de una página recién creada viaja dentro de ella (window.ANCLA_INICIAL). */
+var PAGINAS = {{PAGINAS}};
+var marcos = {}, cortina = null;     // cortina: datos de la que acaba de cerrar el selector (ver resumen/selector.js)
+
+function ruta() {
+  var trozos = location.hash.replace(/^#\/?/, '').split('/');
+  var vista = PAGINAS[trozos[0]] ? trozos[0] : 'inicio';
+  // Solo letras, números, guiones y guiones bajos: la ancla acaba escrita dentro de una página
+  var ancla = vista === trozos[0] ? (trozos[1] || '').replace(/[^\w-]/g, '') : '';
+  return { vista: vista, ancla: ancla };
+}
+
+function mostrar() {
+  var r = ruta(), marco = marcos[r.vista];
+  if (!marco) {                         // las páginas se crean la primera vez que se visitan
+    marco = marcos[r.vista] = document.createElement('iframe');
+    marco.title = marco.name = r.vista;
+    marco.allow = 'clipboard-write';    // para el botón Copiar de los bloques de código
+    marco.srcdoc = PAGINAS[r.vista].replace('<head>', '<head><script>window.ANCLA_INICIAL=' + JSON.stringify(r.ancla) +
+      (cortina ? ';window.REVELA=' + JSON.stringify(cortina) : '') + '<\/script>');
+    document.body.appendChild(marco);
+  } else {
+    marco.contentWindow.postMessage({ ancla: r.ancla, revela: cortina }, '*');
+  }
+  Object.keys(marcos).forEach(function (k) { marcos[k].classList.toggle('activo', k === r.vista); });
+  marco.focus();
+  cortina = null;
+}
+
+// Enlaces entre páginas, enviados por el puente de cada marco (solo se aceptan los de nuestros marcos)
+addEventListener('message', function (e) {
+  var nuestro = Object.keys(marcos).some(function (k) { return marcos[k].contentWindow === e.source; });
+  if (nuestro && e.data && e.data.cortina) cortina = e.data.cortina;
+  if (nuestro && e.data && typeof e.data.ruta === 'string' && e.data.ruta.indexOf('#/') === 0) location.hash = e.data.ruta;
+});
+addEventListener('hashchange', mostrar);
+mostrar();
+</script>
+</body>
+</html>

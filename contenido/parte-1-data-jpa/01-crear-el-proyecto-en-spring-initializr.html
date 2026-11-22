@@ -1,0 +1,58 @@
+<section id="paso-1">
+    <h2>1 Crear el proyecto en Spring Initializr</h2>
+    <p class="paso">1. Abre el navegador y escribe
+        <code><a href="https://start.spring.io">https://start.spring.io</a></code>.
+    </p>
+    <p class="paso">2. En <b>Project</b>, marca <b>Maven</b>. Maven es quien lee la lista de piezas del proyecto y
+        descarga las bibliotecas necesarias.</p>
+    <p class="paso">3. En <b>Language</b>, marca <b>Java</b>.</p>
+    <p class="paso">4. En <b>Spring Boot</b>, elige <b>4.1.3.</b></p>
+    <p class="paso">5. Completa con los datos de la tabla:</p>
+    <table>
+        <tr>
+            <th><b>Campo</b></th>
+            <th><b>Escribe</b></th>
+            <th><b>Para qué sirve</b></th>
+        </tr>
+        <tr>
+            <td>Group</td>
+            <td>leo.astray</td>
+            <td>Identifica el grupo o autor del proyecto.</td>
+        </tr>
+        <tr>
+            <td>Artifact</td>
+            <td>examen</td>
+            <td>Da nombre al proyecto y al archivo que se construirá.</td>
+        </tr>
+        <tr>
+            <td>Package name</td>
+            <td>leo.astray.examen</td>
+            <td>La dirección común de nuestras clases.</td>
+        </tr>
+        <tr>
+            <td>Packaging</td>
+            <td>Jar</td>
+            <td>Un paquete ejecutable de Java.</td>
+        </tr>
+        <tr>
+            <td>Java</td>
+            <td>21</td>
+            <td>Versión con la que vas a programar.</td>
+        </tr>
+        <tr>
+            <td>Configuration</td>
+            <td>Properties</td>
+            <td>Crea application.properties, si aparece esta opción.</td>
+        </tr>
+    </table>
+    <p class="paso">6. Pulsa <b>Add Dependencies</b>. Busca y añade, una por una, <b>Spring Data JPA</b>, <b>MySQL
+            Driver</b>, <b>Spring Boot DevTools</b>, <b>Spring Web</b> y <b>Validation</b>.</p>
+    <p class="paso">7. JPA permite relacionar objetos con tablas; Spring Data aporta los repositorios; Hibernate realiza
+        el trabajo de persistencia. MySQL Driver es el «traductor» que permite a Java hablar con MySQL. DevTools ayuda
+        con los reinicios durante el desarrollo. Spring Web y Validation no se usan hasta la Parte 2 (la API REST), pero
+        conviene añadirlas ya: así no hay que tocar el <code>pom.xml</code> más adelante.</p>
+    <p class="paso">8. Pulsa <b>Generate</b>. Se descargará un ZIP. Guardalo en la carpeta donde quieras tener el
+        proyecto.</p>
+    <figure class="fig shot"><img alt="Pantalla de Spring Initializr con los datos del proyecto rellenos"
+            src="img/spring-initializr.png"></figure>
+</section>

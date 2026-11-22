@@ -1,0 +1,77 @@
+<section id="s27">
+<h2>29 Probar con Postman o curl</h2>
+<p>Arranca (<code>.\mvnw.cmd spring-boot:run</code>) y haz la secuencia <b>en orden</b>, comprobando el código de cada respuesta. Primero cómo se escribe cada petición en Postman; más abajo tienes la misma secuencia con <code>curl</code>.</p>
+<div class="why">Si es la primera vez que usas Postman, lee antes la sección <b>«Probar la API» del paso 19</b>: allí se explica paso a paso cómo elegir el método, escribir la dirección y poner el cuerpo en <b>Body &gt; raw &gt; JSON</b>. Aquí solo se aplica a la biblioteca.</div>
+
+<h3>Cómo se escribe cada petición en Postman</h3>
+<p>En todas, la dirección empieza por <code>http://localhost:8080</code>. Las que llevan cuerpo necesitan <b>Body &gt; raw &gt; JSON</b> (así Postman añade <code>Content-Type: application/json</code>). Las que no, se envían con la pestaña Body vacía.</p>
+<table>
+<tr><th>Petición</th><th>Método y dirección</th><th>¿Cuerpo?</th></tr>
+<tr><td>Crear editorial</td><td>POST <code>/api/editoriales</code></td><td>Sí: <code>EditorialRequestDTO</code></td></tr>
+<tr><td>Crear autor</td><td>POST <code>/api/autores</code></td><td>Sí: <code>AutorRequestDTO</code></td></tr>
+<tr><td>Crear libro</td><td>POST <code>/api/libros</code></td><td>Sí: <code>LibroRequestDTO</code></td></tr>
+<tr><td>Ver un libro</td><td>GET <code>/api/libros/1</code></td><td>No: el id va en la dirección</td></tr>
+<tr><td>Libros de una editorial</td><td>GET <code>/api/libros?editorialId=1</code></td><td>No: el filtro va en la dirección</td></tr>
+<tr><td>Cambiar la ficha</td><td>PUT <code>/api/libros/1/ficha</code></td><td>Sí: <code>FichaLibroDTO</code></td></tr>
+<tr><td>Añadir un autor a un libro</td><td>POST <code>/api/libros/1/autores/1</code></td><td>No: los dos ids van en la dirección</td></tr>
+<tr><td>Libros de un autor</td><td>GET <code>/api/autores/1/libros</code></td><td>No</td></tr>
+<tr><td>Quitar un autor de un libro / borrar editorial</td><td>DELETE <code>/api/libros/1/autores/1</code> · DELETE <code>/api/editoriales/1</code></td><td>No</td></tr>
+</table>
+
+<h3>Cómo se construye cada cuerpo, a partir de su DTO</h3>
+<p>Igual que en el puente: <b>cada clave del JSON es un campo del record</b>, con el mismo nombre. Estos son los tres cuerpos de la secuencia:</p>
+<pre class="code" data-f="Body de POST /api/editoriales  ←  EditorialRequestDTO(nombre, pais)">{
+    "nombre": "Planeta",
+    "pais": "España"
+}</pre>
+<pre class="code" data-f="Body de POST /api/autores  ←  AutorRequestDTO(nombre, nacionalidad)">{
+    "nombre": "Cervantes",
+    "nacionalidad": "Española"
+}</pre>
+<pre class="code" data-f="Body de POST /api/libros  ←  LibroRequestDTO(titulo, editorialId, autoresIds, ficha)">{
+    "titulo": "Don Quijote",
+    "editorialId": 1,
+    "autoresIds": [1],
+    "ficha": {
+        "isbn": "9788420412146",
+        "paginas": 900,
+        "anio": 1605
+    }
+}</pre>
+<p>El del libro es el que más preguntas genera, y cada parte sale de un tipo distinto del record:</p>
+<table>
+<tr><th>Campo de <code>LibroRequestDTO</code></th><th>En el JSON</th><th>Por qué</th></tr>
+<tr><td><code>String titulo</code></td><td>Texto entre comillas.</td><td>Dato simple.</td></tr>
+<tr><td><code>Long editorialId</code></td><td>Un número, <b>sin comillas</b>: <code>1</code>.</td><td>El libro no lleva la editorial entera, solo su <b>id</b>: el cliente solo conoce las claves de lo que ya existe y es el Service quien busca la editorial real (pregunta 1 de la sección 24). Por eso la editorial 1 tiene que existir ya: crea antes la editorial.</td></tr>
+<tr><td><code>Set&lt;Long&gt; autoresIds</code></td><td>Una <b>lista entre corchetes</b> de números: <code>[1]</code> o <code>[1, 2]</code>.</td><td>Un libro puede tener varios autores (N:M), así que son varios ids. Cada autor debe existir; si no, 404. Una lista vacía <code>[]</code> es rechazada con 400 (<code>@NotEmpty</code>, sección 28).</td></tr>
+<tr><td><code>FichaLibroDTO ficha</code></td><td>Un <b>objeto anidado entre llaves</b> con sus propias claves: <code>isbn</code>, <code>paginas</code>, <code>anio</code>.</td><td>Un record dentro de otro record se convierte en un objeto dentro de otro objeto. Es la relación 1:1: la ficha viaja dentro del libro, y por eso no necesita id.</td></tr>
+</table>
+<p>El orden de la secuencia no es casual: para crear el libro necesitas que existan la editorial 1 y el autor 1, así que se crean primero. Fíjate también en que el <b>PUT de la ficha</b> lleva como cuerpo solo el objeto de la ficha, sin el libro (<code>{"isbn": "842041214X", "paginas": 1000, "anio": 1615}</code>), porque su DTO es <code>FichaLibroDTO</code>. En cambio <b>POST <code>/api/libros/1/autores/1</code> no lleva cuerpo</b>: los dos datos que necesita (libro y autor) ya viajan en la dirección.</p>
+<div class="why"><b>Los parámetros de la dirección.</b> Hay dos formas de pasar datos sin cuerpo. Un <b>id dentro de la ruta</b> (<code>/api/libros/1</code>) lo recoge <code>@PathVariable</code>. Un <b>filtro tras la <code>?</code></b> (<code>/api/libros?editorialId=1</code>) lo recoge <code>@RequestParam</code>. En Postman puedes escribir la dirección completa o abrir la pestaña <b>Params</b> y rellenar <i>Key</i> = <code>editorialId</code> y <i>Value</i> = <code>1</code>: Postman monta la <code>?</code> por ti.</div>
+<h3>Los errores, a propósito</h3>
+<p>Para provocar un <b>400</b> basta con romper el cuerpo: <code>{}</code> (todo ausente), un ISBN como <code>"123"</code> que no cumple el patrón, un año <code>1400</code> fuera del rango, un libro sin <code>ficha</code> o con <code>"autoresIds": []</code>. Para un <b>404</b>, apunta a un id que no existe: <code>GET /api/libros/99999</code>, o un POST de libro con <code>"editorialId": 99999</code>. Para un <b>409</b>, intenta borrar la editorial 1 mientras tenga el libro. Si el cuerpo es correcto pero Postman responde <b>415</b>, es que el desplegable de Body está en <i>Text</i> y no en <i>JSON</i>.</p>
+
+<h3>La misma secuencia con curl</h3>
+<p><code>-i</code> muestra el código y las cabeceras, <code>-X</code> el método, <code>-H</code> la cabecera <code>Content-Type</code> y <code>-d</code> el cuerpo, con las comillas del JSON escapadas con <code>\</code>.</p>
+<pre class="code" data-f="secuencia de pruebas (CMD o Git Bash)">curl -i -X POST http://localhost:8080/api/editoriales -H "Content-Type: application/json" -d "{\"nombre\":\"Planeta\",\"pais\":\"España\"}"
+curl -i -X POST http://localhost:8080/api/autores -H "Content-Type: application/json" -d "{\"nombre\":\"Cervantes\",\"nacionalidad\":\"Española\"}"
+curl -i -X POST http://localhost:8080/api/libros -H "Content-Type: application/json" -d "{\"titulo\":\"Don Quijote\",\"editorialId\":1,\"autoresIds\":[1],\"ficha\":{\"isbn\":\"9788420412146\",\"paginas\":900,\"anio\":1605}}"
+curl -i http://localhost:8080/api/libros/1
+curl -i "http://localhost:8080/api/libros?editorialId=1"
+curl -i -X PUT http://localhost:8080/api/libros/1/ficha -H "Content-Type: application/json" -d "{\"isbn\":\"842041214X\",\"paginas\":1000,\"anio\":1615}"
+curl -i -X POST http://localhost:8080/api/libros/1/autores/1
+curl -i http://localhost:8080/api/autores/1/libros
+curl -i -X DELETE http://localhost:8080/api/libros/1/autores/1
+curl -i -X DELETE http://localhost:8080/api/editoriales/1</pre>
+<table>
+<tr><th>Petición</th><th>Esperado</th></tr>
+<tr><td>POST editorial, autor y libro</td><td><b>201</b> y cabecera <code>Location</code></td></tr>
+<tr><td>GET libro 1, GET por editorial, PUT ficha, POST autor, GET libros del autor</td><td><b>200</b></td></tr>
+<tr><td>DELETE del autor del libro</td><td><b>204</b></td></tr>
+<tr><td>DELETE editorial 1 (tiene un libro)</td><td><b>409</b></td></tr>
+<tr><td>GET libro 99999, o POST libro con editorial 99999</td><td><b>404</b></td></tr>
+<tr><td>POST libro con <code>{}</code>, ISBN «123» o año 1400</td><td><b>400</b></td></tr>
+</table>
+<div class="warn">El ISBN tiene que cumplir el patrón (10 o 13 cifras, sin guiones), por eso en los ejemplos aparece <code>9788420412146</code> y no un valor cualquiera como «123».</div>
+<div class="ok">El proyecto de esta guía lleva 5 pruebas automáticas (MockMvc) que recorren todos los endpoints con sus 200, 201, 204, 400, 404 y 409, y pasan. Las ejecuté contra una base H2 en memoria y con Java 17: aquí no tengo tu MySQL ni Java 21, así que lo definitivo es que lo pruebes tú con tu MySQL.</div>
+</section>

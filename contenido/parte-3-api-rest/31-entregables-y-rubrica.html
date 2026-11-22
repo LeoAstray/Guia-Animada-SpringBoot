@@ -1,0 +1,57 @@
+<section id="s29">
+<h2>31 Entregables y rúbrica</h2>
+<h3>Lo que hay que entregar</h3>
+<ul class="check">
+<li><b>Diagrama de clases</b> con las 4 Entities, marcando lado propietario, <code>mappedBy</code>, <code>cascade</code> y <code>fetch</code> (usa la sección 22).</li>
+<li><b>Diagrama de capas</b> con una pastilla <code>@Autowired</code> en cada inyección <b>real</b> de tu proyecto (usa la figura de la sección 25).</li>
+<li><b>Diagramas de recorrido</b> de dos operaciones más (aquí abajo).</li>
+<li>El <b>proyecto funcionando</b> con los endpoints, probado con Postman o curl.</li>
+<li>Un <b>documento corto</b> con las respuestas de las misiones 1, 4 y 5 (están razonadas en las secciones 22, 23 y 25).</li>
+</ul>
+
+<h3>Recorrido de <code>GET /api/libros/{id}</code></h3>
+<pre class="code" data-f="dónde empieza la transacción y dónde se carga cada relación">Cliente ──GET /api/libros/7──▶ LibroController.obtenerPorId(7)
+                                    │  @Autowired ILibroService
+                                    ▼
+                         LibroServiceImpl.obtenerPorId(7)   ◀── EMPIEZA @Transactional(readOnly)
+                                    │
+                                    ▼
+                  libroRepo.findByIdConRelaciones(7)  ──▶ MySQL: 1 SELECT con LEFT JOIN FETCH
+                                    │       carga YA: editorial + ficha + autores
+                                    ▼
+                  mapearAResponseDTO(libro)          todo está cargado: no hay más consultas
+                                    │
+                                    ▼                  ◀── TERMINA @Transactional
+                              Optional con valor
+Cliente ◀── 200 + LibroResponseDTO ── ResponseEntity.ok(...)
+
+ (si no existe: Optional.empty() → el controlador responde 404)</pre>
+
+<h3>Recorrido de <code>POST /api/libros/{id}/autores/{autorId}</code></h3>
+<pre class="code" data-f="dónde empieza la transacción y dónde se carga cada relación">Cliente ──POST …/libros/7/autores/3──▶ LibroController.asociarAutor(7, 3)
+                                              ▼
+                                LibroServiceImpl.asociarAutor     ◀── EMPIEZA @Transactional
+                                              │
+                  libroRepo.findById(7)  ──▶ carga el libro (editorial y autores LAZY)
+                  autorRepo.findById(3)  ──▶ carga el autor
+                                              │   (si falta alguno → Optional.empty() → 404)
+                                              ▼
+                  libro.addAutor(autor)          en MEMORIA: se actualizan los DOS lados
+                                                 (al tocar getAutores() se carga la colección LAZY)
+                  libroRepo.save(libro)
+                  mapearAResponseDTO(libro)
+                                              ▼                   ◀── TERMINA @Transactional → COMMIT
+                                                  aquí se ejecuta el INSERT en LIBRO_AUTOR
+Cliente ◀── 200 + LibroResponseDTO</pre>
+<div class="why">El <code>INSERT</code> en <code>LIBRO_AUTOR</code> se ejecuta al <b>confirmar la transacción</b> (commit), no en la línea de <code>addAutor</code>. Hibernate acumula los cambios y los envía al final.</div>
+
+<h3>Rúbrica</h3>
+<table>
+<tr><th>Criterio</th><th>Peso</th><th>Cómo asegurarlo</th></tr>
+<tr><td>Relaciones JPA correctas y justificadas</td><td><b>30 %</b></td><td>La sección 22, bien razonada.</td></tr>
+<tr><td>Separación estricta Entity y DTO, y conversión en la capa adecuada</td><td><b>25 %</b></td><td>Controller sin imports de <code>entity</code>; IService solo con DTO; conversión solo en el servicio.</td></tr>
+<tr><td>Uso correcto de <code>ResponseEntity</code> y códigos de estado</td><td><b>20 %</b></td><td>Tabla de la sección 20 y pruebas de la 29.</td></tr>
+<tr><td>Inyección de dependencias coherente con el diagrama</td><td><b>10 %</b></td><td>Dibuja solo los <code>@Autowired</code> reales (figura de la sección 25).</td></tr>
+<tr><td>Diagramas y respuestas de comprensión</td><td><b>15 %</b></td><td>La lista de entregables.</td></tr>
+</table>
+</section>

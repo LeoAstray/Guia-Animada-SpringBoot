@@ -1,0 +1,73 @@
+<section id="s19">
+<h2>21 Crear y configurar el proyecto</h2>
+<p>El proceso es el de la Parte 1 (pasos 1 a 3 del tutorial). Estos son los valores de este ejercicio:</p>
+<table>
+<tr><th>Campo de Initializr</th><th>Valor</th></tr>
+<tr><td>Project / Language</td><td>Maven · Java</td></tr>
+<tr><td>Spring Boot</td><td>4.1.2 (una versión estable, no SNAPSHOT ni RC)</td></tr>
+<tr><td>Group</td><td><code>edu.rico.biblioteca</code></td></tr>
+<tr><td>Artifact</td><td><code>biblioteca</code></td></tr>
+<tr><td>Package name</td><td><code>edu.rico.biblioteca</code></td></tr>
+<tr><td>Packaging / Java / Configuration</td><td>Jar · 21 · Properties</td></tr>
+<tr><td>Dependencias</td><td><b>MySQL Driver</b>, <b>Spring Data JPA</b>, <b>Spring Boot DevTools</b>, <b>Spring Web</b>, <b>Validation</b></td></tr>
+</table>
+<div class="why">Cada dependencia tiene su motivo. <b>Spring Data JPA</b> trae las entidades, los repositorios y Hibernate. <b>MySQL Driver</b> es el traductor entre Java y MySQL. <b>Spring Web</b> trae Spring MVC y el servidor Tomcat, para tener endpoints. <b>Validation</b> permite el <code>@Valid</code> de la ampliación (sección 28). <b>DevTools</b> reinicia la app al guardar.</div>
+
+<pre class="code" data-f="pom.xml  (dependencies)">&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-webmvc&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-validation&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-devtools&lt;/artifactId&gt;
+        &lt;scope&gt;runtime&lt;/scope&gt;
+        &lt;optional&gt;true&lt;/optional&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.mysql&lt;/groupId&gt;
+        &lt;artifactId&gt;mysql-connector-j&lt;/artifactId&gt;
+        &lt;scope&gt;runtime&lt;/scope&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;</pre>
+<p>En Spring Boot 4.1 el starter web se llama <code>spring-boot-starter-webmvc</code> (en apuntes antiguos verás <code>spring-boot-starter-web</code>).</p>
+
+<pre class="code" data-f="src/main/resources/application.properties">spring.application.name=biblioteca
+
+spring.datasource.url=jdbc:mysql://localhost:3306/biblioteca?createDatabaseIfNotExist=true&amp;serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+# Sin sesion abierta durante toda la peticion: asi el fallo LAZY es real y entendemos donde va @Transactional
+spring.jpa.open-in-view=false</pre>
+<table>
+<tr><th>Propiedad</th><th>Por qué</th></tr>
+<tr><td><code>createDatabaseIfNotExist=true</code></td><td>Si la base <code>biblioteca</code> no existe, MySQL la crea al conectar. Evita el error «Unknown database».</td></tr>
+<tr><td><code>ddl-auto=update</code></td><td>Hibernate crea o ajusta las tablas y <b>conserva</b> los datos entre ejecuciones.</td></tr>
+<tr><td><code>show-sql</code> y <code>format_sql</code></td><td>Muestran el SQL en la terminal. Imprescindible para contar consultas y cazar el N+1 (sección 27).</td></tr>
+<tr><td><code>open-in-view=false</code></td><td>Evita que la sesión quede abierta durante toda la petición. Así el fallo LAZY es real y se entiende dónde va <code>@Transactional</code>.</td></tr>
+</table>
+<p>Ajusta usuario, contraseña y puerto a los de tu MySQL.</p>
+
+<h3>Paquetes</h3>
+<pre class="code" data-f="estructura">edu/rico/biblioteca/
+ ├─ BibliotecaApplication.java
+ ├─ entity/       Editorial, Libro, Autor, FichaLibro
+ ├─ repository/   IEditorialRepository, ILibroRepository, IAutorRepository, IFichaLibroRepository
+ ├─ dto/          *RequestDTO, *ResponseDTO, *ResumenDTO, FichaLibroDTO
+ ├─ service/      IEditorialService, IAutorService, ILibroService
+ │   └─ impl/     EditorialServiceImpl, AutorServiceImpl, LibroServiceImpl
+ └─ controller/   EditorialController, AutorController, LibroController</pre>
+<div class="ok">Con el proyecto vacío, <code>.\mvnw.cmd spring-boot:run</code> debe arrancar sin errores (Tomcat en el 8080 y «Started»). Si falla aquí, es la conexión, no el código.</div>
+</section>

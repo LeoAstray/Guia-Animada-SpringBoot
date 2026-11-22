@@ -1,0 +1,67 @@
+<section id="s18">
+<h2>20 El ejercicio: qué se pide y cómo se resuelve</h2>
+<p>El ejercicio no evalúa cuánto código sabes escribir, sino si sabes <b>conectar las capas</b> de un sistema Spring: RestController, IService, Service, JpaRepository, Entity, DTO y ResponseEntity. Antes de programar hay que poder <b>dibujar y justificar</b> el sistema: qué relación une cada entidad, qué viaja entre capas y qué código HTTP devuelve cada endpoint.</p>
+
+<table>
+<tr><th>Entidades</th><th>Relación</th><th>Anotación JPA</th><th>Analogía</th></tr>
+<tr><td>Editorial y Libro</td><td><b>1 : N</b></td><td><code>@OneToMany</code> / <code>@ManyToOne</code></td><td>Una mamá, muchos hijos</td></tr>
+<tr><td>Autor y Libro</td><td><b>N : M</b></td><td><code>@ManyToMany</code></td><td>Muchos niños, muchos juguetes</td></tr>
+<tr><td>Libro y FichaLibro</td><td><b>1 : 1</b></td><td><code>@OneToOne</code></td><td>Cada niño, un carné</td></tr>
+</table>
+<p>Las capas: <code>RestController → IService → Service → JpaRepository → MySQL</code>. Cada RestController inyecta su IService, y cada Service inyecta los repositorios que necesita, siempre con <code>@Autowired</code>.</p>
+
+<h3>El modelo de datos: cuatro Entities, cinco tablas</h3>
+<figure class="fig">
+<svg viewBox="0 0 900 350" xmlns="http://www.w3.org/2000/svg" font-size="13">
+  <g>
+    <rect x="10" y="20" width="200" height="112" rx="8" fill="#fff" stroke="#0b6b6b" stroke-width="2"/><rect x="10" y="20" width="200" height="28" rx="8" fill="#0b6b6b"/><rect x="10" y="38" width="200" height="10" fill="#0b6b6b"/>
+    <text x="24" y="40" fill="#fff" font-weight="700">EDITORIAL</text><text x="24" y="72">id (PK)</text><text x="24" y="92">nombre</text><text x="24" y="112">pais</text>
+
+    <rect x="350" y="20" width="210" height="132" rx="8" fill="#fff" stroke="#2c5f8f" stroke-width="2"/><rect x="350" y="20" width="210" height="28" rx="8" fill="#2c5f8f"/><rect x="350" y="38" width="210" height="10" fill="#2c5f8f"/>
+    <text x="364" y="40" fill="#fff" font-weight="700">LIBRO</text><text x="364" y="72">id (PK)</text><text x="364" y="92">titulo</text><text x="364" y="112" fill="#b23a2b" font-weight="700">editorial_id (FK)</text>
+
+    <rect x="690" y="20" width="200" height="152" rx="8" fill="#fff" stroke="#2e7d4f" stroke-width="2"/><rect x="690" y="20" width="200" height="28" rx="8" fill="#2e7d4f"/><rect x="690" y="38" width="200" height="10" fill="#2e7d4f"/>
+    <text x="704" y="40" fill="#fff" font-weight="700">FICHA_LIBRO</text><text x="704" y="72">id (PK)</text><text x="704" y="92">isbn (único)</text><text x="704" y="112">paginas</text><text x="704" y="132">anio</text><text x="704" y="152" fill="#b23a2b" font-weight="700">libro_id (FK, único)</text>
+
+    <rect x="10" y="215" width="200" height="112" rx="8" fill="#fff" stroke="#536171" stroke-width="2"/><rect x="10" y="215" width="200" height="28" rx="8" fill="#536171"/><rect x="10" y="233" width="200" height="10" fill="#536171"/>
+    <text x="24" y="235" fill="#fff" font-weight="700">AUTOR</text><text x="24" y="267">id (PK)</text><text x="24" y="287">nombre</text><text x="24" y="307">nacionalidad</text>
+
+    <rect x="350" y="225" width="210" height="102" rx="8" fill="#fbeccf" stroke="#a35b00" stroke-width="2" stroke-dasharray="6 4"/><rect x="350" y="225" width="210" height="28" rx="8" fill="#a35b00"/><rect x="350" y="243" width="210" height="10" fill="#a35b00"/>
+    <text x="364" y="245" fill="#fff" font-weight="700">LIBRO_AUTOR</text><text x="364" y="277" fill="#b23a2b" font-weight="700">libro_id (FK)</text><text x="364" y="297" fill="#b23a2b" font-weight="700">autor_id (FK)</text>
+  </g>
+  <g stroke="#14212b" stroke-width="2" fill="none"><path pathLength="1" class="ld" d="M210 80 H350"/><path pathLength="1" class="ld" d="M560 80 H690"/><path pathLength="1" class="ld" d="M455 152 V225"/><path pathLength="1" class="ld" d="M210 275 H350"/></g>
+  <g text-anchor="middle" fill="#4f5d68"><text x="280" y="70">1 : N</text><text x="625" y="70">1 : 1</text><text x="485" y="192">1 : N</text><text x="280" y="265">1 : N</text>
+  <text x="450" y="345" font-size="12">La tabla discontinua la crea @ManyToMany. No es una Entity: solo guarda parejas de ids.</text></g>
+</svg>
+<figcaption>La FK de la relación 1:N está en LIBRO, la del 1:1 en FICHA_LIBRO, y LIBRO_AUTOR solo guarda pares de ids</figcaption>
+</figure>
+<div class="kid">La «cuerda» (la clave foránea, FK) la lleva el niño pequeño de la mano de su mamá. En el N:M, como son muchos con muchos, hace falta una <b>libretita aparte</b> (<code>LIBRO_AUTOR</code>) que apunte «Ana juega con el coche». Esa libretita no es una Entity.</div>
+
+<h3>Los endpoints</h3>
+<table>
+<tr><th>Endpoint</th><th>Éxito</th><th>Casos de error</th></tr>
+<tr><td><code>POST /api/editoriales</code></td><td>201 y Location</td><td>400 datos inválidos</td></tr>
+<tr><td><code>GET /api/editoriales/{id}</code></td><td>200</td><td>404</td></tr>
+<tr><td><code>DELETE /api/editoriales/{id}</code></td><td>204</td><td>404 · <b>409</b> si tiene libros</td></tr>
+<tr><td><code>POST /api/autores</code></td><td>201 y Location</td><td>400</td></tr>
+<tr><td><code>GET /api/autores/{id}/libros</code></td><td>200 (<code>LibroResumenDTO</code>)</td><td>404</td></tr>
+<tr><td><code>POST /api/libros</code></td><td>201 y Location</td><td>400 · 404 si no existe la editorial o algún autor</td></tr>
+<tr><td><code>GET /api/libros/{id}</code></td><td>200 (<code>LibroResponseDTO</code>)</td><td>404</td></tr>
+<tr><td><code>GET /api/libros?editorialId=</code></td><td>200 (lista, puede estar vacía)</td><td>404 si la editorial no existe</td></tr>
+<tr><td><code>PUT /api/libros/{id}/ficha</code></td><td>200</td><td>404 · 400 si la ficha es inválida</td></tr>
+<tr><td><code>POST /api/libros/{id}/autores/{autorId}</code></td><td>200</td><td>404 del libro o del autor</td></tr>
+<tr><td><code>DELETE /api/libros/{id}/autores/{autorId}</code></td><td>204</td><td>404</td></tr>
+</table>
+
+<h3>El orden en que se construye</h3>
+<ol>
+<li><b>Proyecto</b> y configuración (sección 21).</li>
+<li><b>Misión 1</b>: decidir las relaciones y escribir las Entities (22).</li>
+<li><b>Repositorios</b> (23).</li>
+<li><b>Misión 2</b>: los DTO (24).</li>
+<li><b>Servicios</b> con la conversión Entity y DTO (25) y <b>controladores</b> con los códigos de estado (26).</li>
+<li><b>Misión 5</b>: provocar las trampas (27).</li>
+<li><b>Ampliación</b>: validación con <code>@Valid</code> (28).</li>
+<li><b>Probar</b> (29).</li>
+</ol>
+</section>

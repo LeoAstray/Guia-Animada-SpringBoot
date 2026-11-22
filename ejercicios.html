@@ -1,0 +1,2250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<script src="resumen/entrada.js"></script>
+<title>Spring Boot de cero a REST · ejercicios</title>
+<link rel="stylesheet" href="css/00-fuentes.css">
+<link rel="stylesheet" href="css/01-variables.css">
+<link rel="stylesheet" href="css/02-base.css">
+<link rel="stylesheet" href="css/07-texto-y-notas.css">
+<link rel="stylesheet" href="css/08-codigo-y-tablas.css">
+<link rel="stylesheet" href="resumen/resumen.css">
+</head>
+<body class="ejercicios" id="inicio">
+<header class="bar">
+  <a class="back" href="index.html">← Elegir otra guía</a>
+  <span class="tag">EJERCICIOS</span>
+</header>
+
+<main class="wrap">
+  <!-- La lista. Se oculta cuando se abre un enunciado o un solucionario (el que coincide con la dirección #...) -->
+  <section class="hub intro">
+    <h1>Ejercicios de práctica</h1>
+    <p class="sub">Enunciados tipo examen para hacer tú solo. Cada ejercicio tiene su <b>enunciado</b> y su <b>solucionario</b>: empieza por el enunciado y abre el solucionario cuando termines.</p>
+    <div class="ej-list">
+      <article class="ej">
+        <p class="n">EJERCICIO 1</p>
+        <h2>La academia de idiomas</h2>
+        <p>Entidades con relaciones 1:N, 1:1 y N:M con datos propios, consultas, datos iniciales y la API REST de alumnos y matrículas.</p>
+        <div class="meta"><span>2 horas</span><span>10 puntos</span></div>
+        <div class="acciones"><a class="ver" href="#ejercicio-1">Ver el ejercicio</a> <a class="sol" href="#solucion-1">Ir al solucionario</a></div>
+      </article>
+      <article class="ej">
+        <p class="n">EJERCICIO 2</p>
+        <h2>El hospital «San Gabriel»</h2>
+        <p>Médicos, pacientes e historiales clínicos: relaciones 1:N, 1:1 y N:M con datos propios (consultas), repositorios, datos iniciales y la API REST de médicos.</p>
+        <div class="meta"><span>10 puntos</span></div>
+        <div class="acciones"><a class="ver" href="#ejercicio-2">Ver el ejercicio</a> <a class="sol" href="#solucion-2">Ir al solucionario</a></div>
+      </article>
+    </div>
+  </section>
+
+<section class="panel" id="ejercicio-1">
+  <nav class="nav"><a href="#">← Todos los ejercicios</a> <a href="#solucion-1">Ir al solucionario →</a></nav>
+  <header><p class="n">EJERCICIO 1 · ENUNCIADO</p><h2>La academia de idiomas</h2></header>
+<p>Un ejercicio completo, con el formato de un examen. Haz el proyecto <b>sin mirar la solución</b> y, cuando termines, compara. Es el mismo recorrido de la guía (entidades, repositorios, datos, API REST y preguntas de comprensión) aplicado a un tema nuevo.</p>
+
+<table>
+<tr><th>Ficha del ejercicio</th><th></th></tr>
+<tr><td>Proyecto</td><td>Spring Boot + Spring Data JPA + MySQL, con Validation y Spring Web</td></tr>
+<tr><td>Paquete base</td><td><code>com.academia.babel</code>, con los subpaquetes <code>entity</code>, <code>enums</code>, <code>repository</code>, <code>dto</code>, <code>service</code> (y <code>impl</code>) y <code>controller</code></td></tr>
+<tr><td>Tiempo orientativo</td><td>2 horas</td></tr>
+<tr><td>Puntuación</td><td>Parte 1: 3 · Parte 2: 1,5 · Parte 3: 1 · Parte 4: 3 · Parte 5: 1,5</td></tr>
+</table>
+<div class="warn">La academia <b>Babel</b> tiene varias sedes. En cada sede trabajan profesores. Los alumnos se matriculan en cursos, y cada alumno tiene un expediente propio. Todo lo que no diga el enunciado, decídelo tú y justifícalo.</div>
+
+<h3>Parte 1: entidades y relaciones (3 puntos)</h3>
+<p class="paso"><b>1.</b> Crea los enums <code>Idioma</code> (<code>INGLES</code>, <code>FRANCES</code>, <code>ALEMAN</code>, <code>ITALIANO</code>), <code>Nivel</code> (<code>A1</code>, <code>A2</code>, <code>B1</code>, <code>B2</code>, <code>C1</code>, <code>C2</code>) y <code>EstadoMatricula</code> (<code>ACTIVA</code>, <code>FINALIZADA</code>, <code>ABANDONADA</code>).</p>
+<p class="paso"><b>2.</b> Crea la entidad <code>Academia</code>, con tabla <code>academias</code>: <code>id</code> (clave autogenerada, columna <code>id_academia</code>), <code>nombre</code> (obligatorio, máximo 80 caracteres) y <code>ciudad</code> (obligatoria).</p>
+<p class="paso"><b>3.</b> Crea la entidad <code>Profesor</code>, con tabla <code>profesores</code>: <code>id</code> (columna <code>id_profesor</code>), <code>nombre</code> (obligatorio), <code>salarioHora</code> (<code>BigDecimal</code>, precisión 8 y escala 2, obligatorio), <code>idioma</code> (el enum, guardado como texto, obligatorio) y <code>activo</code> (<code>boolean</code>).</p>
+<p class="paso"><b>4.</b> Crea la entidad <code>Alumno</code>, con tabla <code>alumnos</code>: <code>id</code> (columna <code>id_alumno</code>), <code>nombre</code> (obligatorio), <code>email</code> (obligatorio y único) y <code>fechaNacimiento</code> (<code>LocalDate</code>, obligatoria).</p>
+<p class="paso"><b>5.</b> Crea la entidad <code>Expediente</code>, con tabla <code>expedientes</code>: <code>id</code> (columna <code>id_expediente</code>), <code>numeroMatricula</code> (obligatorio y único), <code>nivelInicial</code> (el enum <code>Nivel</code>, como texto, obligatorio) y <code>observaciones</code> (texto largo, puede ser nulo).</p>
+<p class="paso"><b>6.</b> Crea la entidad <code>Curso</code>, con tabla <code>cursos</code>: <code>id</code> (columna <code>id_curso</code>), <code>titulo</code> (obligatorio), <code>idioma</code> y <code>nivel</code> (enums, como texto, obligatorios) y <code>precio</code> (<code>BigDecimal</code>, precisión 8 y escala 2, obligatorio).</p>
+<p class="paso"><b>7.</b> Haz una <b>relación bidireccional uno a muchos</b> entre <code>Academia</code> y <code>Profesor</code>. El propietario es <code>Profesor</code>, con la columna <code>id_academia</code>, obligatoria. Al borrar una academia <b>no</b> deben borrarse sus profesores. Inicializa la lista y escribe un método <code>addProfesor</code> que mantenga sincronizados los dos lados.</p>
+<p class="paso"><b>8.</b> Haz una <b>relación uno a uno unidireccional</b> entre <code>Alumno</code> y <code>Expediente</code>. El propietario es <code>Alumno</code>, con la columna <code>id_expediente</code>, obligatoria y única. Al guardar un alumno debe guardarse su expediente, y al borrarlo, también. Diseña el <b>constructor</b> de <code>Alumno</code> de forma que sea imposible crear un alumno sin expediente.</p>
+<p class="paso"><b>9.</b> Haz una <b>relación muchos a muchos con datos propios</b> entre <code>Alumno</code> y <code>Curso</code>, creando la entidad <code>Matricula</code> (tabla <code>matriculas</code>): <code>id</code>, <code>alumno</code> y <code>curso</code> (<code>@ManyToOne</code> obligatorios y con carga perezosa), <code>fecha</code> (<code>LocalDate</code>, obligatoria), <code>nota</code> (<code>Double</code>; <b>puede ser nula</b>, porque al matricularse aún no hay nota), <code>estado</code> (<code>EstadoMatricula</code>, como texto) y <code>pagada</code> (<code>boolean</code>). Añade las listas inversas de matrículas con <code>mappedBy</code>: en <code>Alumno</code>, que se borren con él (<code>orphanRemoval</code>); en <code>Curso</code>, sin cascada.</p>
+<p class="paso"><b>10.</b> Responde con tus palabras:</p>
+<ul>
+<li>a) ¿Por qué <code>Matricula</code> es una entidad y no un <code>@ManyToMany</code> directo entre <code>Alumno</code> y <code>Curso</code>?</li>
+<li>b) ¿En qué tabla está cada clave foránea del modelo?</li>
+<li>c) ¿Qué ocurre con <code>FetchType.EAGER</code> en un <code>@ManyToOne</code> cuando se listan 100 matrículas?</li>
+</ul>
+
+<h3>Parte 2: repositorios y consultas (1,5 puntos)</h3>
+<p class="paso"><b>11.</b> Crea los repositorios de las cinco entidades (<code>JpaRepository</code>), con la convención <code>I</code> + entidad + <code>Repository</code>.</p>
+<p class="paso"><b>12.</b> En <code>IProfesorRepository</code>, escribe estos métodos (consulta derivada donde se pueda, <code>@Query</code> donde haga falta):</p>
+<ul>
+<li>a) Profesores de un idioma dado.</li>
+<li>b) Profesores activos de una academia (por el id de la academia).</li>
+<li>c) Profesores con <code>salarioHora</code> mayor que una cantidad, de mayor a menor.</li>
+<li>d) Número de profesores de cada academia (JPQL con <code>GROUP BY</code>).</li>
+</ul>
+<p class="paso"><b>13.</b> En <code>IMatriculaRepository</code>, escribe:</p>
+<ul>
+<li>a) Matrículas de un alumno, de la más reciente a la más antigua.</li>
+<li>b) Nota media de un curso (<code>@Query</code> con <code>AVG</code>). Las matrículas sin nota no cuentan.</li>
+<li>c) Matrículas <code>ACTIVA</code> que todavía no están pagadas.</li>
+</ul>
+<p class="paso"><b>14.</b> En <code>IAlumnoRepository</code>, escribe una consulta que devuelva los alumnos matriculados en un curso concreto, sin repetidos (<code>JOIN</code> y <code>DISTINCT</code>), y un método que diga si ya existe un alumno con un email dado.</p>
+<p class="paso"><b>15.</b> En <code>ICursoRepository</code>, escribe los cursos de un idioma y un nivel dados, y los cursos cuyo precio no supera una cantidad.</p>
+
+<h3>Parte 3: datos iniciales (1 punto)</h3>
+<p class="paso"><b>16.</b> Configura la aplicación para que cargue los datos al arrancar (<code>create-drop</code>) y escribe el <code>data.sql</code> con:</p>
+<ul>
+<li>2 academias,</li>
+<li>4 profesores, de idiomas distintos y repartidos entre las academias,</li>
+<li>4 cursos,</li>
+<li>3 alumnos, cada uno con su expediente,</li>
+<li>5 matrículas, de modo que un alumno esté en dos cursos, un curso tenga dos alumnos, una matrícula tenga la nota nula y otra esté <code>ABANDONADA</code>.</li>
+</ul>
+<p>Respeta el orden de inserción y los textos exactos de los enums.</p>
+<p class="paso"><b>17.</b> Desde <code>run()</code>, crea y guarda un alumno nuevo con su expediente y matrícúlalo en un curso que ya exista. Indica en qué orden creas y guardas cada objeto, y por qué.</p>
+
+<h3>Parte 4: API REST por capas (3 puntos)</h3>
+<p class="paso"><b>18.</b> <b>DTO.</b> Crea, como <code>record</code>:</p>
+<ul>
+<li><code>AlumnoRequestDTO</code>: <code>nombre</code>, <code>email</code>, <code>fechaNacimiento</code>, <code>numeroMatricula</code> y <code>nivelInicial</code>. Valida con <code>@Valid</code>: nombre no vacío, email con formato correcto, fecha de nacimiento en el pasado, número de matrícula con el formato <code>AL-</code> seguido de 4 cifras, y todos los campos obligatorios.</li>
+<li><code>MatriculaRequestDTO</code>: <code>cursoId</code> y <code>fecha</code>.</li>
+<li><code>MatriculaResumenDTO</code>: <code>tituloCurso</code>, <code>fecha</code>, <code>estado</code> y <code>nota</code>.</li>
+<li><code>AlumnoResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>email</code>, <code>numeroMatricula</code>, <code>nivelInicial</code> y la lista de <code>MatriculaResumenDTO</code>.</li>
+</ul>
+<p class="paso"><b>19.</b> <b>Servicio.</b> Crea <code>IAlumnoService</code> y <code>AlumnoServiceImpl</code>, con los repositorios inyectados con <code>@Autowired</code>. Implementa:</p>
+<ul>
+<li>a) <code>crear(AlumnoRequestDTO)</code>: si el email ya existe, hay que informar al controlador para responder 409.</li>
+<li>b) <code>obtenerPorId(Long)</code>.</li>
+<li>c) <code>listarPorNivel(Nivel)</code>: filtra por el nivel inicial del expediente. Una lista vacía es válida.</li>
+<li>d) <code>matricular(Long alumnoId, MatriculaRequestDTO)</code>: 404 si no existe el alumno o el curso; 409 si el alumno ya tiene una matrícula <code>ACTIVA</code> en ese curso.</li>
+<li>e) <code>eliminar(Long)</code>: 409 si el alumno tiene alguna matrícula <code>ACTIVA</code>.</li>
+<li>f) El método privado que convierte <code>Alumno</code> en <code>AlumnoResponseDTO</code>.</li>
+</ul>
+<p>Explica cómo comunica tu servicio cada uno de esos resultados al controlador.</p>
+<p class="paso"><b>20.</b> <b>Controlador.</b> Crea <code>AlumnoController</code> con estos endpoints. Escribe el código HTTP de éxito y los de error de cada uno:</p>
+<table>
+<tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
+<tr><td><code>POST /api/alumnos</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/alumnos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/alumnos?nivel=</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>POST /api/alumnos/{id}/matriculas</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>DELETE /api/alumnos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+</table>
+<p>El primer <code>POST</code> debe devolver la cabecera <code>Location</code> con la dirección del alumno creado.</p>
+<p class="paso"><b>21.</b> <b>Postman.</b> Escribe:</p>
+<ul>
+<li>a) El cuerpo JSON para crear un alumno con datos válidos, y explica por qué sus claves son las que son.</li>
+<li>b) Un cuerpo que provoque un <b>400</b> por el email, y otro que lo provoque por el número de matrícula.</li>
+<li>c) El cuerpo para matricular a ese alumno en un curso.</li>
+<li>d) Qué hay que marcar en la pestaña <b>Body</b> y qué error obtienes si te olvidas de hacerlo.</li>
+</ul>
+
+<h3>Parte 5: preguntas de comprensión (1,5 puntos)</h3>
+<p class="paso"><b>22.</b> Una petición <code>GET /api/alumnos/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo se evita.</p>
+<p class="paso"><b>23.</b> Al listar 50 alumnos con sus matrículas se lanzan 51 consultas. ¿Cómo se llama el problema y cómo se arregla? Da dos soluciones.</p>
+<p class="paso"><b>24.</b> ¿Por qué el constructor de <code>Alumno</code> exige el expediente en lugar de asignarlo después con un <i>setter</i>?</p>
+<p class="paso"><b>25.</b> <code>DELETE</code> de una academia que tiene profesores devuelve un 500. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
+<p class="paso"><b>26.</b> Dibuja el esquema de tablas que genera todo el modelo, con sus claves primarias y foráneas, y marca dónde está cada clave foránea.</p>
+
+<div class="why">Intenta hacerlo tú primero y no abras el solucionario hasta terminar: lo que más enseña es comparar tus fallos con la solución.</div>
+  <nav class="nav pie"><a href="#">← Todos los ejercicios</a> <a href="#solucion-1">Ir al solucionario →</a></nav>
+</section>
+
+<section class="panel" id="solucion-1">
+  <nav class="nav"><a href="#ejercicio-1">← Volver al enunciado</a> <a href="#">← Todos los ejercicios</a></nav>
+  <header><p class="n">EJERCICIO 1 · SOLUCIONARIO</p><h2>La academia de idiomas</h2></header>
+<p>Esta es <b>una</b> solución posible: hay otras igual de válidas. Lo importante es que entiendas <i>por qué</i> está hecha así. Cada pregunta del enunciado tiene aquí su respuesta, con el número que lleva allí.</p>
+<div class="warn">No mires esto hasta haber hecho el ejercicio. Después, compara <b>tus fallos</b> con la solución: ahí es donde se aprende.</div>
+
+<h3>Parte 1: entidades y relaciones</h3>
+
+<p class="paso"><b>1.</b> Los tres enums, cada uno en su archivo del paquete <code>enums</code>:</p>
+<pre data-f="enums/Idioma.java">package com.academia.babel.enums;
+
+public enum Idioma {
+    INGLES, FRANCES, ALEMAN, ITALIANO
+}</pre>
+<pre data-f="enums/Nivel.java">package com.academia.babel.enums;
+
+public enum Nivel {
+    A1, A2, B1, B2, C1, C2
+}</pre>
+<pre data-f="enums/EstadoMatricula.java">package com.academia.babel.enums;
+
+public enum EstadoMatricula {
+    ACTIVA, FINALIZADA, ABANDONADA
+}</pre>
+
+<p class="paso"><b>2 y 7.</b> <code>Academia</code>, que es el lado «uno» de la relación bidireccional con <code>Profesor</code>. Lleva <code>mappedBy</code> y <b>no lleva cascada</b>: así, borrar una academia no borra a sus profesores.</p>
+<pre data-f="entity/Academia.java">package com.academia.babel.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "academias")
+public class Academia {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_academia")
+    private Long id;
+
+    @Column(nullable = false, length = 80)
+    private String nombre;
+
+    @Column(nullable = false)
+    private String ciudad;
+
+    // Lado inverso: la clave foránea está en Profesor. Sin cascade: borrar la academia no borra a los profesores.
+    @OneToMany(mappedBy = "academia")
+    private List&lt;Profesor&gt; profesores = new ArrayList&lt;&gt;();
+
+    public Academia() {}
+
+    public Academia(String nombre, String ciudad) {
+        this.nombre = nombre;
+        this.ciudad = ciudad;
+    }
+
+    // Mantiene sincronizados los dos lados de la relación
+    public void addProfesor(Profesor profesor) {
+        profesores.add(profesor);
+        profesor.setAcademia(this);
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getCiudad() { return ciudad; }
+    public List&lt;Profesor&gt; getProfesores() { return profesores; }
+}</pre>
+
+<p class="paso"><b>3 y 7.</b> <code>Profesor</code> es el <b>propietario</b> de la relación: tiene la clave foránea <code>id_academia</code>, obligatoria, con carga perezosa.</p>
+<pre data-f="entity/Profesor.java">package com.academia.babel.entity;
+
+import java.math.BigDecimal;
+
+import com.academia.babel.enums.Idioma;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "profesores")
+public class Profesor {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_profesor")
+    private Long id;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(name = "salario_hora", nullable = false, precision = 8, scale = 2)
+    private BigDecimal salarioHora;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Idioma idioma;
+
+    private boolean activo;
+
+    // Lado propietario: aquí está la columna id_academia
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_academia", nullable = false)
+    private Academia academia;
+
+    public Profesor() {}
+
+    public Profesor(String nombre, BigDecimal salarioHora, Idioma idioma, boolean activo) {
+        this.nombre = nombre;
+        this.salarioHora = salarioHora;
+        this.idioma = idioma;
+        this.activo = activo;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public BigDecimal getSalarioHora() { return salarioHora; }
+    public Idioma getIdioma() { return idioma; }
+    public boolean isActivo() { return activo; }
+    public Academia getAcademia() { return academia; }
+    public void setAcademia(Academia academia) { this.academia = academia; }
+}</pre>
+
+<p class="paso"><b>5.</b> <code>Expediente</code>. El texto largo (<code>observaciones</code>) puede ser nulo, así que no lleva <code>nullable = false</code>. Podrías usar <code>@Lob</code> si el enunciado pide un texto realmente enorme.</p>
+<pre data-f="entity/Expediente.java">package com.academia.babel.entity;
+
+import com.academia.babel.enums.Nivel;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "expedientes")
+public class Expediente {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_expediente")
+    private Long id;
+
+    @Column(name = "numero_matricula", nullable = false, unique = true, length = 10)
+    private String numeroMatricula;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nivel_inicial", nullable = false, length = 2)
+    private Nivel nivelInicial;
+
+    @Column(length = 1000)
+    private String observaciones;
+
+    public Expediente() {}
+
+    public Expediente(String numeroMatricula, Nivel nivelInicial, String observaciones) {
+        this.numeroMatricula = numeroMatricula;
+        this.nivelInicial = nivelInicial;
+        this.observaciones = observaciones;
+    }
+
+    public Long getId() { return id; }
+    public String getNumeroMatricula() { return numeroMatricula; }
+    public Nivel getNivelInicial() { return nivelInicial; }
+    public String getObservaciones() { return observaciones; }
+}</pre>
+
+<p class="paso"><b>4, 8 y 9.</b> <code>Alumno</code>. Es el propietario del 1:1 con <code>Expediente</code> (<code>id_expediente</code>, obligatoria y única), con cascada total. Y es el lado «uno» de <code>Matricula</code>, con <code>orphanRemoval</code>. Fíjate en el <b>constructor</b>: recibe el expediente, así que es imposible crear un alumno sin él.</p>
+<pre data-f="entity/Alumno.java">package com.academia.babel.entity;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "alumnos")
+public class Alumno {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_alumno")
+    private Long id;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "fecha_nacimiento", nullable = false)
+    private LocalDate fechaNacimiento;
+
+    // Propietario del 1:1. La cascada guarda y borra el expediente junto con el alumno.
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "id_expediente", nullable = false, unique = true)
+    private Expediente expediente;
+
+    // Lado inverso del N:M con datos: las matrículas dependen del alumno
+    @OneToMany(mappedBy = "alumno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List&lt;Matricula&gt; matriculas = new ArrayList&lt;&gt;();
+
+    // Lo necesita JPA para crear objetos al leer de la base. No lo uses tú.
+    public Alumno() {}
+
+    // Única forma de crear un alumno: obliga a darle su expediente
+    public Alumno(String nombre, String email, LocalDate fechaNacimiento, Expediente expediente) {
+        this.nombre = nombre;
+        this.email = email;
+        this.fechaNacimiento = fechaNacimiento;
+        this.expediente = expediente;
+    }
+
+    public void addMatricula(Matricula matricula) {
+        matriculas.add(matricula);
+        matricula.setAlumno(this);
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getEmail() { return email; }
+    public LocalDate getFechaNacimiento() { return fechaNacimiento; }
+    public Expediente getExpediente() { return expediente; }
+    public List&lt;Matricula&gt; getMatriculas() { return matriculas; }
+}</pre>
+
+<p class="paso"><b>6.</b> <code>Curso</code>. Su lista de matrículas es el lado inverso y <b>no lleva cascada</b>: borrar un curso no debe arrastrar las matrículas por accidente.</p>
+<pre data-f="entity/Curso.java">package com.academia.babel.entity;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.academia.babel.enums.Idioma;
+import com.academia.babel.enums.Nivel;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "cursos")
+public class Curso {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_curso")
+    private Long id;
+
+    @Column(nullable = false)
+    private String titulo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Idioma idioma;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 2)
+    private Nivel nivel;
+
+    @Column(nullable = false, precision = 8, scale = 2)
+    private BigDecimal precio;
+
+    // Lado inverso, sin cascada
+    @OneToMany(mappedBy = "curso")
+    private List&lt;Matricula&gt; matriculas = new ArrayList&lt;&gt;();
+
+    public Curso() {}
+
+    public Curso(String titulo, Idioma idioma, Nivel nivel, BigDecimal precio) {
+        this.titulo = titulo;
+        this.idioma = idioma;
+        this.nivel = nivel;
+        this.precio = precio;
+    }
+
+    public Long getId() { return id; }
+    public String getTitulo() { return titulo; }
+    public Idioma getIdioma() { return idioma; }
+    public Nivel getNivel() { return nivel; }
+    public BigDecimal getPrecio() { return precio; }
+    public List&lt;Matricula&gt; getMatriculas() { return matriculas; }
+}</pre>
+
+<p class="paso"><b>9.</b> <code>Matricula</code> es la entidad que representa la relación N:M con datos. Tiene dos <code>@ManyToOne</code> (propietaria de ambas claves foráneas). Fíjate en que <code>nota</code> es un <code>Double</code> y no un <code>double</code>, porque tiene que poder valer <code>null</code>.</p>
+<pre data-f="entity/Matricula.java">package com.academia.babel.entity;
+
+import java.time.LocalDate;
+
+import com.academia.babel.enums.EstadoMatricula;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "matriculas")
+public class Matricula {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_matricula")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_alumno", nullable = false)
+    private Alumno alumno;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_curso", nullable = false)
+    private Curso curso;
+
+    @Column(nullable = false)
+    private LocalDate fecha;
+
+    // Double (con mayúscula) porque puede ser nula: al matricularse todavía no hay nota
+    private Double nota;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private EstadoMatricula estado;
+
+    private boolean pagada;
+
+    public Matricula() {}
+
+    // El alumno no va aquí: se asigna con alumno.addMatricula(...)
+    public Matricula(Curso curso, LocalDate fecha, EstadoMatricula estado, boolean pagada) {
+        this.curso = curso;
+        this.fecha = fecha;
+        this.estado = estado;
+        this.pagada = pagada;
+    }
+
+    public Long getId() { return id; }
+    public Alumno getAlumno() { return alumno; }
+    public void setAlumno(Alumno alumno) { this.alumno = alumno; }
+    public Curso getCurso() { return curso; }
+    public LocalDate getFecha() { return fecha; }
+    public Double getNota() { return nota; }
+    public EstadoMatricula getEstado() { return estado; }
+    public boolean isPagada() { return pagada; }
+}</pre>
+
+<p class="paso"><b>10.</b> Respuestas:</p>
+<ul>
+<li><b>a)</b> Porque la relación <b>tiene datos propios</b> (fecha, nota, estado y si está pagada). Un <code>@ManyToMany</code> directo solo crea una tabla intermedia con dos ids y no puede guardar nada más. Con <code>Matricula</code> la relación pasa a ser dos <code>@ManyToOne</code> y la tabla intermedia se convierte en una entidad con sus propias columnas.</li>
+<li><b>b)</b> Las claves foráneas: <code>profesores.id_academia</code>, <code>alumnos.id_expediente</code>, <code>matriculas.id_alumno</code> y <code>matriculas.id_curso</code>. <b>Siempre está en el lado propietario</b> (el que lleva <code>@JoinColumn</code>); el lado con <code>mappedBy</code> no tiene columna.</li>
+<li><b>c)</b> Con <code>EAGER</code>, al cargar 100 matrículas Hibernate carga también el alumno y el curso de cada una, aunque no los necesites. Pueden dispararse muchas consultas de más. Con <code>LAZY</code>, solo se cargan cuando se piden.</li>
+</ul>
+
+<h3>Parte 2: repositorios y consultas</h3>
+
+<p class="paso"><b>11 y 12.</b> Cada repositorio es una interfaz que extiende <code>JpaRepository&lt;Entidad, Long&gt;</code>. Estos son los de profesores y academias:</p>
+<pre data-f="repository/IAcademiaRepository.java">package com.academia.babel.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.academia.babel.entity.Academia;
+
+public interface IAcademiaRepository extends JpaRepository&lt;Academia, Long&gt; {
+}</pre>
+<pre data-f="repository/IProfesorRepository.java">package com.academia.babel.repository;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.academia.babel.entity.Profesor;
+import com.academia.babel.enums.Idioma;
+
+public interface IProfesorRepository extends JpaRepository&lt;Profesor, Long&gt; {
+
+    // a) Profesores de un idioma
+    List&lt;Profesor&gt; findByIdioma(Idioma idioma);
+
+    // b) Activos de una academia: "AcademiaId" navega por profesor.academia.id
+    List&lt;Profesor&gt; findByAcademiaIdAndActivoTrue(Long academiaId);
+
+    // c) Salario mayor que X, de mayor a menor
+    List&lt;Profesor&gt; findBySalarioHoraGreaterThanOrderBySalarioHoraDesc(BigDecimal salario);
+
+    // d) Cuántos profesores tiene cada academia: cada fila es [nombre de la academia, cantidad]
+    @Query("SELECT a.nombre, COUNT(p) FROM Profesor p JOIN p.academia a GROUP BY a.id, a.nombre")
+    List&lt;Object[]&gt; contarPorAcademia();
+
+    // Lo usa el servicio para impedir borrar una academia con profesores
+    long countByAcademiaId(Long academiaId);
+}</pre>
+
+<p class="paso"><b>13.</b> Matrículas:</p>
+<pre data-f="repository/IMatriculaRepository.java">package com.academia.babel.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.academia.babel.entity.Matricula;
+import com.academia.babel.enums.EstadoMatricula;
+
+public interface IMatriculaRepository extends JpaRepository&lt;Matricula, Long&gt; {
+
+    // a) De un alumno, de la más reciente a la más antigua
+    List&lt;Matricula&gt; findByAlumnoIdOrderByFechaDesc(Long alumnoId);
+
+    // b) Nota media de un curso. AVG ignora las notas nulas, que es lo que pide el enunciado
+    @Query("SELECT AVG(m.nota) FROM Matricula m WHERE m.curso.id = :cursoId")
+    Double notaMedia(@Param("cursoId") Long cursoId);
+
+    // c) Activas sin pagar: findByEstadoAndPagadaFalse(EstadoMatricula.ACTIVA)
+    List&lt;Matricula&gt; findByEstadoAndPagadaFalse(EstadoMatricula estado);
+
+    // Los usa el servicio
+    boolean existsByAlumnoIdAndCursoIdAndEstado(Long alumnoId, Long cursoId, EstadoMatricula estado);
+
+    long countByAlumnoIdAndEstado(Long alumnoId, EstadoMatricula estado);
+}</pre>
+
+<p class="paso"><b>14.</b> Alumnos. La consulta de «matriculados en un curso» necesita <code>JOIN</code> (hay que pasar por <code>matriculas</code>) y <code>DISTINCT</code> (un alumno podría aparecer repetido). El filtro por nivel navega <code>alumno → expediente → nivelInicial</code>, y Spring lo entiende solo por el nombre.</p>
+<pre data-f="repository/IAlumnoRepository.java">package com.academia.babel.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.academia.babel.entity.Alumno;
+import com.academia.babel.enums.Nivel;
+
+public interface IAlumnoRepository extends JpaRepository&lt;Alumno, Long&gt; {
+
+    // Alumnos matriculados en un curso, sin repetidos
+    @Query("SELECT DISTINCT a FROM Alumno a JOIN a.matriculas m WHERE m.curso.id = :cursoId")
+    List&lt;Alumno&gt; buscarPorCurso(@Param("cursoId") Long cursoId);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByExpedienteNumeroMatricula(String numeroMatricula);
+
+    // alumno.expediente.nivelInicial
+    List&lt;Alumno&gt; findByExpedienteNivelInicial(Nivel nivel);
+}</pre>
+
+<p class="paso"><b>15.</b> Cursos:</p>
+<pre data-f="repository/ICursoRepository.java">package com.academia.babel.repository;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.academia.babel.entity.Curso;
+import com.academia.babel.enums.Idioma;
+import com.academia.babel.enums.Nivel;
+
+public interface ICursoRepository extends JpaRepository&lt;Curso, Long&gt; {
+
+    List&lt;Curso&gt; findByIdiomaAndNivel(Idioma idioma, Nivel nivel);
+
+    // "no supera" significa menor o igual
+    List&lt;Curso&gt; findByPrecioLessThanEqual(BigDecimal precio);
+}</pre>
+
+<h3>Parte 3: datos iniciales</h3>
+
+<p class="paso"><b>16.</b> En <code>application.properties</code> (además de la conexión a MySQL de siempre):</p>
+<pre data-f="src/main/resources/application.properties (añadir)">spring.jpa.hibernate.ddl-auto=create-drop
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true</pre>
+<p>Y el <code>data.sql</code>. <b>El orden importa:</b> primero lo que otros van a apuntar (academias, expedientes, cursos) y después lo que apunta (profesores, alumnos, matrículas). Los nombres de columna son los de las anotaciones.</p>
+<pre data-f="src/main/resources/data.sql">INSERT INTO academias (id_academia, nombre, ciudad)
+VALUES (1, 'Babel Madrid', 'Madrid'),
+       (2, 'Babel Sevilla', 'Sevilla');
+
+INSERT INTO profesores (id_profesor, nombre, salario_hora, idioma, activo, id_academia)
+VALUES (1, 'Helen Clarke', 28.50, 'INGLES', true, 1),
+       (2, 'Pierre Dubois', 26.00, 'FRANCES', true, 1),
+       (3, 'Anke Vogel', 30.00, 'ALEMAN', false, 2),
+       (4, 'Giulia Rossi', 25.00, 'ITALIANO', true, 2);
+
+INSERT INTO expedientes (id_expediente, numero_matricula, nivel_inicial, observaciones)
+VALUES (1, 'AL-0001', 'A1', NULL),
+       (2, 'AL-0002', 'B1', 'Necesita reforzar la expresión oral'),
+       (3, 'AL-0003', 'B2', NULL);
+
+INSERT INTO alumnos (id_alumno, nombre, email, fecha_nacimiento, id_expediente)
+VALUES (1, 'Lucía Pérez', 'lucia@mail.com', '2000-05-14', 1),
+       (2, 'Marcos Ruiz', 'marcos@mail.com', '1998-11-02', 2),
+       (3, 'Sara Gómez', 'sara@mail.com', '2003-02-27', 3);
+
+INSERT INTO cursos (id_curso, titulo, idioma, nivel, precio)
+VALUES (1, 'Inglés conversación', 'INGLES', 'B1', 250.00),
+       (2, 'Francés inicial', 'FRANCES', 'A1', 180.00),
+       (3, 'Alemán intensivo', 'ALEMAN', 'A2', 320.00),
+       (4, 'Inglés avanzado', 'INGLES', 'C1', 300.00);
+
+INSERT INTO matriculas (id_matricula, id_alumno, id_curso, fecha, nota, estado, pagada)
+VALUES (1, 1, 2, '2026-09-15', NULL, 'ACTIVA', true),
+       (2, 1, 1, '2026-09-20', 7.5, 'FINALIZADA', true),
+       (3, 2, 1, '2026-09-18', 8.0, 'FINALIZADA', true),
+       (4, 2, 3, '2026-10-01', NULL, 'ABANDONADA', false),
+       (5, 3, 4, '2026-10-05', NULL, 'ACTIVA', false);</pre>
+<div class="ok">Se cumple lo que pedía el enunciado: <b>Lucía</b> está en dos cursos (matrículas 1 y 2), el <b>curso 1</b> tiene dos alumnos (Lucía y Marcos), la matrícula 4 está <code>ABANDONADA</code> y varias tienen la nota nula.</div>
+
+<p class="paso"><b>17.</b> La clase principal, con el <code>run()</code> que crea un alumno nuevo y lo matricula:</p>
+<pre data-f="BabelApplication.java">package com.academia.babel;
+
+import java.time.LocalDate;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import com.academia.babel.entity.Alumno;
+import com.academia.babel.entity.Curso;
+import com.academia.babel.entity.Expediente;
+import com.academia.babel.entity.Matricula;
+import com.academia.babel.enums.EstadoMatricula;
+import com.academia.babel.enums.Nivel;
+import com.academia.babel.repository.IAlumnoRepository;
+import com.academia.babel.repository.ICursoRepository;
+
+@SpringBootApplication
+public class BabelApplication implements CommandLineRunner {
+
+    @Autowired
+    private IAlumnoRepository alumnoRepository;
+
+    @Autowired
+    private ICursoRepository cursoRepository;
+
+    public static void main(String[] args) {
+        SpringApplication.run(BabelApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) {
+        // 1) El curso ya existe (lo cargó data.sql): solo hay que buscarlo
+        Curso curso = cursoRepository.findById(1L).orElseThrow();
+
+        // 2) El expediente se crea primero porque el constructor de Alumno lo exige
+        Expediente expediente = new Expediente("AL-0004", Nivel.A2, null);
+        Alumno alumno = new Alumno("Pablo León", "pablo@mail.com", LocalDate.of(2001, 3, 9), expediente);
+
+        // 3) La matrícula se cuelga del alumno
+        alumno.addMatricula(new Matricula(curso, LocalDate.now(), EstadoMatricula.ACTIVA, false));
+
+        // 4) Un solo save: la cascada guarda el expediente y la matrícula
+        alumnoRepository.save(alumno);
+        System.out.println("Alumno guardado con id " + alumno.getId());
+    }
+}</pre>
+<p><b>Por qué este orden:</b> el curso tiene que existir antes, porque la matrícula apunta a él. El expediente se crea antes que el alumno porque el constructor lo exige. Y gracias a <code>cascade = ALL</code>, un solo <code>save(alumno)</code> inserta el expediente (primero, porque el alumno tiene su clave foránea), el alumno y, por último, la matrícula, que necesita el id del alumno.</p>
+
+<h3>Parte 4: API REST por capas</h3>
+
+<p class="paso"><b>18.</b> Los DTO, como <code>record</code>. Los de entrada llevan validaciones; los de salida, no. <b>Wrapper o primitivo:</b> <code>nota</code> es <code>Double</code> porque puede ser nula; <code>cursoId</code> es <code>Long</code> con <code>@NotNull</code>, para detectar que no se envió (con un <code>long</code>, un olvido se convertiría en un <code>0</code> sin avisar).</p>
+<pre data-f="dto/AlumnoRequestDTO.java">package com.academia.babel.dto;
+
+import java.time.LocalDate;
+
+import com.academia.babel.enums.Nivel;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
+
+public record AlumnoRequestDTO(
+        @NotBlank(message = "El nombre es obligatorio") String nombre,
+        @NotBlank(message = "El email es obligatorio") @Email(message = "El email no tiene un formato válido") String email,
+        @NotNull(message = "La fecha de nacimiento es obligatoria") @Past(message = "La fecha de nacimiento debe estar en el pasado") LocalDate fechaNacimiento,
+        @NotBlank(message = "El número de matrícula es obligatorio")
+        @Pattern(regexp = "^AL-\\d{4}$", message = "El número de matrícula debe ser AL- y 4 cifras") String numeroMatricula,
+        @NotNull(message = "El nivel inicial es obligatorio") Nivel nivelInicial) {
+}</pre>
+<pre data-f="dto/MatriculaRequestDTO.java">package com.academia.babel.dto;
+
+import java.time.LocalDate;
+
+import jakarta.validation.constraints.NotNull;
+
+public record MatriculaRequestDTO(
+        @NotNull(message = "El curso es obligatorio") Long cursoId,
+        @NotNull(message = "La fecha es obligatoria") LocalDate fecha) {
+}</pre>
+<pre data-f="dto/MatriculaResumenDTO.java">package com.academia.babel.dto;
+
+import java.time.LocalDate;
+
+import com.academia.babel.enums.EstadoMatricula;
+
+/** Pieza anidada: solo lo necesario de una matrícula, sin volver al alumno (así no hay bucles). */
+public record MatriculaResumenDTO(String tituloCurso, LocalDate fecha, EstadoMatricula estado, Double nota) {
+}</pre>
+<pre data-f="dto/AlumnoResponseDTO.java">package com.academia.babel.dto;
+
+import java.util.List;
+
+import com.academia.babel.enums.Nivel;
+
+public record AlumnoResponseDTO(
+        Long id,
+        String nombre,
+        String email,
+        String numeroMatricula,
+        Nivel nivelInicial,
+        List&lt;MatriculaResumenDTO&gt; matriculas) {
+}</pre>
+
+<p class="paso"><b>19.</b> <b>El servicio.</b> Para comunicar los resultados al controlador uso <b>excepciones propias</b>: <code>NoEncontradoException</code> (→ 404) y <code>ConflictoException</code> (→ 409). Un <code>@RestControllerAdvice</code> las traduce a código HTTP en un solo sitio, y el controlador queda limpio. Es la segunda forma de la guía (la otra es devolver <code>Optional</code>, <code>int</code> o <code>boolean</code>); las dos valen.</p>
+<pre data-f="exception/NoEncontradoException.java">package com.academia.babel.exception;
+
+public class NoEncontradoException extends RuntimeException {
+    public NoEncontradoException(String mensaje) {
+        super(mensaje);
+    }
+}</pre>
+<pre data-f="exception/ConflictoException.java">package com.academia.babel.exception;
+
+public class ConflictoException extends RuntimeException {
+    public ConflictoException(String mensaje) {
+        super(mensaje);
+    }
+}</pre>
+<pre data-f="exception/ManejadorErrores.java">package com.academia.babel.exception;
+
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class ManejadorErrores {
+
+    @ExceptionHandler(NoEncontradoException.class)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; noEncontrado(NoEncontradoException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
+    }
+
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; conflicto(ConflictoException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("mensaje", e.getMessage()));
+    }
+}</pre>
+<p>El contrato del servicio solo habla de DTO:</p>
+<pre data-f="service/IAlumnoService.java">package com.academia.babel.service;
+
+import java.util.List;
+
+import com.academia.babel.dto.AlumnoRequestDTO;
+import com.academia.babel.dto.AlumnoResponseDTO;
+import com.academia.babel.dto.MatriculaRequestDTO;
+import com.academia.babel.enums.Nivel;
+
+public interface IAlumnoService {
+
+    AlumnoResponseDTO crear(AlumnoRequestDTO dto);
+
+    AlumnoResponseDTO obtenerPorId(Long id);
+
+    List&lt;AlumnoResponseDTO&gt; listarPorNivel(Nivel nivel);
+
+    AlumnoResponseDTO matricular(Long alumnoId, MatriculaRequestDTO dto);
+
+    void eliminar(Long id);
+}</pre>
+<p>Y la implementación. Cada método que lee relaciones perezosas va con <code>@Transactional(readOnly = true)</code>, y la conversión a DTO se hace <b>dentro</b> del servicio:</p>
+<pre data-f="service/impl/AlumnoServiceImpl.java">package com.academia.babel.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.academia.babel.dto.AlumnoRequestDTO;
+import com.academia.babel.dto.AlumnoResponseDTO;
+import com.academia.babel.dto.MatriculaRequestDTO;
+import com.academia.babel.dto.MatriculaResumenDTO;
+import com.academia.babel.entity.Alumno;
+import com.academia.babel.entity.Curso;
+import com.academia.babel.entity.Expediente;
+import com.academia.babel.entity.Matricula;
+import com.academia.babel.enums.EstadoMatricula;
+import com.academia.babel.enums.Nivel;
+import com.academia.babel.exception.ConflictoException;
+import com.academia.babel.exception.NoEncontradoException;
+import com.academia.babel.repository.IAlumnoRepository;
+import com.academia.babel.repository.ICursoRepository;
+import com.academia.babel.repository.IMatriculaRepository;
+import com.academia.babel.service.IAlumnoService;
+
+@Service
+public class AlumnoServiceImpl implements IAlumnoService {
+
+    @Autowired
+    private IAlumnoRepository alumnoRepository;
+
+    @Autowired
+    private ICursoRepository cursoRepository;
+
+    @Autowired
+    private IMatriculaRepository matriculaRepository;
+
+    @Override
+    @Transactional
+    public AlumnoResponseDTO crear(AlumnoRequestDTO dto) {
+        if (alumnoRepository.existsByEmail(dto.email())) {
+            throw new ConflictoException("Ya existe un alumno con ese email");
+        }
+        if (alumnoRepository.existsByExpedienteNumeroMatricula(dto.numeroMatricula())) {
+            throw new ConflictoException("Ya existe un alumno con ese número de matrícula");
+        }
+        // DTO -&gt; Entity: el expediente se crea primero porque el constructor de Alumno lo exige
+        Expediente expediente = new Expediente(dto.numeroMatricula(), dto.nivelInicial(), null);
+        Alumno alumno = new Alumno(dto.nombre(), dto.email(), dto.fechaNacimiento(), expediente);
+        return mapearADTO(alumnoRepository.save(alumno));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AlumnoResponseDTO obtenerPorId(Long id) {
+        return mapearADTO(buscarAlumno(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;AlumnoResponseDTO&gt; listarPorNivel(Nivel nivel) {
+        List&lt;AlumnoResponseDTO&gt; lista = new ArrayList&lt;&gt;();
+        for (Alumno a : alumnoRepository.findByExpedienteNivelInicial(nivel)) {
+            lista.add(mapearADTO(a));
+        }
+        return lista;
+    }
+
+    @Override
+    @Transactional
+    public AlumnoResponseDTO matricular(Long alumnoId, MatriculaRequestDTO dto) {
+        Alumno alumno = buscarAlumno(alumnoId);
+        Curso curso = cursoRepository.findById(dto.cursoId())
+                .orElseThrow(() -&gt; new NoEncontradoException("No existe el curso " + dto.cursoId()));
+        if (matriculaRepository.existsByAlumnoIdAndCursoIdAndEstado(alumnoId, dto.cursoId(), EstadoMatricula.ACTIVA)) {
+            throw new ConflictoException("El alumno ya tiene una matrícula activa en ese curso");
+        }
+        Matricula matricula = new Matricula(curso, dto.fecha(), EstadoMatricula.ACTIVA, false);
+        alumno.addMatricula(matricula);
+        matriculaRepository.save(matricula);
+        return mapearADTO(alumno);
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Alumno alumno = buscarAlumno(id);
+        if (matriculaRepository.countByAlumnoIdAndEstado(id, EstadoMatricula.ACTIVA) &gt; 0) {
+            throw new ConflictoException("El alumno tiene matrículas activas");
+        }
+        alumnoRepository.delete(alumno);   // la cascada borra su expediente y sus matrículas
+    }
+
+    private Alumno buscarAlumno(Long id) {
+        return alumnoRepository.findById(id)
+                .orElseThrow(() -&gt; new NoEncontradoException("No existe el alumno " + id));
+    }
+
+    // Entity -&gt; DTO (recorre las matrículas, que son LAZY: por eso se hace dentro de la transacción)
+    private AlumnoResponseDTO mapearADTO(Alumno a) {
+        List&lt;MatriculaResumenDTO&gt; matriculas = new ArrayList&lt;&gt;();
+        for (Matricula m : a.getMatriculas()) {
+            matriculas.add(new MatriculaResumenDTO(m.getCurso().getTitulo(), m.getFecha(), m.getEstado(), m.getNota()));
+        }
+        return new AlumnoResponseDTO(a.getId(), a.getNombre(), a.getEmail(),
+                a.getExpediente().getNumeroMatricula(), a.getExpediente().getNivelInicial(), matriculas);
+    }
+}</pre>
+<p><b>Cómo comunica cada resultado:</b> el email repetido y la matrícula activa repetida lanzan <code>ConflictoException</code> (409); el alumno o el curso que no existen lanzan <code>NoEncontradoException</code> (404); borrar con matrículas activas lanza <code>ConflictoException</code> (409). Una lista vacía no es error: se devuelve vacía (200).</p>
+
+<p class="paso"><b>20.</b> <b>El controlador.</b> Solo conoce el <code>IAlumnoService</code> y los DTO. No tiene lógica ni <code>try/catch</code>: las excepciones las recoge el <code>@RestControllerAdvice</code>.</p>
+<pre data-f="controller/AlumnoController.java">package com.academia.babel.controller;
+
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import com.academia.babel.dto.AlumnoRequestDTO;
+import com.academia.babel.dto.AlumnoResponseDTO;
+import com.academia.babel.dto.MatriculaRequestDTO;
+import com.academia.babel.enums.Nivel;
+import com.academia.babel.service.IAlumnoService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/alumnos")
+public class AlumnoController {
+
+    @Autowired
+    private IAlumnoService alumnoService;
+
+    // POST /api/alumnos -&gt; 201 + Location | 400 (@Valid) | 409 (email o matrícula repetidos)
+    @PostMapping
+    public ResponseEntity&lt;AlumnoResponseDTO&gt; crear(@Valid @RequestBody AlumnoRequestDTO dto) {
+        AlumnoResponseDTO creado = alumnoService.crear(dto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(creado.id()).toUri();
+        return ResponseEntity.created(location).body(creado);
+    }
+
+    // GET /api/alumnos/{id} -&gt; 200 | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;AlumnoResponseDTO&gt; obtener(@PathVariable Long id) {
+        return ResponseEntity.ok(alumnoService.obtenerPorId(id));
+    }
+
+    // GET /api/alumnos?nivel=B1 -&gt; 200 (lista, puede estar vacía) | 400 si falta o no es un nivel válido
+    @GetMapping
+    public ResponseEntity&lt;List&lt;AlumnoResponseDTO&gt;&gt; listarPorNivel(@RequestParam Nivel nivel) {
+        return ResponseEntity.ok(alumnoService.listarPorNivel(nivel));
+    }
+
+    // POST /api/alumnos/{id}/matriculas -&gt; 201 | 400 | 404 (alumno o curso) | 409 (ya matriculado)
+    @PostMapping("/{id}/matriculas")
+    public ResponseEntity&lt;AlumnoResponseDTO&gt; matricular(@PathVariable Long id,
+            @Valid @RequestBody MatriculaRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(alumnoService.matricular(id, dto));
+    }
+
+    // DELETE /api/alumnos/{id} -&gt; 204 | 404 | 409 (matrículas activas)
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        alumnoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+}</pre>
+<table>
+<tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
+<tr><td><code>POST /api/alumnos</code></td><td><b>201</b> y <code>Location</code></td><td><b>400</b> datos inválidos · <b>409</b> email o matrícula ya existentes</td></tr>
+<tr><td><code>GET /api/alumnos/{id}</code></td><td><b>200</b></td><td><b>404</b></td></tr>
+<tr><td><code>GET /api/alumnos?nivel=</code></td><td><b>200</b> (puede ser lista vacía)</td><td><b>400</b> si el nivel falta o no existe</td></tr>
+<tr><td><code>POST /api/alumnos/{id}/matriculas</code></td><td><b>201</b></td><td><b>400</b> cuerpo inválido · <b>404</b> alumno o curso inexistente · <b>409</b> ya tiene esa matrícula activa</td></tr>
+<tr><td><code>DELETE /api/alumnos/{id}</code></td><td><b>204</b></td><td><b>404</b> · <b>409</b> si tiene matrículas activas</td></tr>
+</table>
+
+<p class="paso"><b>21.</b> <b>Postman.</b> En todas las peticiones con cuerpo: pestaña <b>Body</b> → <b>raw</b> → desplegable <b>JSON</b>. Si te olvidas y lo dejas en <i>Text</i>, no viaja <code>Content-Type: application/json</code> y el servidor responde <b>415</b>.</p>
+<ul>
+<li><b>a)</b> Crear un alumno (<code>POST /api/alumnos</code>). Las claves son los campos del <code>record</code>, con el mismo nombre; no hay <code>id</code> (lo pone MySQL) ni objeto «expediente» (el DTO es plano; el servicio lo crea); la fecha va como texto <code>yyyy-MM-dd</code> y el nivel como el texto exacto del enum:
+<pre data-f="Body de POST /api/alumnos">{
+    "nombre": "Irene Soto",
+    "email": "irene@mail.com",
+    "fechaNacimiento": "2002-07-21",
+    "numeroMatricula": "AL-0005",
+    "nivelInicial": "B1"
+}</pre></li>
+<li><b>b)</b> Un <b>400</b> por el email (no tiene formato de correo) y otro por el número de matrícula (no cumple el patrón <code>AL-</code> y 4 cifras):
+<pre data-f="400 por el email">{
+    "nombre": "Irene Soto",
+    "email": "esto-no-es-un-email",
+    "fechaNacimiento": "2002-07-21",
+    "numeroMatricula": "AL-0006",
+    "nivelInicial": "B1"
+}</pre>
+<pre data-f="400 por el número de matrícula">{
+    "nombre": "Irene Soto",
+    "email": "otra@mail.com",
+    "fechaNacimiento": "2002-07-21",
+    "numeroMatricula": "AL-12",
+    "nivelInicial": "B1"
+}</pre></li>
+<li><b>c)</b> Matricular (<code>POST /api/alumnos/1/matriculas</code>). El alumno va en la dirección y el curso, en el cuerpo:
+<pre data-f="Body de POST /api/alumnos/1/matriculas">{
+    "cursoId": 3,
+    "fecha": "2026-11-20"
+}</pre></li>
+<li><b>d)</b> Lo que hay que marcar es <b>Body → raw → JSON</b>. Sin eso, el error es <b>415 Unsupported Media Type</b>.</li>
+</ul>
+
+<h3>Parte 5: preguntas de comprensión</h3>
+
+<p class="paso"><b>22.</b> <b>LazyInitializationException.</b> Ocurre al leer una relación <code>LAZY</code> (aquí, las matrículas del alumno o el curso de cada matrícula) <b>cuando la sesión de Hibernate ya se ha cerrado</b>: por ejemplo, si el servicio devuelve la entidad y es el controlador quien intenta recorrerla. Se evita convirtiendo a DTO <b>dentro</b> del servicio y anotándolo con <code>@Transactional</code> (<code>readOnly = true</code> si solo lee), para que la sesión siga abierta mientras se recorren las relaciones.</p>
+
+<p class="paso"><b>23.</b> <b>El problema N+1.</b> Una consulta trae los 50 alumnos y después, al recorrer las matrículas de cada uno, Hibernate lanza <b>otra consulta por alumno</b> (y otra más por cada curso): 1 + N. Dos soluciones: un <code>JOIN FETCH</code> en la consulta, o <code>@EntityGraph</code> sobre el método del repositorio. Por ejemplo:</p>
+<pre data-f="repository/IAlumnoRepository.java (solución al N+1)">@Query("SELECT DISTINCT a FROM Alumno a "
+     + "LEFT JOIN FETCH a.matriculas m LEFT JOIN FETCH m.curso "
+     + "JOIN FETCH a.expediente")
+List&lt;Alumno&gt; listarConMatriculas();
+
+@EntityGraph(attributePaths = {"expediente", "matriculas", "matriculas.curso"})
+List&lt;Alumno&gt; findByExpedienteNivelInicial(Nivel nivel);</pre>
+
+<p class="paso"><b>24.</b> <b>El constructor de <code>Alumno</code> exige el expediente.</b> La relación es obligatoria: un alumno sin expediente no puede guardarse. Si se asignara después con un <i>setter</i>, nada impediría olvidarlo, y el fallo solo aparecería al ejecutar y guardar (con un error de base de datos). Con el constructor, el compilador no deja crear un alumno incompleto: el error sale antes, y en rojo, en el editor. El constructor vacío existe solo porque JPA lo necesita al leer filas.</p>
+
+<p class="paso"><b>25.</b> <b>Borrar una academia con profesores.</b> El 500 viene de la base de datos (violación de clave foránea: los profesores siguen apuntando a ella). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa en el servicio, igual que con las matrículas activas:</p>
+<pre data-f="AcademiaServiceImpl.eliminar (idea)">if (profesorRepository.countByAcademiaId(id) &gt; 0) {
+    throw new ConflictoException("La academia tiene profesores");
+}
+academiaRepository.deleteById(id);</pre>
+
+<p class="paso"><b>26.</b> <b>El esquema de tablas.</b> Las claves foráneas (FK) están siempre en el lado propietario:</p>
+<pre data-f="esquema de tablas">academias    (id_academia PK, nombre, ciudad)
+profesores   (id_profesor PK, nombre, salario_hora, idioma, activo,
+              id_academia FK -&gt; academias)                    1:N
+expedientes  (id_expediente PK, numero_matricula UNIQUE, nivel_inicial, observaciones)
+alumnos      (id_alumno PK, nombre, email UNIQUE, fecha_nacimiento,
+              id_expediente FK UNIQUE -&gt; expedientes)          1:1
+cursos       (id_curso PK, titulo, idioma, nivel, precio)
+matriculas   (id_matricula PK, fecha, nota, estado, pagada,
+              id_alumno FK -&gt; alumnos,                         N:M con datos:
+              id_curso  FK -&gt; cursos)                          dos 1:N hacia Matricula</pre>
+<div class="why"><b>Cómo corregirte.</b> Parte 1 (3 puntos): enums, columnas y restricciones bien, la FK en <code>Profesor</code>, <code>mappedBy</code> en <code>Academia</code>, el constructor de <code>Alumno</code> con el expediente y <code>Matricula</code> con sus dos <code>@ManyToOne</code>. Parte 4 (3 puntos): los DTO con sus validaciones, la conversión solo en el servicio, el controlador sin lógica y los códigos 201, 200, 204, 400, 404 y 409 bien elegidos. Si fallaste en lo de las relaciones, repasa los pasos 11 a 13; si fue en la API, los pasos 18 y 19.</div>
+  <nav class="nav pie"><a href="#ejercicio-1">← Volver al enunciado</a> <a href="#">← Todos los ejercicios</a></nav>
+</section>
+
+<section class="panel" id="ejercicio-2">
+  <nav class="nav"><a href="#">← Todos los ejercicios</a> <a href="#solucion-2">Ir al solucionario →</a></nav>
+  <header><p class="n">EJERCICIO 2 · ENUNCIADO</p><h2>El hospital «San Gabriel»</h2></header>
+<p>Un examen de práctica completo. Haz el proyecto <b>sin mirar la solución</b> y, cuando termines, compara. Todo lo que no diga el enunciado, decídelo tú y justifícalo.</p>
+
+<table>
+<tr><th>Ficha del ejercicio</th><th></th></tr>
+<tr><td>Proyecto</td><td>Spring Boot + Spring Data JPA + MySQL</td></tr>
+<tr><td>Paquete base</td><td><code>com.hospital.examen</code>, con los subpaquetes <code>entity</code>, <code>enums</code>, <code>repository</code>, <code>dto</code>, <code>service</code> y <code>controller</code></td></tr>
+<tr><td>Puntuación</td><td>Parte 1: 3 · Parte 2: 1,5 · Parte 3: 1 · Parte 4: 3 · Parte 5: 1,5</td></tr>
+</table>
+
+<h3>Parte 1: entidades y relaciones (3 puntos)</h3>
+<p class="paso"><b>1.</b> Crea el enum <code>Especialidad</code> con los valores <code>CARDIOLOGIA</code>, <code>PEDIATRIA</code>, <code>TRAUMATOLOGIA</code> y <code>NEUROLOGIA</code>. Crea también el enum <code>TipoConsulta</code> con <code>PRESENCIAL</code>, <code>URGENCIA</code> y <code>TELEMATICA</code>.</p>
+<p class="paso"><b>2.</b> Crea la entidad <code>Hospital</code>, con tabla <code>hospitales</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada, columna <code>id_hospital</code>)</li>
+<li><code>nombre</code> (obligatorio, máximo 80 caracteres)</li>
+<li><code>ciudad</code> (obligatoria)</li>
+</ul>
+<p class="paso"><b>3.</b> Crea la entidad <code>Medico</code>, con tabla <code>medicos</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada, columna <code>id_medico</code>)</li>
+<li><code>nombre</code> (obligatorio)</li>
+<li><code>salario</code> (<code>BigDecimal</code>, precisión 10 y escala 2, obligatorio)</li>
+<li><code>especialidad</code> (el enum, guardado como texto, obligatorio)</li>
+<li><code>activo</code> (<code>boolean</code>)</li>
+</ul>
+<p class="paso"><b>4.</b> Crea la entidad <code>Paciente</code>, con tabla <code>pacientes</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada, columna <code>id_paciente</code>)</li>
+<li><code>nombre</code> (obligatorio)</li>
+<li><code>fechaNacimiento</code> (<code>LocalDate</code>, obligatoria)</li>
+</ul>
+<p class="paso"><b>5.</b> Crea la entidad <code>HistorialClinico</code>, con tabla <code>historiales</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada)</li>
+<li><code>numeroHistorial</code> (obligatorio y único)</li>
+<li><code>grupoSanguineo</code> (obligatorio, máximo 3 caracteres)</li>
+<li><code>alergias</code> (texto, puede ser nulo)</li>
+</ul>
+<p class="paso"><b>6.</b> Haz una <b>relación bidireccional uno a muchos</b> entre <code>Hospital</code> y <code>Medico</code>:</p>
+<ul>
+<li>El propietario de la relación es <code>Medico</code>, con la columna <code>id_hospital</code>, obligatoria.</li>
+<li>Al borrar un hospital <b>no</b> deben borrarse sus médicos.</li>
+<li>Inicializa la lista y escribe un método de ayuda <code>addMedico</code> que mantenga sincronizados los dos lados.</li>
+</ul>
+<p class="paso"><b>7.</b> Haz una <b>relación uno a uno unidireccional</b> entre <code>Paciente</code> e <code>HistorialClinico</code>:</p>
+<ul>
+<li>El propietario es <code>Paciente</code>, con la columna <code>id_historial</code>, obligatoria y única.</li>
+<li>Al guardar un paciente debe guardarse su historial, y al borrarlo, también.</li>
+<li>Explica con tus palabras qué hace <code>optional = false</code> y qué haría <code>unique = true</code>.</li>
+</ul>
+<p class="paso"><b>8.</b> Haz una <b>relación muchos a muchos con datos propios</b> entre <code>Medico</code> y <code>Paciente</code>, creando la entidad <code>Consulta</code>, con tabla <code>consultas</code>. Incluye:</p>
+<ul>
+<li><code>id</code></li>
+<li><code>medico</code> y <code>paciente</code>, con relaciones <code>@ManyToOne</code> obligatorias y carga perezosa</li>
+<li><code>fecha</code> (<code>LocalDateTime</code>, obligatoria)</li>
+<li><code>coste</code> (<code>BigDecimal</code>, obligatorio)</li>
+<li><code>tipo</code> (<code>TipoConsulta</code>, guardado como texto)</li>
+<li><code>seguimiento</code> (<code>boolean</code>)</li>
+</ul>
+<p>Añade en <code>Medico</code> y en <code>Paciente</code> las listas inversas de consultas con <code>mappedBy</code>. En <code>Paciente</code>, que las consultas se borren con él (<code>orphanRemoval</code>). En <code>Medico</code>, <b>sin</b> cascada.</p>
+<p class="paso"><b>9.</b> Responde brevemente:</p>
+<ul>
+<li>a) ¿Por qué <code>Consulta</code> es una entidad y no un <code>@ManyToMany</code> directo?</li>
+<li>b) ¿En qué tabla está cada clave foránea?</li>
+<li>c) ¿Qué pasaría si en <code>Hospital</code> pusieras <code>cascade = ALL</code> y borraras un hospital con médicos?</li>
+</ul>
+
+<h3>Parte 2: repositorios y consultas (1,5 puntos)</h3>
+<p class="paso"><b>10.</b> Crea los repositorios de las cuatro entidades principales y de <code>Consulta</code> (<code>JpaRepository</code>).</p>
+<p class="paso"><b>11.</b> En <code>MedicoRepository</code>, escribe estos métodos. Usa <i>derived queries</i> donde se pueda y <code>@Query</code> donde haga falta.</p>
+<ul>
+<li>a) Médicos de una especialidad dada.</li>
+<li>b) Médicos activos de un hospital (por el id del hospital).</li>
+<li>c) Médicos con salario mayor que una cantidad, ordenados de mayor a menor.</li>
+<li>d) Número de médicos de cada hospital (consulta JPQL con <code>GROUP BY</code>).</li>
+</ul>
+<p class="paso"><b>12.</b> En <code>ConsultaRepository</code>, escribe:</p>
+<ul>
+<li>a) Consultas de un paciente ordenadas por fecha descendente.</li>
+<li>b) Suma del coste de todas las consultas de un médico (<code>@Query</code> con <code>SUM</code>).</li>
+<li>c) Consultas de tipo <code>URGENCIA</code> con seguimiento activo.</li>
+</ul>
+<p class="paso"><b>13.</b> En <code>PacienteRepository</code>, escribe una consulta que devuelva los pacientes que han sido atendidos por un médico concreto, sin repetidos (<code>JOIN</code> y <code>DISTINCT</code>).</p>
+
+<h3>Parte 3: datos iniciales (1 punto)</h3>
+<p class="paso"><b>14.</b> Escribe un <code>data.sql</code> (o las instrucciones equivalentes en el <code>CommandLineRunner</code>) con:</p>
+<ul>
+<li>2 hospitales</li>
+<li>4 médicos repartidos entre ellos, con especialidades distintas</li>
+<li>3 pacientes, cada uno con su historial</li>
+<li>5 consultas, con al menos un médico que atienda a dos pacientes y un paciente atendido por dos médicos</li>
+</ul>
+<p>Respeta el orden de inserción y los textos exactos de los enums.</p>
+<p class="paso"><b>15.</b> Desde <code>run()</code>, crea y guarda un paciente nuevo con su historial y una consulta suya con un médico ya existente. Indica en qué orden guardas cada objeto y por qué.</p>
+
+<h3>Parte 4: API REST por capas (3 puntos)</h3>
+<p class="paso"><b>16.</b> <b>DTO.</b> Crea:</p>
+<ul>
+<li><code>MedicoRequestDTO</code>: <code>nombre</code>, <code>salario</code>, <code>especialidad</code>, <code>hospitalId</code>. Añade validaciones con <code>@Valid</code>: nombre no vacío, salario positivo y todos los campos obligatorios.</li>
+<li><code>MedicoResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>especialidad</code>, <code>nombreHospital</code>.</li>
+<li><code>ConsultaResumenDTO</code>: <code>fecha</code>, <code>nombreMedico</code>, <code>tipo</code>, <code>coste</code>.</li>
+<li><code>PacienteResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>numeroHistorial</code>, <code>grupoSanguineo</code> y una lista de <code>ConsultaResumenDTO</code>.</li>
+</ul>
+<p class="paso"><b>17.</b> Justifica por qué no devuelves directamente las entidades en el controlador. Da dos motivos (por ejemplo, la recursión infinita en las relaciones bidireccionales).</p>
+<p class="paso"><b>18.</b> <b>Servicio.</b> Crea la interfaz <code>IMedicoService</code> y su implementación <code>MedicoService</code>, con <code>@Autowired</code> en los repositorios necesarios. Implementa:</p>
+<ul>
+<li><code>crear(MedicoRequestDTO)</code>. Si no existe el hospital, lanza la excepción de «no encontrado».</li>
+<li><code>obtener(Long id)</code>.</li>
+<li><code>listarPorHospital(Long hospitalId)</code>. Si el hospital no existe, lanza «no encontrado». Una lista vacía es válida.</li>
+<li><code>eliminar(Long id)</code>. Si el médico tiene consultas, lanza una excepción de conflicto.</li>
+<li>Un método privado de conversión <code>Medico → MedicoResponseDTO</code>.</li>
+</ul>
+<p class="paso"><b>19.</b> <b>Controlador.</b> Crea <code>MedicoController</code> con estos endpoints. Indica el código HTTP de éxito y los de error.</p>
+<table>
+<tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
+<tr><td><code>POST /api/medicos</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/medicos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/medicos?hospitalId=</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>DELETE /api/medicos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+</table>
+<p>El <code>POST</code> debe devolver la cabecera <code>Location</code> con la URI del recurso creado.</p>
+<p class="paso"><b>20.</b> Crea un <code>@RestControllerAdvice</code> que transforme <code>NoEncontradoException</code> en 404, <code>ConflictoException</code> en 409 y los errores de validación en 400. Devuelve un cuerpo JSON con <code>mensaje</code> y <code>codigo</code>.</p>
+<p class="paso"><b>21.</b> Añade el endpoint <code>POST /api/pacientes/{id}/consultas</code>, que registra una consulta recibiendo <code>medicoId</code>, <code>fecha</code>, <code>coste</code> y <code>tipo</code>. Indica:</p>
+<ul>
+<li>a) qué entidades hay que buscar antes de crear la consulta,</li>
+<li>b) qué códigos devuelves si falta alguna,</li>
+<li>c) qué DTO devuelves como respuesta.</li>
+</ul>
+
+<h3>Parte 5: preguntas de comprensión (1,5 puntos)</h3>
+<p class="paso"><b>22.</b> Una petición <code>GET /api/pacientes/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo lo evitarías.</p>
+<p class="paso"><b>23.</b> Al serializar un <code>Hospital</code> con su lista de médicos, el JSON entra en un bucle infinito. Explica la causa y da dos soluciones.</p>
+<p class="paso"><b>24.</b> <code>DELETE /api/hospitales/1</code> devuelve 500 por una violación de clave foránea. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
+<p class="paso"><b>25.</b> Dibuja el esquema de tablas (con claves primarias y foráneas) que genera todo el modelo y marca dónde está cada clave foránea.</p>
+
+<div class="why">Intenta hacerlo tú primero y no abras el solucionario hasta terminar: lo que más enseña es comparar tus fallos con la solución.</div>
+  <nav class="nav pie"><a href="#">← Todos los ejercicios</a> <a href="#solucion-2">Ir al solucionario →</a></nav>
+</section>
+
+<section class="panel" id="solucion-2">
+  <nav class="nav"><a href="#ejercicio-2">← Volver al enunciado</a> <a href="#">← Todos los ejercicios</a></nav>
+  <header><p class="n">EJERCICIO 2 · SOLUCIONARIO</p><h2>El hospital «San Gabriel»</h2></header>
+<p>Esta es <b>una</b> solución posible: hay otras igual de válidas. Lo importante es que entiendas <i>por qué</i> está hecha así. Cada pregunta del enunciado tiene aquí su respuesta, con el número que lleva allí.</p>
+<div class="warn">No mires esto hasta haber hecho el ejercicio. Después, compara <b>tus fallos</b> con la solución: ahí es donde se aprende.</div>
+
+<h3>Parte 1: entidades y relaciones</h3>
+
+<p class="paso"><b>1.</b> Los dos enums, cada uno en su archivo del paquete <code>enums</code>:</p>
+<pre data-f="enums/Especialidad.java">package com.hospital.examen.enums;
+
+public enum Especialidad {
+    CARDIOLOGIA, PEDIATRIA, TRAUMATOLOGIA, NEUROLOGIA
+}</pre>
+<pre data-f="enums/TipoConsulta.java">package com.hospital.examen.enums;
+
+public enum TipoConsulta {
+    PRESENCIAL, URGENCIA, TELEMATICA
+}</pre>
+
+<p class="paso"><b>2 y 6.</b> <code>Hospital</code> es el lado «uno» de la relación bidireccional con <code>Medico</code>. Lleva <code>mappedBy</code> y <b>no lleva cascada</b>: borrar un hospital no borra a sus médicos.</p>
+<pre data-f="entity/Hospital.java">package com.hospital.examen.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "hospitales")
+public class Hospital {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_hospital")
+    private Long id;
+
+    @Column(nullable = false, length = 80)
+    private String nombre;
+
+    @Column(nullable = false)
+    private String ciudad;
+
+    // Lado inverso: la clave foránea está en Medico. Sin cascade: borrar el hospital no borra a los médicos.
+    @OneToMany(mappedBy = "hospital")
+    private List&lt;Medico&gt; medicos = new ArrayList&lt;&gt;();
+
+    public Hospital() {}
+
+    public Hospital(String nombre, String ciudad) {
+        this.nombre = nombre;
+        this.ciudad = ciudad;
+    }
+
+    // Mantiene sincronizados los dos lados de la relación
+    public void addMedico(Medico medico) {
+        medicos.add(medico);
+        medico.setHospital(this);
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getCiudad() { return ciudad; }
+    public List&lt;Medico&gt; getMedicos() { return medicos; }
+}</pre>
+
+<p class="paso"><b>3 y 6.</b> <code>Medico</code> es el <b>propietario</b> de la relación con <code>Hospital</code>: tiene la clave foránea <code>id_hospital</code>, obligatoria y con carga perezosa. Su lista de consultas es el lado inverso y <b>sin cascada</b>.</p>
+<pre data-f="entity/Medico.java">package com.hospital.examen.entity;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hospital.examen.enums.Especialidad;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "medicos")
+public class Medico {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_medico")
+    private Long id;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal salario;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Especialidad especialidad;
+
+    private boolean activo;
+
+    // Lado propietario: aquí está la columna id_hospital
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_hospital", nullable = false)
+    private Hospital hospital;
+
+    // Lado inverso del N:M con datos, sin cascada
+    @OneToMany(mappedBy = "medico")
+    private List&lt;Consulta&gt; consultas = new ArrayList&lt;&gt;();
+
+    public Medico() {}
+
+    public Medico(String nombre, BigDecimal salario, Especialidad especialidad, boolean activo) {
+        this.nombre = nombre;
+        this.salario = salario;
+        this.especialidad = especialidad;
+        this.activo = activo;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public BigDecimal getSalario() { return salario; }
+    public Especialidad getEspecialidad() { return especialidad; }
+    public boolean isActivo() { return activo; }
+    public Hospital getHospital() { return hospital; }
+    public void setHospital(Hospital hospital) { this.hospital = hospital; }
+    public List&lt;Consulta&gt; getConsultas() { return consultas; }
+}</pre>
+
+<p class="paso"><b>5.</b> <code>HistorialClinico</code>. Las alergias pueden ser nulas, así que ese campo no lleva <code>nullable = false</code>.</p>
+<pre data-f="entity/HistorialClinico.java">package com.hospital.examen.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "historiales")
+public class HistorialClinico {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_historial")
+    private Long id;
+
+    @Column(name = "numero_historial", nullable = false, unique = true, length = 15)
+    private String numeroHistorial;
+
+    @Column(name = "grupo_sanguineo", nullable = false, length = 3)
+    private String grupoSanguineo;
+
+    @Column(length = 500)
+    private String alergias;
+
+    public HistorialClinico() {}
+
+    public HistorialClinico(String numeroHistorial, String grupoSanguineo, String alergias) {
+        this.numeroHistorial = numeroHistorial;
+        this.grupoSanguineo = grupoSanguineo;
+        this.alergias = alergias;
+    }
+
+    public Long getId() { return id; }
+    public String getNumeroHistorial() { return numeroHistorial; }
+    public String getGrupoSanguineo() { return grupoSanguineo; }
+    public String getAlergias() { return alergias; }
+}</pre>
+
+<p class="paso"><b>4, 7 y 8.</b> <code>Paciente</code>. Es el propietario del 1:1 con <code>HistorialClinico</code> (<code>id_historial</code>, obligatoria y única), con cascada total. Y es el lado «uno» de <code>Consulta</code>, con <code>orphanRemoval</code>. El <b>constructor</b> recibe el historial, así que es imposible crear un paciente sin él.</p>
+<pre data-f="entity/Paciente.java">package com.hospital.examen.entity;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "pacientes")
+public class Paciente {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_paciente")
+    private Long id;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(name = "fecha_nacimiento", nullable = false)
+    private LocalDate fechaNacimiento;
+
+    // Propietario del 1:1. La cascada guarda y borra el historial junto con el paciente.
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "id_historial", nullable = false, unique = true)
+    private HistorialClinico historial;
+
+    // Lado inverso del N:M con datos: las consultas se borran con el paciente
+    @OneToMany(mappedBy = "paciente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List&lt;Consulta&gt; consultas = new ArrayList&lt;&gt;();
+
+    // Lo necesita JPA para crear objetos al leer de la base. No lo uses tú.
+    public Paciente() {}
+
+    // Única forma de crear un paciente: obliga a darle su historial
+    public Paciente(String nombre, LocalDate fechaNacimiento, HistorialClinico historial) {
+        this.nombre = nombre;
+        this.fechaNacimiento = fechaNacimiento;
+        this.historial = historial;
+    }
+
+    public void addConsulta(Consulta consulta) {
+        consultas.add(consulta);
+        consulta.setPaciente(this);
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public LocalDate getFechaNacimiento() { return fechaNacimiento; }
+    public HistorialClinico getHistorial() { return historial; }
+    public List&lt;Consulta&gt; getConsultas() { return consultas; }
+}</pre>
+
+<p class="paso"><b>7 (pregunta).</b> <code>optional = false</code> es una regla del <b>modelo Java</b>: dice que la relación es obligatoria, así que JPA no permite guardar un paciente sin historial (y puede optimizar sabiendo que nunca es nulo). <code>unique = true</code> (en el <code>@JoinColumn</code>) es una regla de la <b>base de datos</b>: crea una restricción de unicidad en <code>id_historial</code>, de modo que dos pacientes no pueden compartir el mismo historial. Sin ella la relación sería en realidad de uno a muchos. Junto con <code>nullable = false</code> (la columna no admite <code>NULL</code>), dejan la relación como «uno a uno obligatoria» tanto en Java como en MySQL.</p>
+
+<p class="paso"><b>8.</b> <code>Consulta</code> es la entidad que representa la relación N:M con datos. Tiene dos <code>@ManyToOne</code> y es la propietaria de las dos claves foráneas.</p>
+<pre data-f="entity/Consulta.java">package com.hospital.examen.entity;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import com.hospital.examen.enums.TipoConsulta;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "consultas")
+public class Consulta {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_consulta")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_medico", nullable = false)
+    private Medico medico;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_paciente", nullable = false)
+    private Paciente paciente;
+
+    @Column(nullable = false)
+    private LocalDateTime fecha;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal coste;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TipoConsulta tipo;
+
+    private boolean seguimiento;
+
+    public Consulta() {}
+
+    // El paciente no va aquí: se asigna con paciente.addConsulta(...)
+    public Consulta(Medico medico, LocalDateTime fecha, BigDecimal coste, TipoConsulta tipo, boolean seguimiento) {
+        this.medico = medico;
+        this.fecha = fecha;
+        this.coste = coste;
+        this.tipo = tipo;
+        this.seguimiento = seguimiento;
+    }
+
+    public Long getId() { return id; }
+    public Medico getMedico() { return medico; }
+    public Paciente getPaciente() { return paciente; }
+    public void setPaciente(Paciente paciente) { this.paciente = paciente; }
+    public LocalDateTime getFecha() { return fecha; }
+    public BigDecimal getCoste() { return coste; }
+    public TipoConsulta getTipo() { return tipo; }
+    public boolean isSeguimiento() { return seguimiento; }
+}</pre>
+
+<p class="paso"><b>9.</b> Respuestas:</p>
+<ul>
+<li><b>a)</b> Porque la relación <b>tiene datos propios</b> (fecha, coste, tipo y seguimiento). Un <code>@ManyToMany</code> directo solo crea una tabla intermedia con dos ids y no puede guardar nada más. Con <code>Consulta</code>, la tabla intermedia pasa a ser una entidad con sus propias columnas, y la relación se convierte en dos <code>@ManyToOne</code>.</li>
+<li><b>b)</b> Las claves foráneas son <code>medicos.id_hospital</code>, <code>pacientes.id_historial</code>, <code>consultas.id_medico</code> y <code>consultas.id_paciente</code>. <b>Siempre están en el lado propietario</b> (el que lleva <code>@JoinColumn</code>); el lado con <code>mappedBy</code> no tiene columna.</li>
+<li><b>c)</b> Al borrar un hospital se borrarían <b>también todos sus médicos</b> (y, por la cadena de relaciones, podría fallar o arrastrar más datos), aunque tengan consultas históricas. Es una pérdida masiva de datos en vez de una protección de integridad. Por eso <code>Hospital</code> no lleva cascada, y borrar un hospital con médicos se responde con un 409.</li>
+</ul>
+
+<h3>Parte 2: repositorios y consultas</h3>
+
+<p class="paso"><b>10.</b> Cada repositorio es una interfaz que extiende <code>JpaRepository&lt;Entidad, Long&gt;</code>. Los de hospitales, historiales y pacientes:</p>
+<pre data-f="repository/IHospitalRepository.java">package com.hospital.examen.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.hospital.examen.entity.Hospital;
+
+public interface IHospitalRepository extends JpaRepository&lt;Hospital, Long&gt; {
+}</pre>
+<pre data-f="repository/IHistorialClinicoRepository.java">package com.hospital.examen.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.hospital.examen.entity.HistorialClinico;
+
+public interface IHistorialClinicoRepository extends JpaRepository&lt;HistorialClinico, Long&gt; {
+}</pre>
+
+<p class="paso"><b>11.</b> Médicos:</p>
+<pre data-f="repository/IMedicoRepository.java">package com.hospital.examen.repository;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.hospital.examen.entity.Medico;
+import com.hospital.examen.enums.Especialidad;
+
+public interface IMedicoRepository extends JpaRepository&lt;Medico, Long&gt; {
+
+    // a) Médicos de una especialidad
+    List&lt;Medico&gt; findByEspecialidad(Especialidad especialidad);
+
+    // b) Activos de un hospital: "HospitalId" navega por medico.hospital.id
+    List&lt;Medico&gt; findByHospitalIdAndActivoTrue(Long hospitalId);
+
+    // c) Salario mayor que X, de mayor a menor
+    List&lt;Medico&gt; findBySalarioGreaterThanOrderBySalarioDesc(BigDecimal salario);
+
+    // d) Cuántos médicos tiene cada hospital: cada fila es [nombre del hospital, cantidad]
+    @Query("SELECT h.nombre, COUNT(m) FROM Medico m JOIN m.hospital h GROUP BY h.id, h.nombre")
+    List&lt;Object[]&gt; contarPorHospital();
+
+    // Lo usa el servicio
+    List&lt;Medico&gt; findByHospitalId(Long hospitalId);
+
+    long countByHospitalId(Long hospitalId);
+}</pre>
+
+<p class="paso"><b>12.</b> Consultas:</p>
+<pre data-f="repository/IConsultaRepository.java">package com.hospital.examen.repository;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.hospital.examen.entity.Consulta;
+import com.hospital.examen.enums.TipoConsulta;
+
+public interface IConsultaRepository extends JpaRepository&lt;Consulta, Long&gt; {
+
+    // a) De un paciente, de la más reciente a la más antigua
+    List&lt;Consulta&gt; findByPacienteIdOrderByFechaDesc(Long pacienteId);
+
+    // b) Suma del coste de las consultas de un médico (SUM devuelve null si no tiene ninguna)
+    @Query("SELECT SUM(c.coste) FROM Consulta c WHERE c.medico.id = :medicoId")
+    BigDecimal sumaCostePorMedico(@Param("medicoId") Long medicoId);
+
+    // c) Urgencias con seguimiento activo: findByTipoAndSeguimientoTrue(TipoConsulta.URGENCIA)
+    List&lt;Consulta&gt; findByTipoAndSeguimientoTrue(TipoConsulta tipo);
+
+    // Lo usa el servicio para impedir borrar un médico con consultas
+    long countByMedicoId(Long medicoId);
+}</pre>
+
+<p class="paso"><b>13.</b> Pacientes. La consulta necesita <code>JOIN</code> (hay que pasar por <code>consultas</code>) y <code>DISTINCT</code> (un paciente atendido varias veces por el mismo médico saldría repetido).</p>
+<pre data-f="repository/IPacienteRepository.java">package com.hospital.examen.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.hospital.examen.entity.Paciente;
+
+public interface IPacienteRepository extends JpaRepository&lt;Paciente, Long&gt; {
+
+    // Pacientes atendidos por un médico, sin repetidos
+    @Query("SELECT DISTINCT p FROM Paciente p JOIN p.consultas c WHERE c.medico.id = :medicoId")
+    List&lt;Paciente&gt; buscarAtendidosPor(@Param("medicoId") Long medicoId);
+}</pre>
+
+<h3>Parte 3: datos iniciales</h3>
+
+<p class="paso"><b>14.</b> En <code>application.properties</code> (además de la conexión a MySQL de siempre):</p>
+<pre data-f="src/main/resources/application.properties (añadir)">spring.jpa.hibernate.ddl-auto=create-drop
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true</pre>
+<p>Y el <code>data.sql</code>. <b>El orden importa:</b> primero lo que otros van a apuntar (hospitales e historiales) y después lo que apunta (médicos, pacientes, consultas).</p>
+<pre data-f="src/main/resources/data.sql">INSERT INTO hospitales (id_hospital, nombre, ciudad)
+VALUES (1, 'San Gabriel Centro', 'Madrid'),
+       (2, 'San Gabriel Norte', 'Bilbao');
+
+INSERT INTO medicos (id_medico, nombre, salario, especialidad, activo, id_hospital)
+VALUES (1, 'Dra. Ana Lozano', 4200.00, 'CARDIOLOGIA', true, 1),
+       (2, 'Dr. Pablo Marín', 3800.00, 'PEDIATRIA', true, 1),
+       (3, 'Dra. Eva Ruiz', 4500.00, 'TRAUMATOLOGIA', false, 2),
+       (4, 'Dr. Hugo Vega', 4000.00, 'NEUROLOGIA', true, 2);
+
+INSERT INTO historiales (id_historial, numero_historial, grupo_sanguineo, alergias)
+VALUES (1, 'H-0001', 'A+', NULL),
+       (2, 'H-0002', 'O-', 'Penicilina'),
+       (3, 'H-0003', 'B+', NULL);
+
+INSERT INTO pacientes (id_paciente, nombre, fecha_nacimiento, id_historial)
+VALUES (1, 'Carmen Díaz', '1985-04-12', 1),
+       (2, 'Iván Torres', '2015-09-30', 2),
+       (3, 'Rosa Campos', '1960-01-25', 3);
+
+INSERT INTO consultas (id_consulta, id_medico, id_paciente, fecha, coste, tipo, seguimiento)
+VALUES (1, 1, 1, '2026-10-01 09:30:00', 120.00, 'PRESENCIAL', true),
+       (2, 1, 3, '2026-10-03 11:00:00', 120.00, 'TELEMATICA', false),
+       (3, 2, 2, '2026-10-05 16:15:00', 80.00, 'PRESENCIAL', false),
+       (4, 4, 1, '2026-10-08 18:40:00', 200.00, 'URGENCIA', true),
+       (5, 3, 3, '2026-10-10 08:00:00', 150.00, 'URGENCIA', false);</pre>
+<div class="ok">Se cumple lo que pedía el enunciado: la <b>Dra. Lozano</b> atiende a dos pacientes (consultas 1 y 2) y <b>Carmen</b> es atendida por dos médicos (la Dra. Lozano y el Dr. Vega, consultas 1 y 4).</div>
+
+<p class="paso"><b>15.</b> La clase principal, con el <code>run()</code> que crea un paciente nuevo con su historial y una consulta:</p>
+<pre data-f="HospitalApplication.java">package com.hospital.examen;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import com.hospital.examen.entity.Consulta;
+import com.hospital.examen.entity.HistorialClinico;
+import com.hospital.examen.entity.Medico;
+import com.hospital.examen.entity.Paciente;
+import com.hospital.examen.enums.TipoConsulta;
+import com.hospital.examen.repository.IMedicoRepository;
+import com.hospital.examen.repository.IPacienteRepository;
+
+@SpringBootApplication
+public class HospitalApplication implements CommandLineRunner {
+
+    @Autowired
+    private IPacienteRepository pacienteRepository;
+
+    @Autowired
+    private IMedicoRepository medicoRepository;
+
+    public static void main(String[] args) {
+        SpringApplication.run(HospitalApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) {
+        // 1) El médico ya existe (lo cargó data.sql): solo hay que buscarlo
+        Medico medico = medicoRepository.findById(2L).orElseThrow();
+
+        // 2) El historial se crea primero porque el constructor de Paciente lo exige
+        HistorialClinico historial = new HistorialClinico("H-0004", "0+", null);
+        Paciente paciente = new Paciente("Lucas Prieto", LocalDate.of(2001, 6, 18), historial);
+
+        // 3) La consulta se cuelga del paciente
+        paciente.addConsulta(new Consulta(medico, LocalDateTime.now(), new BigDecimal("90.00"),
+                TipoConsulta.PRESENCIAL, false));
+
+        // 4) Un solo save: la cascada guarda el historial y la consulta
+        pacienteRepository.save(paciente);
+        System.out.println("Paciente guardado con id " + paciente.getId());
+    }
+}</pre>
+<p><b>Por qué este orden:</b> el médico tiene que existir antes, porque la consulta apunta a él. El historial se crea antes que el paciente porque el constructor lo exige. Y gracias a <code>cascade = ALL</code>, un solo <code>save(paciente)</code> inserta el historial (primero, porque el paciente guarda su clave foránea), el paciente y, por último, la consulta, que necesita el id del paciente.</p>
+
+<h3>Parte 4: API REST por capas</h3>
+
+<p class="paso"><b>16.</b> Los DTO, como <code>record</code>. Los de entrada llevan validaciones; los de salida, no. <code>ConsultaResumenDTO</code> es la pieza anidada de <code>PacienteResponseDTO</code>: solo lleva lo necesario de una consulta, sin volver al paciente (así no hay bucles). Para el endpoint de la pregunta 21 añado <code>ConsultaRequestDTO</code>.</p>
+<pre data-f="dto/MedicoRequestDTO.java">package com.hospital.examen.dto;
+
+import java.math.BigDecimal;
+
+import com.hospital.examen.enums.Especialidad;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+public record MedicoRequestDTO(
+        @NotBlank(message = "El nombre es obligatorio") String nombre,
+        @NotNull(message = "El salario es obligatorio") @Positive(message = "El salario debe ser positivo") BigDecimal salario,
+        @NotNull(message = "La especialidad es obligatoria") Especialidad especialidad,
+        @NotNull(message = "El hospital es obligatorio") Long hospitalId) {
+}</pre>
+<pre data-f="dto/MedicoResponseDTO.java">package com.hospital.examen.dto;
+
+import com.hospital.examen.enums.Especialidad;
+
+public record MedicoResponseDTO(Long id, String nombre, Especialidad especialidad, String nombreHospital) {
+}</pre>
+<pre data-f="dto/ConsultaResumenDTO.java">package com.hospital.examen.dto;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import com.hospital.examen.enums.TipoConsulta;
+
+public record ConsultaResumenDTO(LocalDateTime fecha, String nombreMedico, TipoConsulta tipo, BigDecimal coste) {
+}</pre>
+<pre data-f="dto/PacienteResponseDTO.java">package com.hospital.examen.dto;
+
+import java.util.List;
+
+public record PacienteResponseDTO(
+        Long id,
+        String nombre,
+        String numeroHistorial,
+        String grupoSanguineo,
+        List&lt;ConsultaResumenDTO&gt; consultas) {
+}</pre>
+<pre data-f="dto/ConsultaRequestDTO.java">package com.hospital.examen.dto;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import com.hospital.examen.enums.TipoConsulta;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
+public record ConsultaRequestDTO(
+        @NotNull(message = "El médico es obligatorio") Long medicoId,
+        @NotNull(message = "La fecha es obligatoria") LocalDateTime fecha,
+        @NotNull(message = "El coste es obligatorio") @PositiveOrZero(message = "El coste no puede ser negativo") BigDecimal coste,
+        @NotNull(message = "El tipo es obligatorio") TipoConsulta tipo) {
+}</pre>
+
+<p class="paso"><b>17.</b> Dos motivos para no devolver las entidades:</p>
+<ul>
+<li><b>Recursión infinita.</b> <code>Hospital</code> tiene una lista de <code>Medico</code> y cada <code>Medico</code> apunta a su <code>Hospital</code>: al serializar a JSON, Jackson entra en un bucle (hospital → médicos → hospital → …) y falla con un <code>StackOverflowError</code> o similar. Los DTO, con sus «resúmenes», cortan el bucle.</li>
+<li><b>Se expone la base de datos.</b> La entidad lleva campos que el cliente no debe ver o decidir (ids internos, la lista completa de consultas, etc.), y atar la API a la entidad hace que cualquier cambio en el modelo rompa a los clientes. Además, las relaciones <code>LAZY</code> se intentarían leer fuera de la transacción (<code>LazyInitializationException</code>).</li>
+</ul>
+
+<p class="paso"><b>18.</b> <b>El servicio.</b> Para comunicar los resultados al controlador uso <b>excepciones propias</b>: <code>NoEncontradoException</code> (→ 404) y <code>ConflictoException</code> (→ 409). Un <code>@RestControllerAdvice</code> (pregunta 20) las traduce a código HTTP en un solo sitio, y el controlador queda limpio.</p>
+<pre data-f="exception/NoEncontradoException.java">package com.hospital.examen.exception;
+
+public class NoEncontradoException extends RuntimeException {
+    public NoEncontradoException(String mensaje) {
+        super(mensaje);
+    }
+}</pre>
+<pre data-f="exception/ConflictoException.java">package com.hospital.examen.exception;
+
+public class ConflictoException extends RuntimeException {
+    public ConflictoException(String mensaje) {
+        super(mensaje);
+    }
+}</pre>
+<p>El contrato solo habla de DTO:</p>
+<pre data-f="service/IMedicoService.java">package com.hospital.examen.service;
+
+import java.util.List;
+
+import com.hospital.examen.dto.MedicoRequestDTO;
+import com.hospital.examen.dto.MedicoResponseDTO;
+
+public interface IMedicoService {
+
+    MedicoResponseDTO crear(MedicoRequestDTO dto);
+
+    MedicoResponseDTO obtener(Long id);
+
+    List&lt;MedicoResponseDTO&gt; listarPorHospital(Long hospitalId);
+
+    void eliminar(Long id);
+}</pre>
+<p>Y la implementación. Cada método que lee relaciones perezosas va con <code>@Transactional</code>, y la conversión a DTO se hace <b>dentro</b> del servicio:</p>
+<pre data-f="service/MedicoService.java">package com.hospital.examen.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.hospital.examen.dto.MedicoRequestDTO;
+import com.hospital.examen.dto.MedicoResponseDTO;
+import com.hospital.examen.entity.Hospital;
+import com.hospital.examen.entity.Medico;
+import com.hospital.examen.exception.ConflictoException;
+import com.hospital.examen.exception.NoEncontradoException;
+import com.hospital.examen.repository.IConsultaRepository;
+import com.hospital.examen.repository.IHospitalRepository;
+import com.hospital.examen.repository.IMedicoRepository;
+
+@Service
+public class MedicoService implements IMedicoService {
+
+    @Autowired
+    private IMedicoRepository medicoRepository;
+
+    @Autowired
+    private IHospitalRepository hospitalRepository;
+
+    @Autowired
+    private IConsultaRepository consultaRepository;
+
+    @Override
+    @Transactional
+    public MedicoResponseDTO crear(MedicoRequestDTO dto) {
+        Hospital hospital = buscarHospital(dto.hospitalId());
+        // DTO -&gt; Entity. Un médico nuevo empieza activo.
+        Medico medico = new Medico(dto.nombre(), dto.salario(), dto.especialidad(), true);
+        hospital.addMedico(medico);
+        return mapearADTO(medicoRepository.save(medico));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MedicoResponseDTO obtener(Long id) {
+        return mapearADTO(buscarMedico(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;MedicoResponseDTO&gt; listarPorHospital(Long hospitalId) {
+        buscarHospital(hospitalId);   // si no existe, lanza "no encontrado"
+        List&lt;MedicoResponseDTO&gt; lista = new ArrayList&lt;&gt;();
+        for (Medico m : medicoRepository.findByHospitalId(hospitalId)) {
+            lista.add(mapearADTO(m));
+        }
+        return lista;   // una lista vacía es válida
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Medico medico = buscarMedico(id);
+        if (consultaRepository.countByMedicoId(id) &gt; 0) {
+            throw new ConflictoException("El médico tiene consultas registradas");
+        }
+        medicoRepository.delete(medico);
+    }
+
+    private Hospital buscarHospital(Long id) {
+        return hospitalRepository.findById(id)
+                .orElseThrow(() -&gt; new NoEncontradoException("No existe el hospital " + id));
+    }
+
+    private Medico buscarMedico(Long id) {
+        return medicoRepository.findById(id)
+                .orElseThrow(() -&gt; new NoEncontradoException("No existe el médico " + id));
+    }
+
+    // Entity -&gt; DTO (el hospital es LAZY: por eso se hace dentro de la transacción)
+    private MedicoResponseDTO mapearADTO(Medico m) {
+        return new MedicoResponseDTO(m.getId(), m.getNombre(), m.getEspecialidad(), m.getHospital().getNombre());
+    }
+}</pre>
+<p><b>Cómo comunica cada resultado:</b> un hospital o un médico que no existen lanzan <code>NoEncontradoException</code> (404); un médico con consultas lanza <code>ConflictoException</code> (409). Una lista vacía no es un error: se devuelve vacía (200).</p>
+
+<p class="paso"><b>19.</b> <b>El controlador.</b> Solo conoce el <code>IMedicoService</code> y los DTO. No tiene lógica ni <code>try/catch</code>: las excepciones las recoge el <code>@RestControllerAdvice</code>.</p>
+<pre data-f="controller/MedicoController.java">package com.hospital.examen.controller;
+
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import com.hospital.examen.dto.MedicoRequestDTO;
+import com.hospital.examen.dto.MedicoResponseDTO;
+import com.hospital.examen.service.IMedicoService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/medicos")
+public class MedicoController {
+
+    @Autowired
+    private IMedicoService medicoService;
+
+    // POST /api/medicos -&gt; 201 + Location | 400 (@Valid) | 404 (el hospital no existe)
+    @PostMapping
+    public ResponseEntity&lt;MedicoResponseDTO&gt; crear(@Valid @RequestBody MedicoRequestDTO dto) {
+        MedicoResponseDTO creado = medicoService.crear(dto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(creado.id()).toUri();
+        return ResponseEntity.created(location).body(creado);
+    }
+
+    // GET /api/medicos/{id} -&gt; 200 | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;MedicoResponseDTO&gt; obtener(@PathVariable Long id) {
+        return ResponseEntity.ok(medicoService.obtener(id));
+    }
+
+    // GET /api/medicos?hospitalId=1 -&gt; 200 (lista, puede estar vacía) | 404 (el hospital no existe) | 400 (falta hospitalId)
+    @GetMapping
+    public ResponseEntity&lt;List&lt;MedicoResponseDTO&gt;&gt; listarPorHospital(@RequestParam Long hospitalId) {
+        return ResponseEntity.ok(medicoService.listarPorHospital(hospitalId));
+    }
+
+    // DELETE /api/medicos/{id} -&gt; 204 | 404 | 409 (tiene consultas)
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        medicoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+}</pre>
+<table>
+<tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
+<tr><td><code>POST /api/medicos</code></td><td><b>201</b> y <code>Location</code></td><td><b>400</b> datos inválidos · <b>404</b> el hospital no existe</td></tr>
+<tr><td><code>GET /api/medicos/{id}</code></td><td><b>200</b></td><td><b>404</b></td></tr>
+<tr><td><code>GET /api/medicos?hospitalId=</code></td><td><b>200</b> (puede ser lista vacía)</td><td><b>404</b> el hospital no existe · <b>400</b> si falta <code>hospitalId</code></td></tr>
+<tr><td><code>DELETE /api/medicos/{id}</code></td><td><b>204</b></td><td><b>404</b> · <b>409</b> si tiene consultas</td></tr>
+</table>
+
+<p class="paso"><b>20.</b> <b>El <code>@RestControllerAdvice</code>.</b> Recoge las dos excepciones propias y los errores de validación. Todos los errores devuelven el mismo cuerpo JSON, con <code>mensaje</code> y <code>codigo</code>. Los errores de <code>@Valid</code> llegan como <code>MethodArgumentNotValidException</code>; añado también el JSON ilegible (por ejemplo, una especialidad que no existe), que también es un 400.</p>
+<pre data-f="exception/ManejadorErrores.java">package com.hospital.examen.exception;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class ManejadorErrores {
+
+    @ExceptionHandler(NoEncontradoException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; noEncontrado(NoEncontradoException e) {
+        return respuesta(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; conflicto(ConflictoException e) {
+        return respuesta(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    // Errores de @Valid: se juntan los mensajes de todos los campos incorrectos
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; validacion(MethodArgumentNotValidException e) {
+        String mensaje = e.getBindingResult().getFieldErrors().stream()
+                .map(f -&gt; f.getField() + ": " + f.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return respuesta(HttpStatus.BAD_REQUEST, mensaje);
+    }
+
+    // JSON mal escrito, sin cuerpo o con un valor de enum que no existe
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; cuerpoIlegible(HttpMessageNotReadableException e) {
+        return respuesta(HttpStatus.BAD_REQUEST, "El cuerpo de la petición no es válido");
+    }
+
+    private ResponseEntity&lt;Map&lt;String, Object&gt;&gt; respuesta(HttpStatus estado, String mensaje) {
+        return ResponseEntity.status(estado).body(Map.of("mensaje", mensaje, "codigo", estado.value()));
+    }
+}</pre>
+
+<p class="paso"><b>21.</b> <b>Registrar una consulta</b> (<code>POST /api/pacientes/{id}/consultas</code>):</p>
+<ul>
+<li><b>a)</b> Hay que buscar <b>dos</b> entidades antes de crear la consulta: el <code>Paciente</code> (el <code>{id}</code> de la dirección) y el <code>Medico</code> (el <code>medicoId</code> del cuerpo). La consulta apunta a las dos.</li>
+<li><b>b)</b> Si falta cualquiera de las dos, <b>404</b> (<code>NoEncontradoException</code>). Si el cuerpo es inválido (falta algún campo o el coste es negativo), <b>400</b>.</li>
+<li><b>c)</b> Devuelvo un <code>ConsultaResumenDTO</code>, con <b>201</b>: es el recurso que se acaba de crear, y el resumen no vuelve al paciente (sin bucles).</li>
+</ul>
+<pre data-f="service/IPacienteService.java">package com.hospital.examen.service;
+
+import com.hospital.examen.dto.ConsultaRequestDTO;
+import com.hospital.examen.dto.ConsultaResumenDTO;
+import com.hospital.examen.dto.PacienteResponseDTO;
+
+public interface IPacienteService {
+
+    PacienteResponseDTO obtener(Long id);
+
+    ConsultaResumenDTO registrarConsulta(Long pacienteId, ConsultaRequestDTO dto);
+}</pre>
+<pre data-f="service/PacienteService.java">package com.hospital.examen.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.hospital.examen.dto.ConsultaRequestDTO;
+import com.hospital.examen.dto.ConsultaResumenDTO;
+import com.hospital.examen.dto.PacienteResponseDTO;
+import com.hospital.examen.entity.Consulta;
+import com.hospital.examen.entity.Medico;
+import com.hospital.examen.entity.Paciente;
+import com.hospital.examen.exception.NoEncontradoException;
+import com.hospital.examen.repository.IConsultaRepository;
+import com.hospital.examen.repository.IMedicoRepository;
+import com.hospital.examen.repository.IPacienteRepository;
+
+@Service
+public class PacienteService implements IPacienteService {
+
+    @Autowired
+    private IPacienteRepository pacienteRepository;
+
+    @Autowired
+    private IMedicoRepository medicoRepository;
+
+    @Autowired
+    private IConsultaRepository consultaRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public PacienteResponseDTO obtener(Long id) {
+        return mapearADTO(buscarPaciente(id));
+    }
+
+    @Override
+    @Transactional
+    public ConsultaResumenDTO registrarConsulta(Long pacienteId, ConsultaRequestDTO dto) {
+        // Las dos entidades a las que apunta la consulta
+        Paciente paciente = buscarPaciente(pacienteId);
+        Medico medico = medicoRepository.findById(dto.medicoId())
+                .orElseThrow(() -&gt; new NoEncontradoException("No existe el médico " + dto.medicoId()));
+
+        Consulta consulta = new Consulta(medico, dto.fecha(), dto.coste(), dto.tipo(), false);
+        paciente.addConsulta(consulta);
+        return mapearConsulta(consultaRepository.save(consulta));
+    }
+
+    private Paciente buscarPaciente(Long id) {
+        return pacienteRepository.findById(id)
+                .orElseThrow(() -&gt; new NoEncontradoException("No existe el paciente " + id));
+    }
+
+    private ConsultaResumenDTO mapearConsulta(Consulta c) {
+        return new ConsultaResumenDTO(c.getFecha(), c.getMedico().getNombre(), c.getTipo(), c.getCoste());
+    }
+
+    // Entity -&gt; DTO (recorre las consultas, que son LAZY: por eso se hace dentro de la transacción)
+    private PacienteResponseDTO mapearADTO(Paciente p) {
+        List&lt;ConsultaResumenDTO&gt; consultas = new ArrayList&lt;&gt;();
+        for (Consulta c : p.getConsultas()) {
+            consultas.add(mapearConsulta(c));
+        }
+        return new PacienteResponseDTO(p.getId(), p.getNombre(), p.getHistorial().getNumeroHistorial(),
+                p.getHistorial().getGrupoSanguineo(), consultas);
+    }
+}</pre>
+<pre data-f="controller/PacienteController.java">package com.hospital.examen.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hospital.examen.dto.ConsultaRequestDTO;
+import com.hospital.examen.dto.ConsultaResumenDTO;
+import com.hospital.examen.dto.PacienteResponseDTO;
+import com.hospital.examen.service.IPacienteService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/pacientes")
+public class PacienteController {
+
+    @Autowired
+    private IPacienteService pacienteService;
+
+    // GET /api/pacientes/{id} -&gt; 200 | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;PacienteResponseDTO&gt; obtener(@PathVariable Long id) {
+        return ResponseEntity.ok(pacienteService.obtener(id));
+    }
+
+    // POST /api/pacientes/{id}/consultas -&gt; 201 | 400 | 404 (paciente o médico)
+    @PostMapping("/{id}/consultas")
+    public ResponseEntity&lt;ConsultaResumenDTO&gt; registrarConsulta(@PathVariable Long id,
+            @Valid @RequestBody ConsultaRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pacienteService.registrarConsulta(id, dto));
+    }
+}</pre>
+
+<h3>Parte 5: preguntas de comprensión</h3>
+
+<p class="paso"><b>22.</b> <b>LazyInitializationException.</b> Ocurre al leer una relación <code>LAZY</code> (aquí, las consultas del paciente, o el médico de cada consulta) <b>cuando la sesión de Hibernate ya se ha cerrado</b>: por ejemplo, si el servicio devuelve la entidad y es el controlador quien intenta recorrerla. Se evita convirtiendo a DTO <b>dentro</b> del servicio y anotándolo con <code>@Transactional</code> (<code>readOnly = true</code> si solo lee), para que la sesión siga abierta mientras se recorren las relaciones.</p>
+
+<p class="paso"><b>23.</b> <b>El bucle infinito.</b> La causa es que la relación es <b>bidireccional</b>: <code>Hospital</code> tiene la lista de médicos y cada <code>Medico</code> apunta a su <code>Hospital</code>. Al convertir a JSON, Jackson recorre hospital → médicos → hospital → médicos… sin fin. Dos soluciones:</p>
+<ul>
+<li><b>Usar DTO</b> en vez de entidades (la buena): el DTO de salida no tiene referencia de vuelta, o solo un resumen (<code>nombreHospital</code>).</li>
+<li><b>Anotaciones de Jackson</b> sobre las entidades: <code>@JsonIgnore</code> en el lado que no queremos serializar, o la pareja <code>@JsonManagedReference</code> / <code>@JsonBackReference</code>. Funciona, pero ata la entidad al formato JSON, por eso no es lo recomendable.</li>
+</ul>
+
+<p class="paso"><b>24.</b> <b>Borrar un hospital con médicos.</b> El 500 viene de la base de datos (violación de clave foránea: los médicos siguen apuntando al hospital). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa en el servicio, igual que con las consultas de un médico:</p>
+<pre data-f="HospitalService.eliminar (idea)">if (medicoRepository.countByHospitalId(id) &gt; 0) {
+    throw new ConflictoException("El hospital tiene médicos");
+}
+hospitalRepository.deleteById(id);</pre>
+
+<p class="paso"><b>25.</b> <b>El esquema de tablas.</b> Las claves foráneas (FK) están siempre en el lado propietario:</p>
+<pre data-f="esquema de tablas">hospitales   (id_hospital PK, nombre, ciudad)
+medicos      (id_medico PK, nombre, salario, especialidad, activo,
+              id_hospital FK -&gt; hospitales)                    1:N
+historiales  (id_historial PK, numero_historial UNIQUE, grupo_sanguineo, alergias)
+pacientes    (id_paciente PK, nombre, fecha_nacimiento,
+              id_historial FK UNIQUE -&gt; historiales)           1:1
+consultas    (id_consulta PK, fecha, coste, tipo, seguimiento,
+              id_medico   FK -&gt; medicos,                       N:M con datos:
+              id_paciente FK -&gt; pacientes)                     dos 1:N hacia Consulta</pre>
+<div class="why"><b>Cómo corregirte.</b> Parte 1 (3 puntos): enums, columnas y restricciones bien, la FK en <code>Medico</code>, <code>mappedBy</code> en <code>Hospital</code>, el constructor de <code>Paciente</code> con el historial y <code>Consulta</code> con sus dos <code>@ManyToOne</code>. Parte 4 (3 puntos): los DTO con sus validaciones, la conversión solo en el servicio, el controlador sin lógica, el <code>@RestControllerAdvice</code> y los códigos 201, 200, 204, 400, 404 y 409 bien elegidos. Si fallaste en lo de las relaciones, repasa los pasos 11 a 13; si fue en la API, los pasos 18 y 19.</div>
+  <nav class="nav pie"><a href="#ejercicio-2">← Volver al enunciado</a> <a href="#">← Todos los ejercicios</a></nav>
+</section>
+</main>
+<script src="js/2-codigo.js"></script>
+</body>
+</html>

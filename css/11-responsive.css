@@ -1,0 +1,113 @@
+/* =========================================================
+   PANTALLAS MEDIANAS, MÓVIL Y MOVIMIENTO REDUCIDO
+   ========================================================= */
+
+/* Portátiles y tablets en horizontal (961px – 1344px) */
+@media (min-width: 60.01rem) and (max-width: 84rem) {
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .pack { width: 180px; height: 260px; margin: -130px 0 0 -90px; }
+  .pack .pt { margin-top: 6.2rem; font-size: 1.35rem; }
+  .pack p { font-size: .8rem; }
+  .pack.c { --x: -120px; }
+  .pack.h { --x: 120px; }
+}
+@media (min-width: 60.01rem) { .scrim { display: none; } }
+
+/* Móvil y tablet en vertical (hasta 960px) */
+@media (max-width: 60rem) {
+  .hero { grid-template-columns: 1fr; gap: 1rem; padding: 5rem 1.25rem 6rem; }
+  .packs { height: 340px; }
+  .pack { width: 160px; height: 235px; margin: -118px 0 0 -80px; padding: .9rem; }
+  .pack .pt { margin-top: 5.2rem; font-size: 1.2rem; }
+  .pack p { font-size: .78rem; }
+  .pack.c { --x: -100px; }
+  .pack.h { --x: 100px; }
+  .marquee { bottom: 1.4rem; font-size: 1.6rem; }
+  .hud { display: none; }
+  header.bar.full { padding: 0 1rem; }   /* sin marcas HUD en el móvil, la barra no necesita margen extra */
+
+  /* El índice pasa a ser un cajón que entra por la derecha */
+  .layout { display: block; }
+  .sidebar {
+    position: fixed; inset: 0 0 0 auto; z-index: 70;
+    width: min(22rem, 88vw); height: 100%;
+    transform: translateX(105%); transition: transform .5s var(--out);
+    box-shadow: -20px 0 40px rgba(0, 0, 0, .6);
+  }
+  .sidebar.open { transform: none; }
+  .drawer-close {
+    display: block; width: max-content; margin: 0 0 1rem auto; cursor: pointer;
+    padding: .55rem 1rem; border-radius: 999px;
+    background: var(--void-3); color: var(--ink); border: 1px solid var(--line);
+    font: 700 .75rem var(--pix);
+  }
+
+  main { padding: 1.5rem 1.25rem 6rem; }
+  footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .opener { padding: 1.3rem 1.2rem 1.4rem; }
+  .opener h2 { font-size: clamp(1.4rem, 6.4vw, 1.9rem); }
+  .opener .set { justify-self: start; }
+  .part { grid-template-columns: 1fr; gap: .6rem; padding: 1.4rem; }
+
+  .dock { gap: 0; padding: 4px; max-width: calc(100vw - 24px); }
+  .dock .idx { display: inline-block; }
+  .dock button, .dock a { padding: .55rem .7rem; }
+  .dock .count { padding: .55rem .5rem; }
+}
+
+/* Móvil (hasta 640px): texto, código, notas y tablas más compactos */
+@media (max-width: 40rem) {
+  body { font-size: 1rem; line-height: 1.62; }
+  html { scroll-padding-top: 4.5rem; }   /* deja sitio a la barra superior fija */
+  main { padding: 1.2rem 1rem 6rem; }
+  footer { padding-left: 1rem; padding-right: 1rem; }
+  section { margin-bottom: 3.5rem; }
+  h3 { margin-top: 2.2rem; font-size: 1.1rem; }
+
+  .hero { padding: 4.5rem 1rem 5.5rem; }
+  .hero h1 { font-size: clamp(2.2rem, 11vw, 2.9rem); }
+  .hero .lede { font-size: 1.05rem; margin-bottom: 1.6rem; }
+  .cta { flex-direction: column; align-items: stretch; }
+  .btn { justify-content: center; padding: .95rem 1.2rem; }
+
+  .opener { padding: 1.1rem 1rem 1.2rem; border-radius: 18px; gap: .9rem; }
+  .opener h2 { font-size: clamp(1.25rem, 6.2vw, 1.6rem); }
+  .part { margin: 4rem 0 2rem; padding: 1.2rem; border-radius: 18px; }
+  .part .num { font-size: 3.6rem; }
+
+  /* Las notas ocupan todo el ancho y respiran por dentro */
+  .kid, .why, .warn, .ok, p.note { margin: 1.4rem 0; padding: .9rem 1rem 1rem; }
+
+  /* Tablas: el texto se parte donde haga falta para que quepan en el ancho del móvil */
+  table { font-size: .88rem; }
+  th { padding: .65rem .7rem; overflow-wrap: anywhere; }
+  td { padding: .6rem .7rem; overflow-wrap: anywhere; }
+  td:first-child { width: 38%; }
+  th code, td code { white-space: normal; overflow-wrap: anywhere; }
+
+  .fig { margin: 1.4rem 0; padding: .8rem; }
+  .fig svg { min-width: 34rem; }   /* el diagrama se desliza de lado */
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* Móviles estrechos: se oculta "Arriba" para que quepa el dock y se encogen los sobres */
+@media (max-width: 30rem) {
+  .dock a { display: none; }
+  .dock button, .dock .count { padding: .5rem .4rem; font-size: .62rem; letter-spacing: 0; white-space: nowrap; }
+  .packs { height: 290px; }
+  .pack { width: 132px; height: 195px; margin: -98px 0 0 -66px; padding: .7rem; border-radius: 14px; }
+  .pack .pt { margin-top: 4.2rem; font-size: 1rem; }
+  .pack p { font-size: .7rem; }
+  .pack.c { --x: -82px; }
+  .pack.h { --x: 82px; }
+}
+
+/* Quien pide menos movimiento ve todo quieto y en su sitio */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .hero h1 .w { clip-path: none; }
+  .js .opener:not(.in) { opacity: 1; transform: none; }
+  .js .opener:not(.in) h2 { clip-path: none; }
+  .js .fig:not(.in) .ld { stroke-dashoffset: 0; }
+}

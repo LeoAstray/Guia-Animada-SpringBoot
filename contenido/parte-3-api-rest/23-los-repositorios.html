@@ -1,0 +1,87 @@
+<section id="s21">
+<h2>23 Los repositorios</h2>
+<p>Igual que en la Parte 1: interfaces que extienden <code>JpaRepository&lt;Entidad, Long&gt;</code> (la convención de la guía es <code>I</code> + entidad + <code>Repository</code>). Spring escribe la implementación al arrancar. Solo se añaden las búsquedas nuevas que hacen falta.</p>
+<details open><summary>ILibroRepository.java: aquí está lo interesante</summary>
+<pre class="code" data-f="repository/ILibroRepository.java">package edu.rico.biblioteca.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import edu.rico.biblioteca.entity.Libro;
+
+public interface ILibroRepository extends JpaRepository&lt;Libro, Long&gt; {
+
+    // Búsqueda por FK directa
+    List&lt;Libro&gt; findByEditorialId(Long editorialId);
+
+    // Conteo de libros asignados a una editorial para validar el borrado con 409
+    long countByEditorialId(Long editorialId);
+
+    // Consulta optimizada para evitar problema N+1 al cargar el detalle completo
+    @Query("SELECT l FROM Libro l " +
+            "LEFT JOIN FETCH l.editorial " +
+            "LEFT JOIN FETCH l.ficha " +
+            "LEFT JOIN FETCH l.autores " +
+            "WHERE l.id = :id")
+    Optional&lt;Libro&gt; findByIdConRelaciones(@Param("id") Long id);
+}</pre></details>
+<details><summary>Los otros tres repositorios</summary>
+<pre class="code" data-f="repository/IEditorialRepository.java">package edu.rico.biblioteca.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import edu.rico.biblioteca.entity.Editorial;
+
+public interface IEditorialRepository extends JpaRepository&lt;Editorial, Long&gt; {
+    boolean existsByNombre(String nombre);
+}</pre>
+<pre class="code" data-f="repository/IAutorRepository.java">package edu.rico.biblioteca.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import edu.rico.biblioteca.entity.Autor;
+
+public interface IAutorRepository extends JpaRepository&lt;Autor, Long&gt; {
+}</pre>
+<pre class="code" data-f="repository/IFichaLibroRepository.java">package edu.rico.biblioteca.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import edu.rico.biblioteca.entity.FichaLibro;
+
+public interface IFichaLibroRepository extends JpaRepository&lt;FichaLibro, Long&gt; {
+}</pre></details>
+
+<table>
+<tr><th>Método</th><th>Para qué sirve</th></tr>
+<tr><td><code>findByEditorialId(Long)</code></td><td>Consulta derivada: busca libros por <code>editorial.id</code>. Spring entiende que <code>editorial</code> es un atributo y <code>Id</code> su identificador. Se usa en <code>GET /api/libros?editorialId=</code>.</td></tr>
+<tr><td><code>countByEditorialId(Long)</code></td><td>Cuenta cuántos libros tiene una editorial. Se usa para decidir el <b>409</b> al borrarla.</td></tr>
+<tr><td><code>findByIdConRelaciones(id)</code></td><td>Consulta JPQL con <code>LEFT JOIN FETCH</code>: trae el libro, su editorial, su ficha y sus autores <b>en una sola consulta</b>. Soluciona el problema N+1 en el detalle.</td></tr>
+<tr><td><code>existsByNombre(String)</code></td><td>Comprueba si ya hay una editorial con ese nombre (queda disponible; el ejercicio no la usa todavía).</td></tr>
+</table>
+
+<h3>El problema N+1 y su solución</h3>
+<figure class="fig">
+<svg viewBox="0 0 860 220" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+  <rect x="20" y="20" width="400" height="180" rx="14" fill="#f8e2de" stroke="#b23a2b" stroke-width="3"/>
+  <text x="220" y="50" font-size="15" font-weight="700" fill="#b23a2b">Sin arreglo: 51 viajes</text>
+  <use href="#i-walk" class="ic" x="70" y="62" width="28" height="28"/><text x="118" y="86" font-size="20">→</text><use href="#i-school" class="ic" x="132" y="62" width="28" height="28"/><text x="245" y="86" font-size="15">→ «¿quiénes son?»</text>
+  <text x="220" y="120" font-size="14">y luego, por cada niño:</text>
+  <use href="#i-walk" class="ic" x="60" y="130" width="24" height="24"/><use href="#i-school" class="ic" x="84" y="130" width="24" height="24"/><use href="#i-walk" class="ic" x="122" y="130" width="24" height="24"/><use href="#i-school" class="ic" x="146" y="130" width="24" height="24"/><use href="#i-walk" class="ic" x="184" y="130" width="24" height="24"/><use href="#i-school" class="ic" x="208" y="130" width="24" height="24"/><use href="#i-walk" class="ic" x="246" y="130" width="24" height="24"/><use href="#i-school" class="ic" x="270" y="130" width="24" height="24"/><text x="335" y="150" font-size="16">… ×50</text>
+  <text x="220" y="185" font-size="12" fill="#4f5d68">«¿y tus amigos?» «¿y los tuyos?» «¿y los tuyos?»…</text>
+  <rect x="440" y="20" width="400" height="180" rx="14" fill="#e0f1e7" stroke="#2e7d4f" stroke-width="3"/>
+  <text x="640" y="50" font-size="15" font-weight="700" fill="#1f6a40">Con @EntityGraph / JOIN FETCH: 1 viaje</text>
+  <use href="#i-walk" class="ic" x="495" y="76" width="28" height="28"/><text x="540" y="100" font-size="20">→</text><use href="#i-school" class="ic" x="553" y="76" width="28" height="28"/><text x="598" y="100" font-size="20">→</text><use href="#i-bag" class="ic g" x="612" y="76" width="28" height="28"/><use href="#i-bag" class="ic g" x="642" y="76" width="28" height="28"/><use href="#i-bag" class="ic g" x="672" y="76" width="28" height="28"/><use href="#i-bag" class="ic g" x="702" y="76" width="28" height="28"/><use href="#i-bag" class="ic g" x="732" y="76" width="28" height="28"/>
+  <text x="640" y="140" font-size="14">«Dame todos los niños con sus amigos,</text>
+  <text x="640" y="162" font-size="14">todo de una vez, por favor»</text>
+</svg>
+<figcaption>N+1</figcaption>
+</figure>
+<p>Si consultas 50 libros y, en un bucle, accedes a la editorial o a los autores de cada uno, Hibernate lanza <b>1 consulta</b> para los libros más <b>50 consultas</b> individuales. La solución es pedirlo todo junto: <code>JOIN FETCH</code> en la consulta (como aquí) o <code>@EntityGraph</code> sobre el método.</p>
+<div class="kid">Sin arreglo: vas a por 50 niños y luego preguntas 50 veces «¿y sus amigos?». Con <code>JOIN FETCH</code>: «dame los niños con sus amigos, todo de una vez, por favor».</div>
+<div class="why"><code>JOIN FETCH</code> y <code>@EntityGraph</code> consiguen lo mismo. En <code>@Query</code> escribes la consulta a mano; con <code>@EntityGraph(attributePaths = {"editorial", "autores"})</code> solo anotas el método y Spring hace el JOIN.</div>
+</section>

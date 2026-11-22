@@ -1,0 +1,47 @@
+<section id="s28">
+<h2>30 Cómo explicar el ejercicio</h2>
+<p>Un orden para contarlo en unos diez minutos, de lo general a lo concreto. Cada paso lleva la idea que conviene decir en voz alta.</p>
+<ol>
+<li><b>Qué problema resuelve.</b> «Una API REST para una biblioteca editorial: editoriales, libros, autores y la ficha técnica de cada libro.»</li>
+<li><b>El modelo.</b> «Cuatro entidades y cinco tablas. Hay tres relaciones: 1:N entre Editorial y Libro, 1:1 entre Libro y Ficha, y N:M entre Libro y Autor, que genera una tabla intermedia.» (Enseña la figura de la sección 20.)</li>
+<li><b>Quién es el dueño de cada relación.</b> «El dueño es el que tiene la clave foránea; el otro lado lleva <code>mappedBy</code>.» Después, LAZY, <code>Set</code> y la cascada.</li>
+<li><b>Las capas.</b> «Controller recibe HTTP, Service tiene la lógica y Repository habla con MySQL. Cada capa solo conoce a la de al lado.» (Enseña la figura de la sección 25.)</li>
+<li><b>Los DTO.</b> «El cliente nunca ve una Entity. Los DTO de salida llevan resúmenes para romper los bucles; los de entrada llevan ids, no objetos.»</li>
+<li><b>Una petición completa.</b> Cuenta <code>POST /api/libros</code> paso a paso, con la figura de la sección 25: valida, busca la editorial y los autores, ensambla, guarda, convierte y responde 201.</li>
+<li><b>Los códigos HTTP.</b> «El servicio devuelve Optional, int o boolean y el controlador lo traduce: 200, 201, 204, 404 y 409.»</li>
+<li><b>Las trampas.</b> Bucle infinito, LAZY, N+1, 409 y duplicados: qué se ve y cómo se arregla (sección 27).</li>
+<li><b>La validación.</b> «Con <code>@Valid</code> el 400 sale automático, antes de llegar al servicio.»</li>
+<li><b>Demostración.</b> Ejecuta la secuencia de curl de la sección 29.</li>
+</ol>
+
+<h3>Preguntas que pueden salir</h3>
+<table>
+<tr><th>Pregunta</th><th>Respuesta corta</th></tr>
+<tr><td>¿Por qué un DTO y no la Entity?</td><td>Para no exponer la base de datos y para evitar el bucle infinito al serializar relaciones bidireccionales.</td></tr>
+<tr><td>¿Quién es el lado propietario del N:M?</td><td>Libro, porque declara el <code>@JoinTable</code>. Autor es el lado inverso y lleva <code>mappedBy = "autores"</code>.</td></tr>
+<tr><td>¿Por qué <code>Set</code> y no <code>List</code>?</td><td>Evita duplicados y que Hibernate recree toda la tabla intermedia. A cambio hay que implementar <code>equals</code> y <code>hashCode</code>.</td></tr>
+<tr><td>¿Por qué LAZY?</td><td>Para no cargar datos que no se piden. El EAGER por defecto de <code>@ManyToOne</code> puede disparar consultas de más.</td></tr>
+<tr><td>¿Para qué sirve <code>@Transactional</code> aquí?</td><td>Mantiene la sesión abierta mientras se convierte a DTO, para que las relaciones LAZY se puedan leer.</td></tr>
+<tr><td>¿Por qué <code>LibroServiceImpl</code> no usa <code>IEditorialService</code>?</td><td>Necesita la Entity <code>Editorial</code>, y ese servicio solo entrega DTO.</td></tr>
+<tr><td>¿Cómo se evita un 500 al borrar una editorial con libros?</td><td>Se cuentan sus libros antes (<code>countByEditorialId</code>) y se devuelve 409.</td></tr>
+<tr><td>¿Qué es el N+1 y cómo se arregla?</td><td>Una consulta más N por cada elemento. Con <code>JOIN FETCH</code> o <code>@EntityGraph</code> se trae todo junto.</td></tr>
+<tr><td>¿Qué cambia con <code>@Valid</code>?</td><td>La validación sale del servicio y se hace en la entrada, con anotaciones en los DTO. Responde 400 sola.</td></tr>
+</table>
+
+<h3>Límites de esta solución (conviene conocerlos antes de que pregunten)</h3>
+<ul>
+<li><b>ISBN duplicado.</b> El ISBN es <code>unique</code>. Si se envía un ISBN que ya existe, la base lanza un <code>DataIntegrityViolationException</code> que nadie captura, y el cliente recibe un 500. Se arreglaría comprobándolo antes o con un <code>@RestControllerAdvice</code> que lo convierta en 409.</li>
+<li><b>El 404 depende de un texto.</b> <code>LibroController.crear</code> detecta «no existe» dentro del mensaje de la excepción. Funciona, pero si alguien cambia el mensaje deja de funcionar; una excepción propia sería más robusta.</li>
+<li><b>Listar libros por editorial</b> no usa fetch (sección 27, trampa 3).</li>
+<li><b>Las dos formas de avisar de un error</b> (devolver <code>Optional</code>, <code>int</code> o <code>boolean</code>, o lanzar excepciones propias con un <code>@RestControllerAdvice</code>) son válidas. Esta solución usa la primera.</li>
+</ul>
+
+<h3>Qué he reconstruido yo a partir de las capturas del docx</h3>
+<p>El código del docx está en imágenes y no se ve entero. Esto es lo que he completado, para que quede claro:</p>
+<ul>
+<li>Los getters y setters de las entidades y los <code>equals</code> y <code>hashCode</code> por <code>id</code> de Libro y Autor.</li>
+<li>Las anotaciones de <code>AutorRequestDTO</code> (<code>@NotBlank</code> en los dos campos), que el docx no muestra.</li>
+<li><code>@Valid</code> en el <code>PUT</code> de la ficha, porque el docx indica ponerlo en cada método que recibe un DTO.</li>
+<li>El <code>fetch = LAZY</code> en <code>Libro.ficha</code>, que en la captura está cortado.</li>
+</ul>
+</section>

@@ -1,0 +1,142 @@
+<!-- ENUNCIADO del ejercicio 2 (el examen de práctica del Hospital «San Gabriel»).
+     La solución, cuando exista, va en 02-hospital-san-gabriel-solucion.html (mismo número y nombre). -->
+<article data-titulo="El hospital «San Gabriel»"
+         data-resumen="Médicos, pacientes e historiales clínicos: relaciones 1:N, 1:1 y N:M con datos propios (consultas), repositorios, datos iniciales y la API REST de médicos."
+         data-puntos="10">
+<p>Un examen de práctica completo. Haz el proyecto <b>sin mirar la solución</b> y, cuando termines, compara. Todo lo que no diga el enunciado, decídelo tú y justifícalo.</p>
+
+<table>
+<tr><th>Ficha del ejercicio</th><th></th></tr>
+<tr><td>Proyecto</td><td>Spring Boot + Spring Data JPA + MySQL</td></tr>
+<tr><td>Paquete base</td><td><code>com.hospital.examen</code>, con los subpaquetes <code>entity</code>, <code>enums</code>, <code>repository</code>, <code>dto</code>, <code>service</code> y <code>controller</code></td></tr>
+<tr><td>Puntuación</td><td>Parte 1: 3 · Parte 2: 1,5 · Parte 3: 1 · Parte 4: 3 · Parte 5: 1,5</td></tr>
+</table>
+
+<h3>Parte 1: entidades y relaciones (3 puntos)</h3>
+<p class="paso"><b>1.</b> Crea el enum <code>Especialidad</code> con los valores <code>CARDIOLOGIA</code>, <code>PEDIATRIA</code>, <code>TRAUMATOLOGIA</code> y <code>NEUROLOGIA</code>. Crea también el enum <code>TipoConsulta</code> con <code>PRESENCIAL</code>, <code>URGENCIA</code> y <code>TELEMATICA</code>.</p>
+<p class="paso"><b>2.</b> Crea la entidad <code>Hospital</code>, con tabla <code>hospitales</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada, columna <code>id_hospital</code>)</li>
+<li><code>nombre</code> (obligatorio, máximo 80 caracteres)</li>
+<li><code>ciudad</code> (obligatoria)</li>
+</ul>
+<p class="paso"><b>3.</b> Crea la entidad <code>Medico</code>, con tabla <code>medicos</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada, columna <code>id_medico</code>)</li>
+<li><code>nombre</code> (obligatorio)</li>
+<li><code>salario</code> (<code>BigDecimal</code>, precisión 10 y escala 2, obligatorio)</li>
+<li><code>especialidad</code> (el enum, guardado como texto, obligatorio)</li>
+<li><code>activo</code> (<code>boolean</code>)</li>
+</ul>
+<p class="paso"><b>4.</b> Crea la entidad <code>Paciente</code>, con tabla <code>pacientes</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada, columna <code>id_paciente</code>)</li>
+<li><code>nombre</code> (obligatorio)</li>
+<li><code>fechaNacimiento</code> (<code>LocalDate</code>, obligatoria)</li>
+</ul>
+<p class="paso"><b>5.</b> Crea la entidad <code>HistorialClinico</code>, con tabla <code>historiales</code>:</p>
+<ul>
+<li><code>id</code> (clave autogenerada)</li>
+<li><code>numeroHistorial</code> (obligatorio y único)</li>
+<li><code>grupoSanguineo</code> (obligatorio, máximo 3 caracteres)</li>
+<li><code>alergias</code> (texto, puede ser nulo)</li>
+</ul>
+<p class="paso"><b>6.</b> Haz una <b>relación bidireccional uno a muchos</b> entre <code>Hospital</code> y <code>Medico</code>:</p>
+<ul>
+<li>El propietario de la relación es <code>Medico</code>, con la columna <code>id_hospital</code>, obligatoria.</li>
+<li>Al borrar un hospital <b>no</b> deben borrarse sus médicos.</li>
+<li>Inicializa la lista y escribe un método de ayuda <code>addMedico</code> que mantenga sincronizados los dos lados.</li>
+</ul>
+<p class="paso"><b>7.</b> Haz una <b>relación uno a uno unidireccional</b> entre <code>Paciente</code> e <code>HistorialClinico</code>:</p>
+<ul>
+<li>El propietario es <code>Paciente</code>, con la columna <code>id_historial</code>, obligatoria y única.</li>
+<li>Al guardar un paciente debe guardarse su historial, y al borrarlo, también.</li>
+<li>Explica con tus palabras qué hace <code>optional = false</code> y qué haría <code>unique = true</code>.</li>
+</ul>
+<p class="paso"><b>8.</b> Haz una <b>relación muchos a muchos con datos propios</b> entre <code>Medico</code> y <code>Paciente</code>, creando la entidad <code>Consulta</code>, con tabla <code>consultas</code>. Incluye:</p>
+<ul>
+<li><code>id</code></li>
+<li><code>medico</code> y <code>paciente</code>, con relaciones <code>@ManyToOne</code> obligatorias y carga perezosa</li>
+<li><code>fecha</code> (<code>LocalDateTime</code>, obligatoria)</li>
+<li><code>coste</code> (<code>BigDecimal</code>, obligatorio)</li>
+<li><code>tipo</code> (<code>TipoConsulta</code>, guardado como texto)</li>
+<li><code>seguimiento</code> (<code>boolean</code>)</li>
+</ul>
+<p>Añade en <code>Medico</code> y en <code>Paciente</code> las listas inversas de consultas con <code>mappedBy</code>. En <code>Paciente</code>, que las consultas se borren con él (<code>orphanRemoval</code>). En <code>Medico</code>, <b>sin</b> cascada.</p>
+<p class="paso"><b>9.</b> Responde brevemente:</p>
+<ul>
+<li>a) ¿Por qué <code>Consulta</code> es una entidad y no un <code>@ManyToMany</code> directo?</li>
+<li>b) ¿En qué tabla está cada clave foránea?</li>
+<li>c) ¿Qué pasaría si en <code>Hospital</code> pusieras <code>cascade = ALL</code> y borraras un hospital con médicos?</li>
+</ul>
+
+<h3>Parte 2: repositorios y consultas (1,5 puntos)</h3>
+<p class="paso"><b>10.</b> Crea los repositorios de las cuatro entidades principales y de <code>Consulta</code> (<code>JpaRepository</code>).</p>
+<p class="paso"><b>11.</b> En <code>MedicoRepository</code>, escribe estos métodos. Usa <i>derived queries</i> donde se pueda y <code>@Query</code> donde haga falta.</p>
+<ul>
+<li>a) Médicos de una especialidad dada.</li>
+<li>b) Médicos activos de un hospital (por el id del hospital).</li>
+<li>c) Médicos con salario mayor que una cantidad, ordenados de mayor a menor.</li>
+<li>d) Número de médicos de cada hospital (consulta JPQL con <code>GROUP BY</code>).</li>
+</ul>
+<p class="paso"><b>12.</b> En <code>ConsultaRepository</code>, escribe:</p>
+<ul>
+<li>a) Consultas de un paciente ordenadas por fecha descendente.</li>
+<li>b) Suma del coste de todas las consultas de un médico (<code>@Query</code> con <code>SUM</code>).</li>
+<li>c) Consultas de tipo <code>URGENCIA</code> con seguimiento activo.</li>
+</ul>
+<p class="paso"><b>13.</b> En <code>PacienteRepository</code>, escribe una consulta que devuelva los pacientes que han sido atendidos por un médico concreto, sin repetidos (<code>JOIN</code> y <code>DISTINCT</code>).</p>
+
+<h3>Parte 3: datos iniciales (1 punto)</h3>
+<p class="paso"><b>14.</b> Escribe un <code>data.sql</code> (o las instrucciones equivalentes en el <code>CommandLineRunner</code>) con:</p>
+<ul>
+<li>2 hospitales</li>
+<li>4 médicos repartidos entre ellos, con especialidades distintas</li>
+<li>3 pacientes, cada uno con su historial</li>
+<li>5 consultas, con al menos un médico que atienda a dos pacientes y un paciente atendido por dos médicos</li>
+</ul>
+<p>Respeta el orden de inserción y los textos exactos de los enums.</p>
+<p class="paso"><b>15.</b> Desde <code>run()</code>, crea y guarda un paciente nuevo con su historial y una consulta suya con un médico ya existente. Indica en qué orden guardas cada objeto y por qué.</p>
+
+<h3>Parte 4: API REST por capas (3 puntos)</h3>
+<p class="paso"><b>16.</b> <b>DTO.</b> Crea:</p>
+<ul>
+<li><code>MedicoRequestDTO</code>: <code>nombre</code>, <code>salario</code>, <code>especialidad</code>, <code>hospitalId</code>. Añade validaciones con <code>@Valid</code>: nombre no vacío, salario positivo y todos los campos obligatorios.</li>
+<li><code>MedicoResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>especialidad</code>, <code>nombreHospital</code>.</li>
+<li><code>ConsultaResumenDTO</code>: <code>fecha</code>, <code>nombreMedico</code>, <code>tipo</code>, <code>coste</code>.</li>
+<li><code>PacienteResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>numeroHistorial</code>, <code>grupoSanguineo</code> y una lista de <code>ConsultaResumenDTO</code>.</li>
+</ul>
+<p class="paso"><b>17.</b> Justifica por qué no devuelves directamente las entidades en el controlador. Da dos motivos (por ejemplo, la recursión infinita en las relaciones bidireccionales).</p>
+<p class="paso"><b>18.</b> <b>Servicio.</b> Crea la interfaz <code>IMedicoService</code> y su implementación <code>MedicoService</code>, con <code>@Autowired</code> en los repositorios necesarios. Implementa:</p>
+<ul>
+<li><code>crear(MedicoRequestDTO)</code>. Si no existe el hospital, lanza la excepción de «no encontrado».</li>
+<li><code>obtener(Long id)</code>.</li>
+<li><code>listarPorHospital(Long hospitalId)</code>. Si el hospital no existe, lanza «no encontrado». Una lista vacía es válida.</li>
+<li><code>eliminar(Long id)</code>. Si el médico tiene consultas, lanza una excepción de conflicto.</li>
+<li>Un método privado de conversión <code>Medico → MedicoResponseDTO</code>.</li>
+</ul>
+<p class="paso"><b>19.</b> <b>Controlador.</b> Crea <code>MedicoController</code> con estos endpoints. Indica el código HTTP de éxito y los de error.</p>
+<table>
+<tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
+<tr><td><code>POST /api/medicos</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/medicos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/medicos?hospitalId=</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>DELETE /api/medicos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+</table>
+<p>El <code>POST</code> debe devolver la cabecera <code>Location</code> con la URI del recurso creado.</p>
+<p class="paso"><b>20.</b> Crea un <code>@RestControllerAdvice</code> que transforme <code>NoEncontradoException</code> en 404, <code>ConflictoException</code> en 409 y los errores de validación en 400. Devuelve un cuerpo JSON con <code>mensaje</code> y <code>codigo</code>.</p>
+<p class="paso"><b>21.</b> Añade el endpoint <code>POST /api/pacientes/{id}/consultas</code>, que registra una consulta recibiendo <code>medicoId</code>, <code>fecha</code>, <code>coste</code> y <code>tipo</code>. Indica:</p>
+<ul>
+<li>a) qué entidades hay que buscar antes de crear la consulta,</li>
+<li>b) qué códigos devuelves si falta alguna,</li>
+<li>c) qué DTO devuelves como respuesta.</li>
+</ul>
+
+<h3>Parte 5: preguntas de comprensión (1,5 puntos)</h3>
+<p class="paso"><b>22.</b> Una petición <code>GET /api/pacientes/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo lo evitarías.</p>
+<p class="paso"><b>23.</b> Al serializar un <code>Hospital</code> con su lista de médicos, el JSON entra en un bucle infinito. Explica la causa y da dos soluciones.</p>
+<p class="paso"><b>24.</b> <code>DELETE /api/hospitales/1</code> devuelve 500 por una violación de clave foránea. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
+<p class="paso"><b>25.</b> Dibuja el esquema de tablas (con claves primarias y foráneas) que genera todo el modelo y marca dónde está cada clave foránea.</p>
+
+<div class="why">Intenta hacerlo tú primero y no abras el solucionario hasta terminar: lo que más enseña es comparar tus fallos con la solución.</div>
+</article>

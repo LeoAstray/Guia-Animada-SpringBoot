@@ -1,0 +1,444 @@
+<section id="s23">
+<h2>25 Los servicios: interfaces, implementaciones y conversión</h2>
+<h3>Las capas y las inyecciones</h3>
+<figure class="fig">
+<svg viewBox="0 0 900 330" xmlns="http://www.w3.org/2000/svg" font-size="13" text-anchor="middle">
+  <g font-weight="600">
+    <rect x="10" y="25" width="180" height="44" rx="6" fill="#dcefee" stroke="#0b6b6b" stroke-width="2"/><text x="100" y="52">EditorialController</text>
+    <rect x="235" y="25" width="150" height="44" rx="6" fill="#fbeccf" stroke="#a35b00" stroke-width="2"/><text x="310" y="52">IEditorialService</text>
+    <rect x="430" y="25" width="170" height="44" rx="6" fill="#e0f1e7" stroke="#2e7d4f" stroke-width="2"/><text x="515" y="52">EditorialServiceImpl</text>
+    <rect x="660" y="10" width="220" height="30" rx="15" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="2"/><text x="770" y="30">IEditorialRepository</text>
+    <rect x="660" y="52" width="220" height="30" rx="15" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="2"/><text x="770" y="72">ILibroRepository</text>
+
+    <rect x="10" y="125" width="180" height="44" rx="6" fill="#dcefee" stroke="#0b6b6b" stroke-width="2"/><text x="100" y="152">AutorController</text>
+    <rect x="235" y="125" width="150" height="44" rx="6" fill="#fbeccf" stroke="#a35b00" stroke-width="2"/><text x="310" y="152">IAutorService</text>
+    <rect x="430" y="125" width="170" height="44" rx="6" fill="#e0f1e7" stroke="#2e7d4f" stroke-width="2"/><text x="515" y="152">AutorServiceImpl</text>
+    <rect x="660" y="125" width="220" height="30" rx="15" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="2"/><text x="770" y="145">IAutorRepository</text>
+
+    <rect x="10" y="232" width="180" height="44" rx="6" fill="#dcefee" stroke="#0b6b6b" stroke-width="2"/><text x="100" y="259">LibroController</text>
+    <rect x="235" y="232" width="150" height="44" rx="6" fill="#fbeccf" stroke="#a35b00" stroke-width="2"/><text x="310" y="259">ILibroService</text>
+    <rect x="430" y="232" width="170" height="44" rx="6" fill="#e0f1e7" stroke="#2e7d4f" stroke-width="2"/><text x="515" y="259">LibroServiceImpl</text>
+    <rect x="660" y="205" width="220" height="30" rx="15" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="2"/><text x="770" y="225">ILibroRepository</text>
+    <rect x="660" y="247" width="220" height="30" rx="15" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="2"/><text x="770" y="267">IEditorialRepository</text>
+    <rect x="660" y="289" width="220" height="30" rx="15" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="2"/><text x="770" y="309">IAutorRepository</text>
+  </g>
+  <g stroke="#14212b" stroke-width="2" marker-end="url(#ar)">
+    <line pathLength="1" class="ld" x1="190" y1="47" x2="233" y2="47"/><line pathLength="1" class="ld" x1="190" y1="147" x2="233" y2="147"/><line pathLength="1" class="ld" x1="190" y1="254" x2="233" y2="254"/>
+    <line pathLength="1" class="ld" x1="600" y1="45" x2="658" y2="26"/><line pathLength="1" class="ld" x1="600" y1="52" x2="658" y2="67"/>
+    <line pathLength="1" class="ld" x1="600" y1="147" x2="658" y2="140"/>
+    <line pathLength="1" class="ld" x1="600" y1="244" x2="658" y2="222"/><line pathLength="1" class="ld" x1="600" y1="254" x2="658" y2="262"/><line pathLength="1" class="ld" x1="600" y1="264" x2="658" y2="302"/>
+  </g>
+  <g stroke="#14212b" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar)">
+    <line pathLength="1" class="ld" x1="428" y1="47" x2="387" y2="47"/><line pathLength="1" class="ld" x1="428" y1="147" x2="387" y2="147"/><line pathLength="1" class="ld" x1="428" y1="254" x2="387" y2="254"/>
+  </g>
+  <g font-size="11" fill="#4f5d68"><text x="212" y="40">@Autowired</text><text x="212" y="140">@Autowired</text><text x="212" y="247">@Autowired</text><text x="407" y="40">implements</text><text x="407" y="140">implements</text><text x="407" y="247">implements</text></g>
+</svg>
+<figcaption>Cada flecha continua es un @Autowired; la discontinua es implements. Los repositorios de las columnas a la derecha son los que inyecta cada servicio</figcaption>
+</figure>
+<table>
+<tr><th>Servicio</th><th>Repositorios que inyecta</th><th>Para qué los necesita</th></tr>
+<tr><td><code>EditorialServiceImpl</code></td><td><code>IEditorialRepository</code>, <code>ILibroRepository</code></td><td>Guardar y buscar editoriales, y <b>contar sus libros</b> antes de borrar.</td></tr>
+<tr><td><code>AutorServiceImpl</code></td><td><code>IAutorRepository</code></td><td>Guardar autores y recorrer sus libros.</td></tr>
+<tr><td><code>LibroServiceImpl</code></td><td><b><code>ILibroRepository</code>, <code>IEditorialRepository</code>, <code>IAutorRepository</code></b></td><td>Convertir los ids que llegan en entidades reales y asociarlas al libro.</td></tr>
+</table>
+
+<h3>¿Por qué <code>LibroServiceImpl</code> inyecta tres repositorios y no llama a <code>IEditorialService</code>?</h3>
+<p><code>LibroServiceImpl</code> necesita transformar claves foráneas (<code>editorialId</code>, <code>autoresIds</code>) en <b>instancias de entidades persistentes</b> (<code>Editorial</code>, <code>Autor</code>) para establecer las relaciones en la base de datos. Si llamáramos a <code>IEditorialService</code>, solo nos entregaría un <code>EditorialResponseDTO</code> (por la regla que prohíbe exponer entidades en los contratos de servicio), y <b>un DTO no puede asociarse a una relación JPA de Libro</b>. Por eso el servicio accede directamente a los repositorios.</p>
+<div class="kid">El cocinero necesita el tomate de verdad, no una foto del tomate. Va a la nevera (el repositorio), no al camarero.</div>
+
+<h3>El «idioma» entre el servicio y el controlador</h3>
+<p>En esta solución los servicios no lanzan excepciones para los casos normales: <b>devuelven un valor que cuenta qué pasó</b>, y el controlador lo traduce a un código HTTP.</p>
+<table>
+<tr><th>El servicio devuelve</th><th>Significa</th><th>El controlador responde</th></tr>
+<tr><td><code>Optional&lt;DTO&gt;</code> con valor</td><td>Encontrado o hecho</td><td>200</td></tr>
+<tr><td><code>Optional.empty()</code></td><td>No existe</td><td>404</td></tr>
+<tr><td><code>int eliminar(...)</code>: <b>1</b></td><td>Borrado con éxito</td><td>204</td></tr>
+<tr><td><code>int eliminar(...)</code>: <b>0</b></td><td>No existe</td><td>404</td></tr>
+<tr><td><code>int eliminar(...)</code>: <b>-1</b></td><td>Conflicto: la editorial tiene libros</td><td>409</td></tr>
+<tr><td><code>boolean desasociarAutor</code></td><td><code>true</code> hecho, <code>false</code> el libro o el autor no existen</td><td>204 o 404</td></tr>
+<tr><td><code>IllegalArgumentException</code> (solo en <code>crear</code> de Libro)</td><td>La editorial o un autor no existen</td><td>404 (el controlador la captura)</td></tr>
+</table>
+
+<h3>La pieza central: <code>POST /api/libros</code> de principio a fin</h3>
+<figure class="fig">
+<svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg" font-size="12" text-anchor="middle">
+  <g font-weight="700">
+    <circle cx="40" cy="60" r="26" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><use href="#i-hand" class="ic" x="27.35" y="46.495" width="25.3" height="25.3"/><text x="40" y="105">Cliente</text>
+    <rect x="110" y="30" width="150" height="60" rx="10" fill="#dcefee" stroke="#0b6b6b" stroke-width="3"/><text x="185" y="55">① Controller</text><text x="185" y="73" font-weight="400">recibe RequestDTO</text>
+    <rect x="320" y="30" width="270" height="200" rx="10" fill="#e0f1e7" stroke="#2e7d4f" stroke-width="3"/><text x="455" y="52">② ServiceImpl (@Transactional ▶)</text>
+    <rect x="640" y="30" width="150" height="60" rx="10" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><text x="715" y="55">EditorialRepo</text><text x="715" y="73" font-weight="400">findById → 404</text>
+    <rect x="640" y="110" width="150" height="60" rx="10" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><text x="715" y="135">AutorRepo</text><text x="715" y="153" font-weight="400">findById → 404</text>
+    <rect x="640" y="190" width="150" height="50" rx="10" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><text x="715" y="212">LibroRepo</text><text x="715" y="228" font-weight="400">save → INSERT</text>
+  </g>
+  <g font-size="12">
+    <text x="455" y="85">a) busca la editorial</text>
+    <text x="455" y="110">b) busca los autores</text>
+    <text x="455" y="135">c) monta Libro (addAutor)</text>
+    <text x="455" y="160">d) guarda el Libro</text>
+    <text x="455" y="185">③ Libro → ResponseDTO</text>
+    <text x="455" y="215" fill="#4f5d68">◀ fin de la transacción</text>
+  </g>
+  <g stroke="#14212b" stroke-width="2" marker-end="url(#ar)">
+    <line pathLength="1" class="ld" x1="68" y1="60" x2="108" y2="60"/><line pathLength="1" class="ld" x1="260" y1="60" x2="318" y2="60"/>
+    <line pathLength="1" class="ld" x1="590" y1="60" x2="638" y2="60"/><line pathLength="1" class="ld" x1="590" y1="140" x2="638" y2="140"/><line pathLength="1" class="ld" x1="590" y1="215" x2="638" y2="215"/>
+  </g>
+  <text x="185" y="140" font-weight="700">④ ResponseEntity</text><text x="185" y="158">.created(location)</text><text x="185" y="176">.body(dto)</text>
+  <text x="185" y="205" font-size="15" font-weight="700" fill="#1f6a40">⑤ 201 Created</text>
+  <path d="M185 190 Q185 240 60 100" stroke="#1f6a40" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+</svg>
+<figcaption>Recorrido de POST /api/libros: del cliente a MySQL y vuelta</figcaption>
+</figure>
+<p>Se debe poder explicar <b>sin mirar apuntes</b>. El servicio resuelve la editorial por su id, resuelve cada autor, crea la ficha técnica, ensambla el <code>Libro</code> (con <code>addAutor</code> para dejar los dos lados coherentes), lo guarda y lo convierte en <code>LibroResponseDTO</code>. El controlador lo devuelve en un <code>ResponseEntity</code> con <b>201</b> y la cabecera <code>Location</code>.</p>
+
+<details open><summary>LibroServiceImpl.java y su interfaz</summary>
+<pre class="code" data-f="service/ILibroService.java">package edu.rico.biblioteca.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import edu.rico.biblioteca.dto.FichaLibroDTO;
+import edu.rico.biblioteca.dto.LibroRequestDTO;
+import edu.rico.biblioteca.dto.LibroResponseDTO;
+
+public interface ILibroService {
+    LibroResponseDTO crear(LibroRequestDTO dto);
+
+    Optional&lt;LibroResponseDTO&gt; obtenerPorId(Long id);
+
+    Optional&lt;List&lt;LibroResponseDTO&gt;&gt; listarPorEditorial(Long editorialId);
+
+    Optional&lt;LibroResponseDTO&gt; actualizarFicha(Long libroId, FichaLibroDTO fichaDTO);
+
+    Optional&lt;LibroResponseDTO&gt; asociarAutor(Long libroId, Long autorId);
+
+    boolean desasociarAutor(Long libroId, Long autorId);
+}</pre>
+<pre class="code" data-f="service/impl/LibroServiceImpl.java">package edu.rico.biblioteca.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.rico.biblioteca.dto.AutorResumenDTO;
+import edu.rico.biblioteca.dto.EditorialResumenDTO;
+import edu.rico.biblioteca.dto.FichaLibroDTO;
+import edu.rico.biblioteca.dto.LibroRequestDTO;
+import edu.rico.biblioteca.dto.LibroResponseDTO;
+import edu.rico.biblioteca.entity.Autor;
+import edu.rico.biblioteca.entity.Editorial;
+import edu.rico.biblioteca.entity.FichaLibro;
+import edu.rico.biblioteca.entity.Libro;
+import edu.rico.biblioteca.repository.IAutorRepository;
+import edu.rico.biblioteca.repository.IEditorialRepository;
+import edu.rico.biblioteca.repository.ILibroRepository;
+import edu.rico.biblioteca.service.ILibroService;
+
+@Service
+public class LibroServiceImpl implements ILibroService {
+
+    @Autowired
+    private ILibroRepository libroRepo;
+
+    @Autowired
+    private IEditorialRepository editorialRepo;
+
+    @Autowired
+    private IAutorRepository autorRepo;
+
+    @Override
+    @Transactional
+    public LibroResponseDTO crear(LibroRequestDTO dto) {
+        // 1. Resolver la Editorial
+        Optional&lt;Editorial&gt; editorialOpt = editorialRepo.findById(dto.editorialId());
+        if (editorialOpt.isEmpty()) {
+            throw new IllegalArgumentException("La editorial con ID " + dto.editorialId() + " no existe");
+        }
+
+        Libro libro = new Libro(dto.titulo());
+        libro.setEditorial(editorialOpt.get());
+
+        // 2. Resolver Autores
+        if (dto.autoresIds() != null &amp;&amp; !dto.autoresIds().isEmpty()) {
+            for (Long autorId : dto.autoresIds()) {
+                Optional&lt;Autor&gt; autorOpt = autorRepo.findById(autorId);
+                if (autorOpt.isEmpty()) {
+                    throw new IllegalArgumentException("El autor con ID " + autorId + " no existe");
+                }
+                libro.addAutor(autorOpt.get());
+            }
+        }
+
+        // 3. Resolver Ficha Técnica (1:1)
+        if (dto.ficha() != null) {
+            FichaLibro ficha = new FichaLibro(dto.ficha().isbn(), dto.ficha().paginas(), dto.ficha().anio());
+            libro.setFicha(ficha);
+        }
+
+        Libro guardado = libroRepo.save(libro);
+        return mapearAResponseDTO(guardado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;LibroResponseDTO&gt; obtenerPorId(Long id) {
+        Optional&lt;Libro&gt; opt = libroRepo.findByIdConRelaciones(id);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(mapearAResponseDTO(opt.get()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;List&lt;LibroResponseDTO&gt;&gt; listarPorEditorial(Long editorialId) {
+        if (!editorialRepo.existsById(editorialId)) {
+            return Optional.empty();
+        }
+
+        List&lt;Libro&gt; libros = libroRepo.findByEditorialId(editorialId);
+        List&lt;LibroResponseDTO&gt; listaDTO = new ArrayList&lt;&gt;();
+        for (Libro l : libros) {
+            listaDTO.add(mapearAResponseDTO(l));
+        }
+        return Optional.of(listaDTO);
+    }
+
+    @Override
+    @Transactional
+    public Optional&lt;LibroResponseDTO&gt; actualizarFicha(Long libroId, FichaLibroDTO fichaDTO) {
+        Optional&lt;Libro&gt; opt = libroRepo.findById(libroId);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Libro libro = opt.get();
+        FichaLibro ficha = libro.getFicha();
+
+        if (ficha == null) {
+            ficha = new FichaLibro();
+            libro.setFicha(ficha);
+        }
+
+        ficha.setIsbn(fichaDTO.isbn());
+        ficha.setPaginas(fichaDTO.paginas());
+        ficha.setAnio(fichaDTO.anio());
+
+        Libro guardado = libroRepo.save(libro);
+        return Optional.of(mapearAResponseDTO(guardado));
+    }
+
+    @Override
+    @Transactional
+    public Optional&lt;LibroResponseDTO&gt; asociarAutor(Long libroId, Long autorId) {
+        Optional&lt;Libro&gt; libroOpt = libroRepo.findById(libroId);
+        Optional&lt;Autor&gt; autorOpt = autorRepo.findById(autorId);
+
+        if (libroOpt.isEmpty() || autorOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Libro libro = libroOpt.get();
+        Autor autor = autorOpt.get();
+
+        libro.addAutor(autor);
+        Libro guardado = libroRepo.save(libro);
+        return Optional.of(mapearAResponseDTO(guardado));
+    }
+
+    @Override
+    @Transactional
+    public boolean desasociarAutor(Long libroId, Long autorId) {
+        Optional&lt;Libro&gt; libroOpt = libroRepo.findById(libroId);
+        Optional&lt;Autor&gt; autorOpt = autorRepo.findById(autorId);
+
+        if (libroOpt.isEmpty() || autorOpt.isEmpty()) {
+            return false;
+        }
+
+        Libro libro = libroOpt.get();
+        Autor autor = autorOpt.get();
+
+        libro.removeAutor(autor);
+        libroRepo.save(libro);
+        return true;
+    }
+
+    // Conversión manual entre Entity y DTO (sin librerías externas)
+    private LibroResponseDTO mapearAResponseDTO(Libro l) {
+        EditorialResumenDTO edDTO = null;
+        if (l.getEditorial() != null) {
+            edDTO = new EditorialResumenDTO(l.getEditorial().getId(), l.getEditorial().getNombre());
+        }
+
+        List&lt;AutorResumenDTO&gt; autoresDTO = new ArrayList&lt;&gt;();
+        if (l.getAutores() != null) {
+            for (Autor a : l.getAutores()) {
+                autoresDTO.add(new AutorResumenDTO(a.getId(), a.getNombre()));
+            }
+        }
+
+        FichaLibroDTO fichaDTO = null;
+        if (l.getFicha() != null) {
+            fichaDTO = new FichaLibroDTO(l.getFicha().getIsbn(), l.getFicha().getPaginas(), l.getFicha().getAnio());
+        }
+
+        return new LibroResponseDTO(l.getId(), l.getTitulo(), edDTO, autoresDTO, fichaDTO);
+    }
+}</pre></details>
+<details><summary>EditorialServiceImpl.java y su interfaz</summary>
+<pre class="code" data-f="service/IEditorialService.java">package edu.rico.biblioteca.service;
+
+import java.util.Optional;
+
+import edu.rico.biblioteca.dto.EditorialRequestDTO;
+import edu.rico.biblioteca.dto.EditorialResponseDTO;
+
+public interface IEditorialService {
+    EditorialResponseDTO crear(EditorialRequestDTO dto);
+
+    Optional&lt;EditorialResponseDTO&gt; obtenerPorId(Long id);
+
+    // Devuelve: 1 = borrado con éxito (204), 0 = no existe (404), -1 = conflicto, tiene libros (409)
+    int eliminar(Long id);
+}</pre>
+<pre class="code" data-f="service/impl/EditorialServiceImpl.java">package edu.rico.biblioteca.service.impl;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.rico.biblioteca.dto.EditorialRequestDTO;
+import edu.rico.biblioteca.dto.EditorialResponseDTO;
+import edu.rico.biblioteca.entity.Editorial;
+import edu.rico.biblioteca.repository.IEditorialRepository;
+import edu.rico.biblioteca.repository.ILibroRepository;
+import edu.rico.biblioteca.service.IEditorialService;
+
+@Service
+public class EditorialServiceImpl implements IEditorialService {
+
+    @Autowired
+    private IEditorialRepository editorialRepo;
+
+    @Autowired
+    private ILibroRepository libroRepo;
+
+    @Override
+    @Transactional
+    public EditorialResponseDTO crear(EditorialRequestDTO dto) {
+        Editorial editorial = new Editorial(dto.nombre(), dto.pais());
+        Editorial guardada = editorialRepo.save(editorial);
+        return new EditorialResponseDTO(guardada.getId(), guardada.getNombre(), guardada.getPais());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;EditorialResponseDTO&gt; obtenerPorId(Long id) {
+        Optional&lt;Editorial&gt; opt = editorialRepo.findById(id);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Editorial e = opt.get();
+        return Optional.of(new EditorialResponseDTO(e.getId(), e.getNombre(), e.getPais()));
+    }
+
+    @Override
+    @Transactional
+    public int eliminar(Long id) {
+        if (!editorialRepo.existsById(id)) {
+            return 0; // 404
+        }
+
+        // Comprobación de integridad: verificar si tiene libros asociados
+        long totalLibros = libroRepo.countByEditorialId(id);
+        if (totalLibros &gt; 0) {
+            return -1; // 409 Conflicto
+        }
+
+        editorialRepo.deleteById(id);
+        return 1; // 204 Éxito
+    }
+}</pre></details>
+<details><summary>AutorServiceImpl.java y su interfaz</summary>
+<pre class="code" data-f="service/IAutorService.java">package edu.rico.biblioteca.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import edu.rico.biblioteca.dto.AutorRequestDTO;
+import edu.rico.biblioteca.dto.AutorResponseDTO;
+import edu.rico.biblioteca.dto.LibroResumenDTO;
+
+public interface IAutorService {
+    AutorResponseDTO crear(AutorRequestDTO dto);
+
+    Optional&lt;List&lt;LibroResumenDTO&gt;&gt; obtenerLibrosPorAutor(Long autorId);
+}</pre>
+<pre class="code" data-f="service/impl/AutorServiceImpl.java">package edu.rico.biblioteca.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.rico.biblioteca.dto.AutorRequestDTO;
+import edu.rico.biblioteca.dto.AutorResponseDTO;
+import edu.rico.biblioteca.dto.LibroResumenDTO;
+import edu.rico.biblioteca.entity.Autor;
+import edu.rico.biblioteca.entity.Libro;
+import edu.rico.biblioteca.repository.IAutorRepository;
+import edu.rico.biblioteca.service.IAutorService;
+
+@Service
+public class AutorServiceImpl implements IAutorService {
+
+    @Autowired
+    private IAutorRepository autorRepo;
+
+    @Override
+    @Transactional
+    public AutorResponseDTO crear(AutorRequestDTO dto) {
+        Autor autor = new Autor(dto.nombre(), dto.nacionalidad());
+        Autor guardado = autorRepo.save(autor);
+        return new AutorResponseDTO(guardado.getId(), guardado.getNombre(), guardado.getNacionalidad(), new ArrayList&lt;&gt;());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;List&lt;LibroResumenDTO&gt;&gt; obtenerLibrosPorAutor(Long autorId) {
+        Optional&lt;Autor&gt; opt = autorRepo.findById(autorId);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Autor autor = opt.get();
+        List&lt;LibroResumenDTO&gt; resumenes = new ArrayList&lt;&gt;();
+        for (Libro l : autor.getLibros()) {
+            resumenes.add(new LibroResumenDTO(l.getId(), l.getTitulo()));
+        }
+
+        return Optional.of(resumenes);
+    }
+}</pre></details>
+
+<h3>Decisiones que conviene saber justificar</h3>
+<table>
+<tr><th>Decisión</th><th>Por qué</th></tr>
+<tr><td><code>@Transactional</code> en cada método, y <code>readOnly = true</code> en las lecturas</td><td>El mapeo a DTO recorre relaciones LAZY, así que la sesión debe seguir abierta. <code>readOnly</code> avisa de que solo se lee.</td></tr>
+<tr><td>La conversión es un <b>método privado</b> <code>mapearAResponseDTO</code> dentro de <code>LibroServiceImpl</code></td><td>La regla pide que la conversión ocurra en el servicio, ya sea en métodos privados o en una clase Mapper. Aquí se elige método privado, <b>sin librerías externas</b>, porque solo Libro necesita ese mapeo completo. Si lo necesitaran varios servicios, un <code>@Component Mapper</code> evitaría repetir código.</td></tr>
+<tr><td><code>obtenerPorId</code> usa <code>findByIdConRelaciones</code></td><td>Una sola consulta con JOIN FETCH para tener editorial, ficha y autores, sin N+1.</td></tr>
+<tr><td><code>asociarAutor</code> añade al <code>Set</code></td><td>Añadir dos veces el mismo autor no duplica nada.</td></tr>
+<tr><td><code>eliminar</code> de Editorial cuenta antes los libros</td><td>Así se devuelve un 409 limpio en vez de dejar que la base de datos falle con un 500.</td></tr>
+<tr><td>El <code>AutorResponseDTO</code> de <code>crear</code> lleva una lista vacía</td><td>Un autor recién creado todavía no tiene libros.</td></tr>
+</table>
+</section>

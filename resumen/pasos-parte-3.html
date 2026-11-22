@@ -1,0 +1,157 @@
+<!-- GUÍA RESUMIDA · PARTE 3 (pasos 20 a 32). Mismo formato que pasos-parte-1.html
+     (ahí se explica la marca [[codigo:N:texto]] para mostrar código de la guía completa). -->
+
+<article data-paso="20">
+<ol>
+<li>Lo que se evalúa es saber <b>conectar las capas</b>: RestController, IService, Service, JpaRepository, Entity, DTO y ResponseEntity.</li>
+<li>El modelo: Editorial 1:N Libro, Libro 1:1 FichaLibro y Libro N:M Autor (4 entidades y 5 tablas).</li>
+<li>La guía completa trae la tabla de endpoints con su código de éxito y los de error.</li>
+<li>Orden de trabajo: proyecto, Misión 1 (entidades), repositorios, DTO, servicios y controladores, trampas, <code>@Valid</code> y probar.</li>
+</ol>
+</article>
+
+<article data-paso="21">
+<ol>
+<li>En Initializr: Maven, Java 21, Spring Boot 4.1.2, Group y package <code>edu.rico.biblioteca</code>, Artifact <code>biblioteca</code>. Dependencias: MySQL Driver, Spring Data JPA, Spring Boot DevTools, Spring Web y Validation.</li>
+<li>El <code>pom.xml</code> debe quedar con estas dependencias (en Spring Boot 4.1 el starter web se llama <code>spring-boot-starter-webmvc</code>).
+[[codigo:21:spring-boot-starter-webmvc]]</li>
+<li>Configura <code>application.properties</code>. Ajusta usuario, contraseña y puerto.
+[[codigo:21:spring.application.name=biblioteca]]</li>
+<li>Crea esta estructura de paquetes.
+[[codigo:21:edu/rico/biblioteca/]]</li>
+<li>Con el proyecto vacío debe arrancar sin errores (Tomcat en el 8080).</li>
+</ol>
+</article>
+
+<article data-paso="22">
+<ol>
+<li>El <b>lado propietario</b> es el que tiene la clave foránea; el otro lleva <code>mappedBy</code>. Aquí: <code>Libro</code> (con <code>Editorial</code> y con <code>Autor</code>) y <code>FichaLibro</code> (con <code>Libro</code>).</li>
+<li><code>@ManyToOne</code> con <code>fetch = LAZY</code>; en el N:M, <code>Set</code> con <code>equals</code> y <code>hashCode</code>; <code>Libro → FichaLibro</code> con <code>cascade = ALL</code> y <code>orphanRemoval</code>; <code>Editorial → Libro</code> sin <code>REMOVE</code>.</li>
+<li><code>Libro</code>, propietario del N:M y de la clave a editorial, con los métodos <code>addAutor</code>, <code>removeAutor</code> y <code>setFicha</code>, que actualizan los dos lados:
+[[codigo:22:public class Libro {]]</li>
+<li><code>Editorial</code>:
+[[codigo:22:public class Editorial]]</li>
+<li><code>Autor</code>, lado inverso del N:M:
+[[codigo:22:public class Autor]]</li>
+<li><code>FichaLibro</code>, propietaria del 1:1:
+[[codigo:22:public class FichaLibro]]</li>
+</ol>
+</article>
+
+<article data-paso="23">
+<ol>
+<li>Crea cuatro interfaces <code>JpaRepository&lt;Entidad, Long&gt;</code>, una por entidad. La interesante es la de libros: <code>findByEditorialId</code>, <code>countByEditorialId</code> (para decidir el 409) y <code>findByIdConRelaciones</code> (con <code>JOIN FETCH</code>, contra el N+1).
+[[codigo:23:public interface ILibroRepository]]</li>
+<li>Los otros tres:
+[[codigo:23:public interface IEditorialRepository]]
+[[codigo:23:public interface IAutorRepository]]
+[[codigo:23:public interface IFichaLibroRepository]]</li>
+</ol>
+</article>
+
+<article data-paso="24">
+<ol>
+<li>El cliente nunca ve una Entity. Todos los DTO son <code>record</code>: de entrada (<code>*RequestDTO</code>), de salida (<code>*ResponseDTO</code>) y <code>*ResumenDTO</code> anidados para romper los bucles.</li>
+<li>El libro recibe <b>ids</b> (<code>editorialId</code> y <code>autoresIds</code>), no objetos: el Service busca los reales.</li>
+<li>Esta es la primera versión, sin validar (cada <code>record</code> va en su archivo, en el paquete <code>dto</code>). La versión final está en el paso 28.
+[[codigo:24:public record EditorialResumenDTO]]</li>
+</ol>
+</article>
+
+<article data-paso="25">
+<ol>
+<li>Para cada entidad, una interfaz (solo con DTO) y su implementación con <code>@Service</code>, <code>@Autowired</code> y <code>@Transactional</code>. El Service convierte entre DTO y Entity.</li>
+<li><b>Libro</b>, el más completo. <code>LibroServiceImpl</code> usa tres repositorios y no <code>IEditorialService</code>, porque necesita Entities.
+[[codigo:25:public interface ILibroService]]
+[[codigo:25:public class LibroServiceImpl]]</li>
+<li><b>Editorial</b>:
+[[codigo:25:public interface IEditorialService]]
+[[codigo:25:public class EditorialServiceImpl]]</li>
+<li><b>Autor</b>:
+[[codigo:25:public interface IAutorService]]
+[[codigo:25:public class AutorServiceImpl]]</li>
+<li>Devuelven <code>Optional</code>, <code>int</code> o <code>boolean</code>, y el Controller lo traduce a código HTTP.</li>
+</ol>
+</article>
+
+<article data-paso="26">
+<ol>
+<li>Cada Controller inyecta solo su <code>IService</code> y responde con <code>ResponseEntity</code>. Códigos: <b>201</b> con <code>Location</code> al crear, <b>200</b> al leer o actualizar, <b>204</b> al borrar, <b>404</b> si no existe y <b>409</b> si choca con otros datos.</li>
+<li><code>LibroController</code>:
+[[codigo:26:public class LibroController]]</li>
+<li><code>EditorialController</code>:
+[[codigo:26:public class EditorialController]]</li>
+<li><code>AutorController</code>:
+[[codigo:26:public class AutorController]]</li>
+</ol>
+</article>
+
+<article data-paso="27">
+<ol>
+<li>Se trata de <b>provocar</b> cada trampa a propósito, entender por qué ocurre y arreglarla.</li>
+<li><b>Devolver una Entity</b> → recursión infinita en el JSON → usa DTO con <code>*ResumenDTO</code>.</li>
+<li><b>LAZY fuera de la transacción</b> → <code>LazyInitializationException</code> → <code>@Transactional</code> en el Service.</li>
+<li><b>N+1</b> → muchas consultas en el log → <code>JOIN FETCH</code> o <code>@EntityGraph</code>.</li>
+<li><b>Borrar una editorial con libros</b> → 500 → cuenta antes los libros y devuelve 409.</li>
+<li><b>Autor repetido</b>: un <code>List</code> lo duplica y un <code>Set</code> no.</li>
+<li>Después de cada experimento, devuelve el código a su versión correcta.</li>
+</ol>
+</article>
+
+<article data-paso="28">
+<ol>
+<li>Con <code>@Valid</code> el 400 sale solo, antes de llegar al servicio. Comprueba que está la dependencia <code>spring-boot-starter-validation</code>.
+[[codigo:28:spring-boot-starter-validation]]</li>
+<li><b>DTO de entrada con validaciones</b> (son los finales; sustituyen a los del paso 24). <code>@NotBlank</code>, <code>@NotNull</code>, <code>@NotEmpty</code>, <code>@Size</code>, <code>@Pattern</code> (el ISBN), <code>@Min</code> y <code>@Max</code>.
+[[codigo:28:public record EditorialRequestDTO]]
+[[codigo:28:public record FichaLibroDTO]]
+[[codigo:28:public record LibroRequestDTO]]
+[[codigo:28:public record AutorRequestDTO]]</li>
+<li><b>DTO de salida</b>, con su <code>package</code> e imports:
+[[codigo:28:public record AutorResponseDTO]]
+[[codigo:28:public record EditorialResponseDTO]]
+[[codigo:28:public record EditorialResumenDTO]]
+[[codigo:28:public record AutorResumenDTO]]
+[[codigo:28:public record LibroResumenDTO]]
+[[codigo:28:public record LibroResponseDTO]]</li>
+<li>En cada método del Controller que recibe un DTO va <code>@Valid</code> delante de <code>@RequestBody</code>, como en los controladores del paso 26.</li>
+</ol>
+</article>
+
+<article data-paso="29">
+<ol>
+<li>Arranca la aplicación y haz la secuencia <b>en orden</b>. En Postman, los POST y el PUT llevan <b>Body &gt; raw &gt; JSON</b>; los GET y los DELETE no llevan cuerpo.</li>
+<li>Crear editorial (<code>POST /api/editoriales</code>):
+[[codigo:29:"nombre": "Planeta"]]</li>
+<li>Crear autor (<code>POST /api/autores</code>):
+[[codigo:29:"nombre": "Cervantes"]]</li>
+<li>Crear libro (<code>POST /api/libros</code>). Necesita la editorial 1 y el autor 1. <code>autoresIds</code> es una lista y <code>ficha</code> es un objeto.
+[[codigo:29:"titulo": "Don Quijote"]]</li>
+<li>El resto: <code>GET /api/libros/1</code>, <code>GET /api/libros?editorialId=1</code>, <code>PUT /api/libros/1/ficha</code> (cuerpo: <code>{"isbn": "842041214X", "paginas": 1000, "anio": 1615}</code>), <code>POST /api/libros/1/autores/1</code> (sin cuerpo), <code>GET /api/autores/1/libros</code>, <code>DELETE /api/libros/1/autores/1</code> y <code>DELETE /api/editoriales/1</code>.</li>
+<li>Esperado: <b>201</b> al crear, <b>200</b> al leer, <b>204</b> al quitar un autor, <b>409</b> al borrar una editorial con libros, y <b>404</b> o <b>400</b> en los errores.</li>
+<li>La misma secuencia, con <code>curl</code>:
+[[codigo:29:curl -i -X POST http://localhost:8080/api/editoriales]]</li>
+</ol>
+</article>
+
+<article data-paso="30">
+<ol>
+<li>Cuéntalo en unos diez minutos y de lo general a lo concreto: el problema, el modelo, los dueños de cada relación, las capas, los DTO, una petición completa, los códigos HTTP, las trampas, la validación y la demostración.</li>
+<li>Prepara una respuesta corta para las preguntas típicas (por qué DTO, por qué <code>Set</code>, por qué LAZY, para qué <code>@Transactional</code>…).</li>
+<li>Conoce los límites de la solución: un ISBN duplicado da 500, el 404 depende de un texto y listar libros por editorial no usa fetch.</li>
+</ol>
+</article>
+
+<article data-paso="31">
+<ol>
+<li><b>Entrega:</b> diagrama de clases, diagrama de capas con los <code>@Autowired</code> reales, dos diagramas de recorrido, el proyecto funcionando y un documento con las respuestas de las misiones 1, 4 y 5.</li>
+<li><b>Rúbrica:</b> relaciones JPA 30 %, separación Entity y DTO 25 %, <code>ResponseEntity</code> y códigos 20 %, inyección coherente 10 % y diagramas y respuestas 15 %.</li>
+</ol>
+</article>
+
+<article data-paso="32">
+<ol>
+<li>Una tabla con todas las anotaciones, agrupadas por dónde se usan: Controller, parámetros, validación, Service, entidades, relaciones y consultas.</li>
+<li>Las ideas clave en una línea: capas, DTO, LAZY, <code>mappedBy</code>, <code>Set</code>, <code>orphanRemoval</code>, sin <code>REMOVE</code> de Editorial a Libro, <code>@Transactional</code>, <code>JOIN FETCH</code> y <code>@Valid</code>.</li>
+</ol>
+</article>

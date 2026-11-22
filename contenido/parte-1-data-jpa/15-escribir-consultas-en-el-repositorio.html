@@ -1,0 +1,82 @@
+<section id="paso-15">
+<h2>15 Escribir consultas en el repositorio y ejecutarlas en la aplicación</h2>
+<p>El <b>repositorio declara cómo buscar</b>. <code>ExamenApplication</code> <b>llama a esa búsqueda y utiliza su resultado</b>. Son dos partes de la misma tarea.</p>
+<div class="kid">Es como escribir una receta y después cocinarla.</div>
+<p>Por ejemplo, <code>Jugador findByMote(String mote);</code> declara una búsqueda en <code>IJugadorRepository</code>. <code>jugadorRepository.findByMote("Rayo")</code> la ejecuta desde <code>run</code>. No escribimos el cuerpo de esa búsqueda en la interfaz porque Spring Data lo prepara.</p>
+
+<h3>Dejar claro qué métodos son de cada sitio</h3>
+<p class="paso">1. Abre <code>IJugadorRepository.java</code>. Para una búsqueda por mote único, conserva esta declaración <b>dentro de las llaves de la interfaz</b>, sin cuerpo:</p>
+<pre data-f="repository/IJugadorRepository.java">Jugador findByMote(String mote);</pre>
+<p class="paso">2. Para usarla, el bloque siguiente va <b>dentro de <code>run</code> de <code>ExamenApplication.java</code></b>:</p>
+<pre data-f="ExamenApplication.java (dentro de run)">Jugador jugador = jugadorRepository.findByMote("Rayo");
+
+if (jugador != null) {
+    System.out.println(jugador.getNombre());
+} else {
+    System.out.println("No existe ese mote");
+}</pre>
+<div class="why"><code>findById</code>, <code>findAll</code>, <code>save</code>, <code>deleteById</code>, <code>existsById</code> y <code>count</code> ya vienen de <code>JpaRepository</code>. No los declares otra vez para usarlos. En cambio, las búsquedas nuevas por mote, posición o ciudad sí se añaden al repositorio.</div>
+
+<h3>Cuando el enunciado pide escribir SQL</h3>
+<p class="paso">3. Añade estos imports a <code>IJugadorRepository.java</code>, junto a los que ya tenga. Un import se escribe una sola vez:</p>
+<pre data-f="repository/IJugadorRepository.java (imports)">import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;</pre>
+<p class="paso">4. Añade los tres métodos siguientes <b>dentro de la interfaz</b>, antes de su última llave. Conserva <code>extends JpaRepository&lt;Jugador, Long&gt;</code> y las consultas anteriores que necesites.</p>
+
+<h4>Buscar por posición y por un trozo del nombre</h4>
+<pre data-f="repository/IJugadorRepository.java">@Query(value = """
+    SELECT * FROM jugadores
+    WHERE posicion = 'DELANTERO' AND nombre LIKE '%Ana%'
+    """, nativeQuery = true)
+List&lt;Jugador&gt; buscarPorPosicionYNombre();</pre>
+<p><code>@Query</code> permite escribir la consulta. <code>nativeQuery = true</code> indica que es SQL y utiliza las tablas y columnas de MySQL. Aquí los valores están fijados en la propia consulta: buscamos delanteros cuyo nombre contenga Ana. Los signos <code>%</code> permiten que haya texto antes o después de Ana. Por eso el método no recibe parámetros.</p>
+<p>Aquí usamos <code>List&lt;Jugador&gt;</code> porque puede haber varios jugadores que cumplan la condición. No hace falta crear una variable de tipo lista en <code>run</code>; puedes recorrer directamente el resultado:</p>
+<pre data-f="ExamenApplication.java (dentro de run)">for (Jugador jugador : jugadorRepository.buscarPorPosicionYNombre()) {
+    System.out.println(jugador.getNombre());
+}</pre>
+
+<h4>Buscar jugadores que tienen algún fichaje en equipos de una ciudad</h4>
+<pre data-f="repository/IJugadorRepository.java">@Query(value = """
+    SELECT DISTINCT j.*
+    FROM jugadores j
+    JOIN fichajes f ON f.id_jugador = j.id_jugador
+    JOIN equipos e ON e.id_equipo = f.id_equipo
+    WHERE e.ciudad = :ciudad
+    """, nativeQuery = true)
+List&lt;Jugador&gt; buscarPorCiudad(@Param("ciudad") String ciudad);</pre>
+<p><code>JOIN</code> une las tablas siguiendo sus claves. <code>j</code>, <code>f</code> y <code>e</code> son nombres cortos para escribir menos. <code>DISTINCT</code> evita repetir un jugador si tiene varios fichajes que cumplen la condición. <code>:ciudad</code> se enlaza con el argumento que lleva <code>@Param("ciudad")</code>.</p>
+<p>Para usarla, dentro de <code>run</code>:</p>
+<pre data-f="ExamenApplication.java (dentro de run)">for (Jugador jugador : jugadorRepository.buscarPorCiudad("Madrid")) {
+    System.out.println(jugador.getNombre());
+}</pre>
+
+<h4>Cambiar la posición de los jugadores fichados por un equipo</h4>
+<pre data-f="repository/IJugadorRepository.java">@Modifying(clearAutomatically = true, flushAutomatically = true)
+@Transactional
+@Query(value = """
+    UPDATE jugadores SET posicion = :posicion
+    WHERE id_jugador IN (
+        SELECT id_jugador FROM fichajes
+        WHERE id_equipo = :idEquipo
+    )
+    """, nativeQuery = true)
+int cambiarPosicionPorEquipo(
+    @Param("posicion") String posicion,
+    @Param("idEquipo") Long idEquipo);</pre>
+<p>Para probarla, al final de <code>run</code>:</p>
+<pre data-f="ExamenApplication.java (al final de run)">int cambiados = jugadorRepository.cambiarPosicionPorEquipo(
+    "DEFENSA", 1L);
+System.out.println("Filas cambiadas: " + cambiados);</pre>
+<p><code>@Modifying</code> avisa de que la consulta cambia datos. <code>@Transactional</code> permite realizar el cambio dentro de una transacción. El resultado <code>int</code> indica el número de filas afectadas. Con nuestros datos, afecta a Ana porque tiene un fichaje con el equipo 1.</p>
+<div class="warn">Este <code>UPDATE</code> va directamente a la base. <code>flushAutomatically</code> envía primero los cambios pendientes y <code>clearAutomatically</code> limpia las entidades que estaban cargadas para no seguir leyendo copias antiguas. Después vuelve a consultar si quieres ver el estado actualizado. Prueba este bloque al final, cuando ya hayas terminado de usar los objetos cargados antes.</div>
+
+<h3>Si te piden JPQL</h3>
+<p>JPQL escribe los nombres de <b>clases y atributos Java</b>; SQL escribe los de <b>tablas y columnas</b>. Por ejemplo, <code>Jugador</code> es la clase y <code>jugadores</code> es la tabla. Este método alternativo va dentro del repositorio y necesita importar <code>leo.astray.examen.enums.Posicion</code>:</p>
+<pre data-f="repository/IJugadorRepository.java">@Query("select j from Jugador j where j.posicion = :posicion")
+List&lt;Jugador&gt; buscarJPQL(@Param("posicion") Posicion posicion);</pre>
+<p>En <code>run</code> lo llamarías con <code>jugadorRepository.buscarJPQL(Posicion.DELANTERO)</code>.</p>
+<div class="why">No necesitas aprender varias formas para hacer lo mismo si no las pide el examen: distingue primero consulta derivada, SQL y JPQL, y practica la que corresponda al enunciado.</div>
+</section>

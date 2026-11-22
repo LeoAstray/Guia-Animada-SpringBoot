@@ -1,0 +1,64 @@
+<section id="paso-14">
+<h2>14 Cargar los datos iniciales</h2>
+<p>Ahora ya están definidas las relaciones. Vamos a crear un pequeño juego de datos conocido para que todos los ejemplos den resultados fáciles de comprobar.</p>
+
+<h3>Preparar la configuración</h3>
+<p class="paso">1. Guarda todos los archivos con <b>File → Save All</b>. Detén la aplicación antes de cambiar su configuración.</p>
+<p class="paso">2. Abre <code>src/main/resources/application.properties</code>. Estas opciones recrean las tablas: úsalas sobre <code>examen</code>, la base de práctica.</p>
+<div class="warn">Si la base contiene datos que quieres conservar, utiliza otra base de práctica vacía y cambia el nombre en la conexión antes de continuar.</div>
+<p class="paso">3. Sustituye la línea anterior de <code>ddl-auto</code> y añade las otras dos opciones. Deja una sola línea de cada propiedad:</p>
+<pre data-f="src/main/resources/application.properties">spring.jpa.hibernate.ddl-auto=create-drop
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true</pre>
+<p><code>create-drop</code> crea las tablas desde las entidades al arrancar y las elimina al cerrar normalmente. <code>mode=always</code> activa <code>data.sql</code> también al usar MySQL. <code>defer-datasource-initialization=true</code> hace que esos <code>INSERT</code> se ejecuten después de que Hibernate cree las tablas. Conserva tus propiedades de conexión a MySQL.</p>
+
+<h3>Crear data.sql</h3>
+<p class="paso">4. En VS Code, clic derecho sobre <code>src/main/resources</code> → <b>New File</b>. Escribe <code>data.sql</code>, pulsa Enter y pega:</p>
+<pre data-f="src/main/resources/data.sql">INSERT INTO perfiles_estadisticos
+  (id_perfil, partidos, goles, asistencias, valoracion)
+VALUES (1, 10, 6, 3, 8.5),
+       (2, 12, 0, 1, 7.2);
+
+INSERT INTO jugadores
+  (id_jugador, nombre, mote, posicion, id_perfil)
+VALUES (1, 'Ana', 'Rayo', 'DELANTERO', 1),
+       (2, 'Luis', 'Muro', 'PORTERO', 2);
+
+INSERT INTO equipos (id_equipo, nombre, ciudad, presupuesto)
+VALUES (1, 'Estrellas', 'Madrid', 100000.00),
+       (2, 'Cometas', 'Sevilla', 80000.00);
+
+INSERT INTO estadios (id_estadio, nombre, capacidad, id_equipo)
+VALUES (1, 'Campo Norte', 5000, 1),
+       (2, 'Campo Sur', 3000, 2);
+
+INSERT INTO fichajes
+  (id_fichaje, id_jugador, id_equipo, temporada, precio,
+   clausula_pagada, mercado, tipo)
+VALUES (1, 1, 1, '26/27', 1200.00, false, 'VERANO', 'TRASPASO'),
+       (2, 2, 2, '26/27', 500.00, false, 'INVIERNO', 'CESION');</pre>
+<div class="warn">El orden importa: primero la fila a la que vas a apuntar y después la fila que la necesita. No puedes insertar un jugador con <code>id_perfil = 1</code> si ese perfil todavía no existe. Tampoco puedes insertar un fichaje de un equipo inexistente.</div>
+<p>Aquí damos los ID a mano para que las pruebas sean fáciles de seguir. Cuando crees un objeto nuevo desde Java, no le pongas un ID: MySQL generará otro mediante <code>IDENTITY</code>.</p>
+
+<h3>Crear el repositorio de equipos</h3>
+<p class="paso">5. Clic derecho sobre <code>repository</code> → <b>New Java File → Interface</b>. Escribe <code>IEquipoRepository</code> y pega:</p>
+<pre data-f="repository/IEquipoRepository.java">package leo.astray.examen.repository;
+
+import leo.astray.examen.entity.Equipo;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface IEquipoRepository
+        extends JpaRepository&lt;Equipo, Long&gt; {
+}</pre>
+<p>Una <b>interfaz</b> dice qué operaciones están disponibles. Al extender <code>JpaRepository&lt;Equipo, Long&gt;</code> recibes operaciones como guardar, buscar y borrar equipos. <code>Equipo</code> dice qué entidad maneja y <code>Long</code> qué tipo tiene su ID. Spring prepara la implementación; tú la utilizarás desde <code>ExamenApplication</code>.</p>
+<p>La <code>I</code> inicial y el final <code>Repository</code> siguen la forma de nombrar usada en estos apuntes y materiales. Son una convención, no una obligación del lenguaje Java. El archivo se crea como <b>Interface</b>, mientras las entidades se crean como <b>Class</b>.</p>
+
+<h3>Arrancar y ver las tablas</h3>
+<p class="paso">6. Comprueba que has añadido la dependencia del servidor web siguiendo el paso 3A. Mantén las pruebas dentro de <code>ExamenApplication</code> y deja temporalmente solo un mensaje dentro de <code>run</code> para no insertar otra vez los registros que ya carga <code>data.sql</code>.</p>
+<pre data-f="ExamenApplication.java (dentro de run)">System.out.println("Datos iniciales cargados");</pre>
+<p class="paso">7. Guarda todos los archivos y ejecuta el proyecto. Espera a que la aplicación arranque y muestre el mensaje de <code>run</code>.</p>
+<p class="paso">8. Deja la aplicación arrancada. En phpMyAdmin, abre <code>examen</code> y examina <code>perfiles_estadisticos</code>, <code>jugadores</code>, <code>equipos</code>, <code>estadios</code> y <code>fichajes</code>.</p>
+<div class="ok">Con este <code>data.sql</code> debes encontrar dos filas en cada tabla.</div>
+<p class="paso">9. Cuando acabes de mirar los datos, pulsa <code>Ctrl+C</code> en la terminal. <code>create-drop</code> elimina las tablas al cerrar normalmente. Al volver a arrancar, las recrea y carga otra vez <code>data.sql</code>.</p>
+<div class="why">Si el examen exige conservar los cambios entre ejecuciones, normalmente usarás <code>ddl-auto=update</code> y <code>spring.sql.init.mode=never</code> después de preparar los datos. Cambiar a <code>update</code> no recupera unas tablas que el cierre anterior con <code>create-drop</code> ya haya eliminado.</div>
+</section>

@@ -1,0 +1,40 @@
+<section id="paso-16">
+<h2>16 Corregir errores y terminar el proyecto</h2>
+
+<h3>Cuando algo falla</h3>
+<p class="paso">1. En VS Code abre <b>Problems</b> con <code>Ctrl+Shift+M</code>. Corrige primero los errores de Java: archivo y clase con nombres distintos, imports que faltan, <code>package</code> incorrecto o llaves mal cerradas. Guarda todos los archivos.</p>
+<p class="paso">2. Comprueba el JDK del proyecto. En la paleta <code>Ctrl+Shift+P</code>, busca <b>Java: Configure Java Runtime</b>. Para estos apuntes utiliza JDK 21. En terminal, <code>java -version</code> te dice qué Java está usando esa terminal; puede ser distinto si tienes varias instalaciones.</p>
+<p class="paso">3. Si Maven no reconoce una dependencia, revisa <code>pom.xml</code>, su bloque <code>dependencies</code> y si ha terminado la descarga. Si VS Code sigue mostrando errores de índice después de corregirlo, busca <b>Java: Clean Java Language Server Workspace</b> y deja que vuelva a importar el proyecto.</p>
+<p class="paso">4. Si falla la conexión, revisa que MySQL esté arrancado, el nombre de la base, el puerto, el usuario y la contraseña. En la pestaña SQL de phpMyAdmin, <code>SELECT @@port;</code> permite comprobar el puerto de ese servidor. <code>Access denied</code> suele indicar credenciales o permisos; <code>Communications link failure</code>, que no se consigue establecer la conexión.</p>
+<p class="paso">5. Si falla un <code>INSERT</code>, busca la causa SQL concreta en la terminal: tabla inexistente, columna mal escrita, dato obligatorio ausente, clave repetida o clave foránea sin fila de destino. Revisa el orden de <code>data.sql</code>.</p>
+<p class="paso">6. Si aparece <code>LazyInitializationException</code>, revisa que estás recorriendo las relaciones dentro del <code>run</code> de la clase principal, anotado con <code>@Transactional</code>, y que Spring está ejecutando ese método mediante <code>CommandLineRunner</code>.</p>
+<p class="paso">7. Si indica que no encuentra una propiedad de una consulta derivada, compara la firma del repositorio con el nombre exacto del atributo Java. <code>findByNombre</code> necesita el campo <code>nombre</code>; no se escribe usando el nombre SQL si es diferente.</p>
+
+<h3>Revisar los fallos concretos de estas prácticas</h3>
+<ul class="check">
+<li><code>ExamenApplication</code> y <code>MotorApplication</code> deben implementar <code>CommandLineRunner</code>. Las pruebas van dentro de su <code>run</code>. No llames a <code>run</code> manualmente desde <code>main</code> ni crees otra clase para hacer estas comprobaciones.</li>
+<li>En <code>ExamenApplication</code>, los repositorios se llaman <code>jugadorRepository</code> y <code>equipoRepository</code>. Utiliza esos mismos nombres en todas las llamadas.</li>
+<li>En <code>IEquipoRepository</code> debe poner <code>JpaRepository&lt;Equipo, Long&gt;</code>. Si al copiar has dejado <code>Jugador</code>, ese repositorio estará configurado para otra entidad.</li>
+<li><code>Jugador</code> ahora necesita un perfil. Antes de guardar uno nuevo, prepara su <code>PerfilEstadistico</code> y pásaselo al constructor: <code>new Jugador(nombre, mote, posicion, perfil)</code>.</li>
+<li>En la relación bidireccional equipo y estadios, <code>@JoinColumn</code> está en <code>Estadio.equipo</code> y <code>mappedBy</code> en <code>Equipo.estadios</code>. No dejes la antigua <code>@JoinColumn</code> de la versión unidireccional.</li>
+<li>En <code>Coche</code>, <code>getGaraje()</code> debe devolver <code>Garaje</code> y el campo <code>garaje</code>; <code>setGaraje</code> debe asignarlo. Elimina cualquier <code>UnsupportedOperationException</code> que haya quedado como relleno.</li>
+<li>Los scripts se activan con <code>spring.sql.init.mode</code>. La espera a Hibernate se configura con <code>spring.jpa.defer-datasource-initialization=true</code>.</li>
+<li>No mantengas dos métodos <code>findByMote</code> con los mismos argumentos y distinto retorno. En estos apuntes usamos la versión <code>Jugador</code>, con comprobación de <code>null</code>.</li>
+<li>No ejecutes a la vez las pruebas antiguas y la prueba final si ambas crean los mismos datos. Si tu proyecto aún tiene clases de prueba de consola añadidas durante versiones anteriores de estos apuntes, elimínalas y conserva las comprobaciones de la clase principal.</li>
+</ul>
+
+<h3>Comprobar y entregar</h3>
+<p class="paso">8. Arranca el proyecto y comprueba por consola las operaciones de los pasos 8, 9 y 10. Después de añadir el perfil obligatorio, cualquier jugador nuevo debe tenerlo asignado antes de guardar. Con el servidor activo, examina las tablas en phpMyAdmin y detén la aplicación cuando termines.</p>
+<p class="paso">9. Si necesitas comprobar las tablas en phpMyAdmin, recuerda el efecto de <code>create-drop</code> y la confirmación de las transacciones. Para conservar datos utiliza la estrategia que permita tu enunciado; no cambies propiedades sin tener claro si recrean o conservan las tablas.</p>
+<p class="paso">10. Si el proyecto trae pruebas configuradas, ejecútalas desde la carpeta de <code>pom.xml</code>:</p>
+<pre data-f="terminal (en la carpeta del pom.xml)">.\mvnw.cmd test</pre>
+<p>Las pruebas que arrancan Spring también pueden necesitar MySQL y ejecutar <code>data.sql</code>. Usa una base de práctica para la configuración que recrea tablas.</p>
+<p class="paso">11. Para construir el JAR:</p>
+<pre data-f="terminal (en la carpeta del pom.xml)">.\mvnw.cmd clean package</pre>
+<p>Si termina con <code>BUILD SUCCESS</code>, busca el JAR en <code>target</code>. Maven compila y ejecuta sus pruebas durante ese proceso.</p>
+<p class="paso">12. Puedes ejecutarlo así, ajustando el nombre al archivo generado:</p>
+<pre data-f="terminal (en la carpeta del pom.xml)">java -jar .\target\examen-0.0.1-SNAPSHOT.jar</pre>
+<p>El Java que uses para arrancarlo debe admitir el código compilado para Java 21. Si trabajas en el proyecto de coches, el archivo se llamará según su <code>artifact</code>, por ejemplo <code>motor-0.0.1-SNAPSHOT.jar</code>.</p>
+<p class="paso">13. Si te piden entregar el proyecto, incluye <code>pom.xml</code>, <code>src</code>, <code>mvnw</code>, <code>mvnw.cmd</code> y la carpeta <code>.mvn</code>, además de la configuración o el SQL que exija el examen.</p>
+<div class="warn">Las carpetas que empiezan por punto pueden aparecer ocultas en Windows. Comprueba el enunciado antes de comprimir.</div>
+</section>

@@ -1,0 +1,78 @@
+<section id="paso-9">
+<h2>9 Practicar buscar, cambiar y borrar desde ExamenApplication</h2>
+<p class="paso">1. Abre <code>ExamenApplication.java</code>. Utilizaremos el mismo método <code>run</code> del paso anterior. Añade este import junto a los demás, <b>antes de</b> <code>@SpringBootApplication</code>:</p>
+<pre data-f="ExamenApplication.java (imports)">import java.util.Optional;</pre>
+
+<p class="paso">2. Busca un jugador y cambia su nombre. Dentro de <code>run</code>, localiza el listado del paso anterior:</p>
+<pre>for (Jugador jugador : jugadorRepository.findAll()) {
+    System.out.println(jugador.getNombre());
+}</pre>
+<p><b>Después de la llave que cierra ese <code>for</code></b>, pega lo siguiente. El código debe seguir dentro de las llaves de <code>run</code>:</p>
+<pre data-f="ExamenApplication.java (dentro de run)">Optional&lt;Jugador&gt; resultado = jugadorRepository.findById(1L);
+
+if (resultado.isPresent()) {
+
+    Jugador jugador = resultado.get();
+
+    jugador.setNombre("Ana García");
+
+    jugadorRepository.save(jugador);
+
+    System.out.println(
+        "Nombre cambiado: " + jugador.getNombre()
+    );
+
+} else {
+
+    System.out.println("No existe ese jugador");
+
+}</pre>
+<div class="warn">Usa un identificador que exista en tu tabla. Si el jugador tiene ID 5, cambia <code>1L</code> por <code>5L</code>.</div>
+<p><b>Qué hace cada línea:</b></p>
+<ul>
+<li><code>jugadorRepository.findById(1L)</code>: busca en la base de datos al jugador con ID 1.</li>
+<li><code>Optional&lt;Jugador&gt;</code>: es una caja que puede contener al jugador encontrado o estar vacía.</li>
+<li><code>resultado.isPresent()</code>: comprueba si la caja contiene un jugador.</li>
+<li><code>resultado.get()</code>: saca el jugador de la caja. Lo utilizamos después de comprobar que existe.</li>
+<li><code>jugador.setNombre(...)</code>: cambia el nombre en el objeto Java.</li>
+<li><code>jugadorRepository.save(jugador)</code>: guarda ese cambio en MySQL.</li>
+</ul>
+<p>Estamos modificando un jugador que ya tenía identificador, así que guardamos los cambios de ese registro.</p>
+
+<p class="paso">3. Guarda y comprueba la modificación. Guarda los archivos y ejecuta el proyecto. Si el jugador existe, aparecerá:</p>
+<pre>Nombre cambiado: Ana García</pre>
+<div class="ok">En phpMyAdmin, entra en <code>examen &gt; jugadores &gt; Examinar</code>. Actualiza la página y comprueba el nombre.</div>
+
+<p class="paso">4. Prueba el borrado con un jugador temporal. Debajo del bloque anterior, <b>todavía dentro de <code>run</code></b>, añade:</p>
+<pre data-f="ExamenApplication.java (dentro de run)">Jugador temporal = new Jugador(
+    "Temporal",
+    "PruebaUnica",
+    Posicion.PORTERO
+);
+
+jugadorRepository.save(temporal);
+
+Long idTemporal = temporal.getId();
+
+System.out.println(
+    "ID del jugador temporal: " + idTemporal
+);
+
+jugadorRepository.deleteById(idTemporal);
+
+System.out.println(
+    "¿Sigue existiendo? " + jugadorRepository.existsById(idTemporal)
+);</pre>
+<p>Este bloque hace lo siguiente:</p>
+<ol>
+<li>Crea un jugador temporal en memoria.</li>
+<li>Lo guarda en MySQL.</li>
+<li>Obtiene el identificador que MySQL le ha asignado.</li>
+<li>Borra ese jugador usando su identificador.</li>
+<li>Comprueba si sigue existiendo.</li>
+</ol>
+<p>Guarda y vuelve a ejecutar. El resultado esperado del último mensaje es:</p>
+<pre>¿Sigue existiendo? false</pre>
+<p><code>false</code> significa que el jugador temporal ya no existe. Como lo creamos y borramos durante la misma ejecución, al revisar después la tabla en phpMyAdmin no aparecerá.</p>
+<div class="why"><code>findById</code> devuelve un <code>Optional&lt;Jugador&gt;</code> porque puede no encontrar nada; <code>findAll</code> devuelve una <code>List&lt;Jugador&gt;</code> porque puede encontrar varios. El sufijo <code>L</code> de <code>1L</code> indica que ese número es de tipo <code>long</code>.</div>
+</section>

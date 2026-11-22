@@ -1,0 +1,47 @@
+/* =========================================================
+   BASE: reglas generales de la página
+   ========================================================= */
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  scrollbar-color: var(--violet) var(--void);
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--ink);
+  font: 1.0625rem/1.68 var(--body);
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+::selection { background: var(--lime); color: var(--void); }
+
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--void-4); border-radius: 10px; border: 2px solid var(--void); }
+::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+
+:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; border-radius: 6px; }
+
+a { color: var(--lime); text-underline-offset: .2em; text-decoration-thickness: 1px; }
+a:hover { color: #e2ff9a; }
+b, strong { color: #fff; }
+
+/* Palabras largas (nombres de clases, URLs) no rompen el ancho */
+p, li, td, h2, h3 { overflow-wrap: anywhere; }
+
+/* Barra superior de todas las páginas de la guía: para volver al selector de guías.
+   (header.bar y no .bar, porque el cargador también tiene un .bar) */
+.tag { margin: 0; font: 700 .75rem var(--pix); letter-spacing: .08em; color: var(--ink-3); }
+header.bar {
+  position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  height: var(--bar); padding: 0 max(1rem, calc((100vw - 56rem) / 2));
+  background: rgba(13, 10, 31, .88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+}
+header.bar .back { font: 700 .78rem var(--pix); text-decoration: none; }
+header.bar .tag { color: var(--cyan); }
+@media (max-width: 40rem) { header.bar .back { font-size: .7rem; } }

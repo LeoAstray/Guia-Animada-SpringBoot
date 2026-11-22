@@ -1,0 +1,63 @@
+/* =========================================================
+   ESTRUCTURA E ÍNDICE LATERAL
+   ========================================================= */
+.layout {
+  display: grid; grid-template-columns: 19.5rem minmax(0, 1fr);
+  min-height: 100vh; border-top: 1px solid var(--line);
+}
+.content { min-width: 0; }
+main { max-width: 56rem; padding: 2rem 4vw 6rem; }
+section { margin: 0 0 5rem; }
+section > *:not(.opener) { max-width: 46rem; }
+section > .tw, section > .fig, section > pre, section > .grid { max-width: none; }
+
+/* Barra superior de la guía completa: ocupa todo el ancho y deja libres las marcas HUD de las esquinas */
+header.bar.full { padding: 0 3rem; }
+
+/* Índice (queda justo debajo de la barra superior, que es fija) */
+.sidebar {
+  position: sticky; top: var(--bar); align-self: start; overflow: auto;
+  height: calc(100vh - var(--bar)); padding: 1.6rem 1rem 6rem;
+  background: var(--void-2); border-right: 1px solid var(--line); scrollbar-width: thin;
+}
+.brand { margin: 0 0 1.4rem; padding: 0 .5rem; color: var(--lime); font: 900 1rem/1.25 var(--disp); letter-spacing: -.02em; }
+.brand small { display: block; margin-top: .3rem; color: var(--ink-3); font: 400 .85rem/1.4 var(--body); letter-spacing: 0; }
+
+.group { margin: 0 0 .5rem; }
+.group > summary {
+  display: flex; align-items: center; gap: .6rem; cursor: pointer; list-style: none;
+  padding: .6rem .5rem; border-radius: 8px; color: var(--ink-2); text-transform: uppercase;
+  font: 700 .78rem/1.3 var(--pix); letter-spacing: .04em;
+}
+.group > summary:hover { background: var(--void-3); }
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary .n {
+  display: inline-grid; place-items: center; flex: none;
+  width: 1.7rem; height: 2.3rem; border-radius: 5px; color: var(--void); font: 700 .8rem var(--pix);
+}
+.group.g1 .n { background: var(--cyan); }
+.group.g2 .n { background: var(--pink); }
+.group.g3 .n { background: var(--holo); }
+.group.g4 .n { background: var(--green); }
+
+.group ul { list-style: none; margin: .2rem 0 .8rem; padding: 0 0 0 .4rem; }
+.group li a {
+  position: relative; display: block; padding: .38rem .6rem; border-radius: 8px;
+  color: var(--ink-2); text-decoration: none; font-size: .9rem; line-height: 1.35;
+  transition: background .25s, color .25s;
+}
+.group li.sub a { padding-left: 1.4rem; font-size: .85rem; }
+.group li a:hover { background: var(--void-3); color: var(--ink); }
+.group li a.active { background: var(--lime); color: var(--void); font-weight: 700; }
+.group li a.left::after { content: "AQUÍ LO DEJASTE"; display: block; margin-top: .25rem; color: var(--pink); font: 700 .7rem var(--pix); }
+.group li a.left.active::after { color: #7a0f46; }
+
+/* Botón de cerrar y fondo oscuro del cajón (solo en móvil) */
+.drawer-close { display: none; }
+.scrim {
+  position: fixed; inset: 0; z-index: 65; opacity: 0; pointer-events: none;
+  background: rgba(5, 3, 15, .6); backdrop-filter: blur(2px); transition: opacity .4s;
+}
+.scrim.on { opacity: 1; pointer-events: auto; }
+
+footer { max-width: 56rem; padding: 2.5rem 4vw 7rem; border-top: 1px solid var(--line); color: var(--ink-3); font-size: .9rem; }

@@ -1,0 +1,33 @@
+<section id="s30">
+<h2>32 Chuleta final</h2>
+<table>
+<tr><th>Anotación</th><th>Dónde</th><th>Para qué</th></tr>
+<tr><td><code>@RestController</code> y <code>@RequestMapping</code></td><td>Controller</td><td>Atiende HTTP y devuelve JSON; ruta base.</td></tr>
+<tr><td><code>@GetMapping</code>, <code>@PostMapping</code>, <code>@PutMapping</code>, <code>@DeleteMapping</code></td><td>Método del controller</td><td>Verbo HTTP: leer, crear, actualizar, borrar.</td></tr>
+<tr><td><code>@PathVariable</code>, <code>@RequestParam</code>, <code>@RequestBody</code></td><td>Parámetro</td><td>Dato de la URL (<code>/{id}</code>), del filtro (<code>?x=</code>) o del JSON del cuerpo.</td></tr>
+<tr><td><code>@Valid</code> y <code>@NotBlank</code>, <code>@NotNull</code>, <code>@NotEmpty</code>, <code>@Size</code>, <code>@Pattern</code>, <code>@Min</code>, <code>@Max</code></td><td>Parámetro y DTO</td><td>Validar la entrada; si falla, 400.</td></tr>
+<tr><td><code>@Service</code></td><td>Clase</td><td>Spring la crea y la guarda para inyectarla.</td></tr>
+<tr><td><code>@Autowired</code></td><td>Campo</td><td>Spring inyecta la dependencia.</td></tr>
+<tr><td><code>@Transactional</code> y <code>(readOnly = true)</code></td><td>Método del Service</td><td>Sesión abierta mientras trabajas (LAZY).</td></tr>
+<tr><td><code>@Entity</code>, <code>@Table</code>, <code>@Id</code>, <code>@GeneratedValue</code>, <code>@Column</code></td><td>Entity</td><td>La clase es una tabla, con su clave y columnas.</td></tr>
+<tr><td><code>@OneToOne</code>, <code>@OneToMany</code>, <code>@ManyToOne</code>, <code>@ManyToMany</code></td><td>Campo</td><td>Las relaciones; <code>mappedBy</code> marca el lado inverso.</td></tr>
+<tr><td><code>@JoinColumn</code> y <code>@JoinTable</code></td><td>Lado propietario</td><td>La FK o la tabla intermedia.</td></tr>
+<tr><td><code>cascade</code>, <code>orphanRemoval</code>, <code>fetch</code></td><td>Relación</td><td>Propagar operaciones, borrar huérfanos, cargar al pedirlo.</td></tr>
+<tr><td><code>@Query</code> con <code>JOIN FETCH</code>, o <code>@EntityGraph</code></td><td>Repositorio</td><td>Cargar relaciones de golpe (anti N+1).</td></tr>
+</table>
+
+<h3>Las ideas en una línea</h3>
+<ul>
+<li><b>Capas:</b> cada una hace una cosa; cambiar una no rompe las demás.</li>
+<li><b>DTO:</b> el cliente no ve la base de datos ni recibe bucles.</li>
+<li><b>LAZY:</b> no traigas lo que no pides.</li>
+<li><b><code>mappedBy</code>:</b> «yo no tengo la cuerda; la tiene el otro».</li>
+<li><b><code>Set</code>:</b> sin duplicados y mejor comportamiento en el N:M.</li>
+<li><b><code>orphanRemoval</code>:</b> una ficha sin libro es basura, se borra.</li>
+<li><b>Sin cascade REMOVE de Editorial a Libro:</b> no borres hijos por accidente; responde 409.</li>
+<li><b><code>@Transactional</code> en el Service:</b> mantiene la sesión abierta mientras trabajas.</li>
+<li><b><code>JOIN FETCH</code> o <code>@EntityGraph</code>:</b> pedir todo de una vez (N+1).</li>
+<li><b><code>LibroService</code> usa repositorios, no <code>EditorialService</code>:</b> necesita Entities, no DTO.</li>
+<li><b><code>@Valid</code>:</b> el 400 sale solo, antes de llegar al servicio.</li>
+</ul>
+</section>

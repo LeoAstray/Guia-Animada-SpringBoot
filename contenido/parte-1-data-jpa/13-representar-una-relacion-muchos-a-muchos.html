@@ -1,0 +1,145 @@
+<section id="paso-13">
+<h2>13 Representar una relación muchos a muchos</h2>
+<p>Una relación <b>muchos a muchos</b> permite que varios objetos de un tipo se relacionen con varios del otro. Un jugador puede pasar por distintos equipos a lo largo de su carrera y cada equipo puede tener muchos jugadores.</p>
+<p>Hay dos formas según lo que pida el examen. Si solo necesitas unir jugador y equipo, sirve <code>@ManyToMany</code>. Si además debes guardar precio, temporada o tipo de operación, crea <code>Fichaje</code>.</p>
+<div class="warn"><b>El proyecto que seguimos construyendo usa Fichaje.</b> La primera opción es una explicación alternativa; no la añadas al modelo final.</div>
+
+<h3>Opción A: cuando solo interesa la unión</h3>
+<p>La base necesita una tabla intermedia con un ID de jugador y un ID de equipo. En <code>Jugador</code> el mapeo podría ser:</p>
+<pre data-f="entity/Jugador.java (opción A)">@ManyToMany
+@JoinTable(name = "jugadores_equipos",
+    joinColumns = @JoinColumn(name = "id_jugador"),
+    inverseJoinColumns = @JoinColumn(name = "id_equipo"))
+private Set&lt;Equipo&gt; equipos = new HashSet&lt;&gt;();
+
+public Set&lt;Equipo&gt; getEquipos() {
+    return equipos;
+}
+
+public void addEquipo(Equipo equipo) {
+    equipos.add(equipo);
+    equipo.getJugadores().add(this);
+}</pre>
+<p>En <code>Equipo</code>, el otro lado sería:</p>
+<pre data-f="entity/Equipo.java (opción A)">@ManyToMany(mappedBy = "equipos")
+private Set&lt;Jugador&gt; jugadores = new HashSet&lt;&gt;();
+
+public Set&lt;Jugador&gt; getJugadores() {
+    return jugadores;
+}</pre>
+<p>Ambos archivos necesitarían <code>import java.util.Set;</code> e <code>import java.util.HashSet;</code>. Un <code>Set</code> es una colección que evita elementos repetidos según la igualdad de los objetos Java. Aquí lo usamos para representar una pertenencia sin repetir el mismo objeto.</p>
+<p><code>@JoinTable</code> da nombre a la tabla intermedia. <code>joinColumns</code> corresponde al propietario, aquí el jugador; <code>inverseJoinColumns</code>, al equipo. <code>mappedBy = "equipos"</code> apunta al atributo de <code>Jugador</code>.</p>
+<div class="warn">No pongas cascada de borrado hacia los equipos: borrar un jugador no debe borrar los equipos compartidos con otros jugadores.</div>
+
+<h3>Opción B: crear Fichaje con sus propios datos</h3>
+<p class="paso">1. Para seguir el tutorial, conserva <code>Jugador</code>, <code>Equipo</code>, <code>Estadio</code> y <code>PerfilEstadistico</code> de los pasos anteriores. Si habías copiado la opción A, quita sus campos <code>equipos</code> y <code>jugadores</code>, las anotaciones y los métodos que dependen de ellos. No mantengas las dos formas para el mismo historial.</p>
+<p class="paso">2. Clic derecho en <code>enums</code> → <b>New Java File → Enum</b>. Crea <code>PeriodoMercado</code> y pega:</p>
+<pre data-f="enums/PeriodoMercado.java">package leo.astray.examen.enums;
+
+public enum PeriodoMercado {
+    VERANO,
+    INVIERNO
+}</pre>
+<p class="paso">3. Crea del mismo modo <code>TipoOperacion</code>:</p>
+<pre data-f="enums/TipoOperacion.java">package leo.astray.examen.enums;
+
+public enum TipoOperacion {
+    TRASPASO,
+    CESION,
+    LIBRE
+}</pre>
+<div class="kid">Un <b>enum</b> es una lista cerrada de valores permitidos. Es como elegir entre los sabores escritos en un menú: puedes usar <code>VERANO</code> o <code>INVIERNO</code>, pero no inventarte un texto distinto por error.</div>
+<p>Los archivos también terminan en <code>.java</code>; la palabra <code>enum</code> indica qué estás creando.</p>
+<p class="paso">4. Clic derecho en <code>entity</code> → <b>New Java File → Class</b>. Crea <code>Fichaje</code> y pega este archivo:</p>
+<pre data-f="entity/Fichaje.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import leo.astray.examen.enums.PeriodoMercado;
+import leo.astray.examen.enums.TipoOperacion;
+
+@Entity
+@Table(name = "fichajes")
+public class Fichaje {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_fichaje")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_jugador", nullable = false)
+    private Jugador jugador;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_equipo", nullable = false)
+    private Equipo equipo;
+
+    @Column(nullable = false, length = 5)
+    private String temporada;
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal precio;
+    @Column(name = "clausula_pagada", nullable = false)
+    private boolean clausulaPagada;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private PeriodoMercado mercado;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TipoOperacion tipo;
+
+    public Fichaje() {}
+
+    public Fichaje(Jugador jugador, Equipo equipo,
+            String temporada, BigDecimal precio,
+            boolean clausulaPagada, PeriodoMercado mercado,
+            TipoOperacion tipo) {
+        this.jugador = jugador;
+        this.equipo = equipo;
+        this.temporada = temporada;
+        this.precio = precio;
+        this.clausulaPagada = clausulaPagada;
+        this.mercado = mercado;
+        this.tipo = tipo;
+    }
+
+    public Long getId() { return id; }
+    public Jugador getJugador() { return jugador; }
+    public Equipo getEquipo() { return equipo; }
+    public String getTemporada() { return temporada; }
+    public BigDecimal getPrecio() { return precio; }
+    public boolean isClausulaPagada() { return clausulaPagada; }
+    public PeriodoMercado getMercado() { return mercado; }
+    public TipoOperacion getTipo() { return tipo; }
+
+    public void setJugador(Jugador jugador) {
+        this.jugador = jugador;
+    }
+}</pre>
+<div class="kid">Un fichaje es como un recibo que dice «este jugador ha fichado por este equipo, en esta temporada y por este precio».</div>
+<p>Por eso tiene <b>dos relaciones muchos a uno</b>: muchos fichajes pueden apuntar al mismo jugador y muchos al mismo equipo.</p>
+<div class="warn"><code>@Enumerated(EnumType.STRING)</code> guarda el nombre del valor, por ejemplo <code>VERANO</code>. El SQL debe usar ese mismo texto. No escribas <code>verano</code> o <code>CESIÓN</code> si tus constantes son <code>VERANO</code> y <code>CESION</code>.</div>
+<p class="paso">5. Abre <code>Jugador.java</code>. Añade los imports <code>java.util.List</code> y <code>java.util.ArrayList</code> debajo de los demás imports. Dentro de la clase añade este campo, su getter y el método de ayuda:</p>
+<pre data-f="entity/Jugador.java (fichajes)">@OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL,
+    orphanRemoval = true)
+private List&lt;Fichaje&gt; fichajes = new ArrayList&lt;&gt;();
+
+public List&lt;Fichaje&gt; getFichajes() {
+    return fichajes;
+}
+
+public void addFichaje(Fichaje fichaje) {
+    fichajes.add(fichaje);
+    fichaje.setJugador(this);
+}</pre>
+<p class="paso">6. Abre <code>Equipo.java</code>. Añade este campo y su getter dentro de la clase. Ya tienes los imports de <code>List</code> y <code>ArrayList</code>:</p>
+<pre data-f="entity/Equipo.java (fichajes)">@OneToMany(mappedBy = "equipo")
+private List&lt;Fichaje&gt; fichajes = new ArrayList&lt;&gt;();
+
+public List&lt;Fichaje&gt; getFichajes() {
+    return fichajes;
+}</pre>
+<div class="warn"><b>No vuelvas a generar los constructores.</b> Conserva los que ya tienen <code>Jugador</code> (el vacío y el de 4 parámetros del paso 11: nombre, mote, posición y perfil), <code>Equipo</code> y el resto. Las listas <code>fichajes</code> <b>no</b> van en ningún constructor: nacen vacías y se llenan después con <code>addFichaje</code>. Si usas <b>Generate Constructors</b> y marcas <code>fichajes</code>, cambias la forma de crear un jugador y el código de los pasos 11 y 19 deja de compilar. Si solo necesitas getters y setters que falten, genera únicamente esos.</div>
+<p>Los dos campos <code>mappedBy</code> señalan los atributos de <code>Fichaje</code>, que es quien guarda las claves foráneas. No añadas otra <code>@JoinColumn</code> en esas listas. En <code>Equipo</code> no ponemos cascada de borrado para los fichajes: si un equipo tiene historial asociado, primero hay que decidir qué pide el ejercicio que hagamos con ese historial.</p>
+<p>Para crear un fichaje desde Java, el equipo debe existir o guardarse antes. El constructor de <code>Fichaje</code> recibe al jugador y al equipo; después puedes usar <code>jugador.addFichaje(fichaje)</code> y guardar el jugador para propagar el guardado al fichaje. Si estás usando también la lista inversa de ese equipo en memoria, añade el fichaje a <code>equipo.getFichajes()</code> para mantenerla sincronizada.</p>
+</section>

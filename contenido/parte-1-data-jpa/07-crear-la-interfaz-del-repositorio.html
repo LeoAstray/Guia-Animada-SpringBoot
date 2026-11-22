@@ -1,0 +1,26 @@
+<section id="paso-7">
+<h2>7 Crear la interfaz del repositorio</h2>
+<p class="paso">1. Clic derecho en <code>repository</code> &gt; <b>New Java File &gt; Interface</b>. Escribe <code>IJugadorRepository</code>. Si solo hay <b>New File</b>, crea <code>IJugadorRepository.java</code> y escribe <code>public interface</code>, como abajo.</p>
+<p class="paso">2. Pega el archivo completo y guarda.</p>
+<pre data-f="repository/IJugadorRepository.java">package leo.astray.examen.repository;
+
+import leo.astray.examen.entity.Jugador;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface IJugadorRepository
+        extends JpaRepository&lt;Jugador, Long&gt; {
+}</pre>
+<div class="kid">Una <b>interfaz</b> es como una carta de servicios, dice qué operaciones (métodos) se ofrecen.</div>
+<p><code>extends</code> permite heredar el contrato de <code>JpaRepository</code>. Los dos tipos entre <code>&lt; &gt;</code> dicen «este repositorio trabaja con <code>Jugador</code> y sus identificadores son <code>Long</code>». Si la entidad usa <code>Integer</code>, el segundo tipo debe ser <code>Integer</code>, y las llamadas usarían <code>1</code> en vez de <code>1L</code>.</p>
+<div class="why">Estamos usando la convención <b>I + entidad + Repository</b>. La seguimos para reconocer las interfaces. Esa I ayuda a organizarse, pero Java no obliga a ponerla.</div>
+<p>JpaRepository ya trae métodos predefinidos, no tenemos que implementarlos manualmente. Algunos son los siguientes:</p>
+<table>
+<tr><th>Método que ya tienes</th><th>Para qué lo usas</th></tr>
+<tr><td><code>save(objeto)</code></td><td>Insertar o guardar los cambios de una entidad.</td></tr>
+<tr><td><code>findById(id)</code></td><td>Buscar por clave primaria; devuelve <code>Optional</code>.</td></tr>
+<tr><td><code>findAll()</code></td><td>Obtener todos los registros en una lista.</td></tr>
+<tr><td><code>existsById(id)</code></td><td>Saber si existe sin pedir toda la entidad.</td></tr>
+<tr><td><code>count()</code></td><td>Contar las filas.</td></tr>
+<tr><td><code>deleteById(id)</code></td><td>Borrar por identificador, respetando las relaciones.</td></tr>
+</table>
+</section>

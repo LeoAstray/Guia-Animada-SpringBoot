@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es" data-total="{{TOTAL}}">
+<head>
+{{CABECERA}}
+{{ENTRADA}}
+<title>Spring Boot de cero a REST · guía animada</title>
+<script>document.documentElement.classList.add('js');</script>
+{{CSS}}
+</head>
+<body>
+{{ICONOS}}
+
+<div class="loader" id="loader" aria-hidden="true"><div><div class="bar" id="bar"></div><p id="pct">BARAJANDO {{TOTAL_N}} CARTAS · 0%</p></div></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<i class="hud tl" aria-hidden="true"></i><i class="hud tr" aria-hidden="true"></i><i class="hud bl" aria-hidden="true"></i><i class="hud br" aria-hidden="true"></i>
+
+<header class="bar full">
+  <a class="back" href="{{ENLACE_OTRA}}">{{TEXTO_OTRA}}</a>
+  <span class="tag">GUÍA COMPLETA</span>
+</header>
+
+{{PORTADA}}
+
+<div class="layout">
+<aside class="sidebar">
+  <button type="button" class="drawer-close" id="drawer-close" aria-label="Cerrar índice">Cerrar</button>
+  <div class="brand">Spring Boot de cero a REST<small>Data JPA, el puente y la API completa</small></div>
+  <nav class="menu" id="menu" aria-label="Índice de la guía">
+{{INDICE}}
+  </nav>
+</aside>
+
+<div class="content">
+<main>
+{{SECCIONES}}
+</main>
+{{PIE}}
+</div>
+</div>
+
+<nav class="dock" id="dock" aria-label="Controles de lectura">
+  <button type="button" class="idx" id="dock-idx" aria-controls="menu">Índice</button>
+  <span class="count" id="dock-count" aria-live="polite">000/{{TOTAL}}</span>
+  <button type="button" id="dock-repaso" aria-pressed="false">Modo repaso</button>
+  <a href="#inicio">Arriba</a>
+</nav>
+
+{{JS}}
+</body>
+</html>

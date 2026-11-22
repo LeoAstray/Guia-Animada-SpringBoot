@@ -1,0 +1,485 @@
+<section id="s17">
+<h2>19 El puente paso a paso, con el proyecto de fútbol</h2>
+<p>Vamos a ofrecer <b>un jugador por REST</b> (<code>/api/jugadores</code>) sobre el proyecto que ya tienes. Es pequeño a propósito: cuando entiendas estos 5 pasos, la biblioteca de la Parte 3 es <b>lo mismo con más entidades</b>.</p>
+
+<h3><span class="step">1</span>La dependencia de validación</h3>
+<p>Con la dependencia de <b>validación</b> funcionan <code>@NotBlank</code>, <code>@NotNull</code>, <code>@Valid</code> y compañía. <b>Spring Web no la incluye</b>: son starters separados. Por eso en el paso 1 se marcan las dos en Spring Initializr, y <b>no tienes que hacer nada ahora</b>.</p>
+<p class="paso">Comprueba que está: abre <code>pom.xml</code> y busca <code>spring-boot-starter-validation</code> dentro de <code>&lt;dependencies&gt;</code>. Si está, salta al paso 2.</p>
+<div class="warn"><b>¿No está?</b> Tu proyecto se creó sin marcar Validation. Sin ella, los <code>import jakarta.validation...</code> dan error de compilación. Añádela dando clic derecho en el código del pom.xml &gt; Add Starters &gt; Validation.</div>
+
+<h3><span class="step">2</span>Los DTO: el plato servido</h3>
+<p>Una <b>Entity</b> es el ingrediente crudo con todos sus cables a la base de datos. Un <b>DTO</b> (<i>Data Transfer Object</i>) es lo que viaja al cliente: solo los datos que necesita. Creamos el paquete <code>dto</code> dentro de <code>model</code> con tres <code>record</code> (un <code>record</code> es una clase de datos en pocas líneas, con getters automáticos):</p>
+
+<h4>Para qué sirve cada DTO y por qué hay tres tipos</h4>
+<p>Un DTO no es una «copia de la Entity»: es un <b>formulario hecho a medida</b> para un momento concreto del viaje. Según el momento hay tres tipos:</p>
+<table>
+<tr><th>Tipo</th><th>Cuándo se usa</th><th>Qué lleva</th><th>En este ejemplo</th></tr>
+<tr><td><b>Request DTO</b> (de entrada)</td><td>Cuando el cliente <b>envía</b> datos (POST, PUT). Spring convierte el JSON que llega en este objeto.</td><td>Solo lo que el cliente <b>puede decidir</b>. Nunca el <code>id</code> (lo pone MySQL). Lleva las reglas de validación (<code>@NotBlank</code>…).</td><td><code>JugadorRequestDTO</code>: nombre, mote, posición y goles.</td></tr>
+<tr><td><b>Response DTO</b> (de salida)</td><td>Cuando el servidor <b>responde</b>. Spring lo convierte en el JSON que recibe el cliente.</td><td>Lo que el cliente <b>necesita ver</b>: el <code>id</code> ya generado, los datos y, si hace falta, listas de «Resumen».</td><td><code>JugadorResponseDTO</code>: id, nombre, mote, posición, goles y la lista de fichajes.</td></tr>
+<tr><td><b>Resumen DTO</b> (pieza anidada)</td><td>Cuando un Response DTO necesita incluir <b>otros objetos</b> dentro (una lista de fichajes, de libros…).</td><td>Solo <b>2 o 3 datos sueltos</b> del objeto anidado, <b>sin volver al objeto padre</b>.</td><td><code>FichajeResumenDTO</code>: solo temporada y nombre del equipo.</td></tr>
+</table>
+<p><b>¿Por qué no usar uno solo para todo?</b> Porque entrada y salida no coinciden. Al crear no envías <code>id</code>, pero al recibir sí lo quieres. Al crear envías <code>goles</code> suelto, pero en la base viven dentro de otra tabla (<code>PerfilEstadistico</code>). Y si devolvieras la Entity, saldrían campos que el cliente no debe ver y se formarían bucles. Cada DTO es la forma justa para cada caso.</p>
+<pre class="code" data-f="El viaje de los datos (quién es quién)">JSON que envía el cliente
+        │  Spring lo convierte en
+        ▼
+  JugadorRequestDTO   ◀── entra al Controller
+        │  el Service lo convierte en
+        ▼
+     Jugador (Entity) ──▶ Repository ──▶ MySQL
+        │  el Service lo vuelve a convertir en
+        ▼
+  JugadorResponseDTO  (con FichajeResumenDTO dentro)
+        │  Spring lo convierte en
+        ▼
+JSON que recibe el cliente</pre>
+<div class="why">Un <code>record</code> crea los accesos <b>sin prefijo <code>get</code></b>: en un DTO escribes <code>dto.nombre()</code>, no <code>dto.getNombre()</code>. En cambio, las Entities siguen usando <code>getNombre()</code>. Si mezclas las dos formas, VS Code marcará error.</div>
+
+<pre class="code" data-f="dto/JugadorRequestDTO.java  (lo que ENTRA)">package leo.astray.examen.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import leo.astray.examen.enums.Posicion;
+
+/** Lo que el cliente ENVIA para crear un jugador. Nunca una Entity. */
+public record JugadorRequestDTO(
+        @NotBlank(message = "El nombre es obligatorio") String nombre,
+        @NotBlank(message = "El mote es obligatorio") String mote,
+        @NotNull(message = "La posicion es obligatoria") Posicion posicion,
+        @NotNull(message = "Los goles son obligatorios")
+        @PositiveOrZero(message = "Los goles no pueden ser negativos") Integer goles) {
+}</pre>
+<h4>¿Por qué <code>goles</code> suelto y no el perfil entero?</h4>
+<p>Fíjate en que <code>JugadorRequestDTO</code> no pide un <code>PerfilEstadistico</code>, sino un único número, <code>goles</code>. Tiene sus razones:</p>
+<ul>
+<li><b>Una Entity nunca entra por la puerta.</b> Si el DTO llevara un <code>PerfilEstadistico</code>, estaríamos aceptando una Entity del cliente, y es la primera regla de oro.</li>
+<li><b>El cliente no debe conocer la base de datos.</b> Que los goles vivan en otra tabla (<code>perfiles_estadisticos</code>) es un detalle interno. Para el cliente, un jugador es «nombre, mote, posición y goles». Si mañana cambias el modelo, la API no cambia.</li>
+<li><b>El cliente no decide lo demás.</b> Un jugador nuevo no ha jugado partidos, ni tiene asistencias ni valoración: esos datos empiezan en 0 y los pone el Service. El perfil tiene además su propio <code>id</code>, que no debe elegir el cliente.</li>
+<li><b>El JSON queda plano y simple</b>, más fácil de enviar y de validar.</li>
+</ul>
+<p>Si un ejercicio pidiera enviar todas las estadísticas, la solución correcta no sería usar la Entity, sino crear un DTO propio para el perfil (por ejemplo <code>PerfilRequestDTO</code>) y anidarlo dentro de este.</p>
+<h4>¿Por qué <code>Integer</code> y no <code>int</code>? Y por qué lleva <code>@NotNull</code></h4>
+<p><code>int</code> es un número simple: nunca puede ser <code>null</code>. <code>Integer</code> es el mismo número «en caja» y sí admite <code>null</code>. La diferencia aparece cuando el cliente <b>olvida enviar</b> los goles:</p>
+<table>
+<tr><th>Tipo</th><th>Si el JSON no trae <code>goles</code></th><th>Resultado</th></tr>
+<tr><td><code>int goles</code></td><td>Java rellena el hueco con <code>0</code> sin avisar.</td><td>Se crea un jugador con 0 goles aunque nadie lo pidiera. No hay forma de detectar el olvido.</td></tr>
+<tr><td><code>Integer goles</code> con <code>@NotNull</code></td><td>Llega <code>null</code> y <code>@NotNull</code> lo rechaza.</td><td><b>400</b> con el mensaje «Los goles son obligatorios». Es lo correcto.</td></tr>
+<tr><td><code>Integer goles</code> sin <code>@NotNull</code></td><td>Llega <code>null</code> y <code>@PositiveOrZero</code> lo da por válido (ignora los nulos).</td><td>El <code>null</code> pasa y falla más adelante, al convertirlo en <code>int</code> dentro del Service (<code>NullPointerException</code>, error 500).</td></tr>
+</table>
+<p>Por eso usamos <code>Integer</code> junto con <code>@NotNull</code>: el 400 sale pronto y con un mensaje claro. <code>@PositiveOrZero</code> se encarga después de rechazar los negativos.</p>
+<pre class="code" data-f="dto/FichajeResumenDTO.java  (pieza anidada)">package leo.astray.examen.dto;
+
+/** Solo lo necesario de un fichaje: sin bucles Jugador -&gt; Fichaje -&gt; Jugador. */
+public record FichajeResumenDTO(String temporada, String equipo) {
+}</pre>
+<pre class="code" data-f="dto/JugadorResponseDTO.java  (lo que SALE)">package leo.astray.examen.dto;
+
+import java.util.List;
+
+import leo.astray.examen.enums.Posicion;
+
+/** Lo que el cliente RECIBE. */
+public record JugadorResponseDTO(
+        Long id,
+        String nombre,
+        String mote,
+        Posicion posicion,
+        Integer goles,
+        List&lt;FichajeResumenDTO&gt; fichajes) {
+}</pre>
+<table>
+<tr><th>Pregunta</th><th>Respuesta</th></tr>
+<tr><td>¿Por qué <code>JugadorRequestDTO</code> no tiene <code>id</code>?</td><td>Al crear, el id lo pone MySQL. El cliente no debe decidirlo.</td></tr>
+<tr><td>¿Por qué <code>FichajeResumenDTO</code> solo lleva temporada y nombre del equipo?</td><td>Si llevara el <code>Jugador</code> entero tendríamos Jugador, Fichaje, Jugador, Fichaje… un <b>bucle infinito</b>. El «Resumen» corta el bucle.</td></tr>
+<tr><td>¿Qué hacen <code>@NotBlank</code> y <code>@NotNull</code>?</td><td>Validan lo que llega. Si fallan, Spring responde <b>400</b> sin llegar a nuestro código.</td></tr>
+</table>
+<figure class="fig">
+<svg viewBox="0 0 800 170" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+  <g font-size="13" font-weight="700">
+    <rect x="30" y="50" width="120" height="50" rx="10" fill="#e8edf1" stroke="#536171" stroke-width="3"/><text x="90" y="80">Autor</text>
+    <rect x="250" y="50" width="120" height="50" rx="10" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><text x="310" y="80">Libro</text>
+    <rect x="470" y="50" width="120" height="50" rx="10" fill="#e8edf1" stroke="#536171" stroke-width="3"/><text x="530" y="80">Autor</text>
+    <rect x="690" y="50" width="100" height="50" rx="10" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><text x="740" y="80">Libro…</text>
+  </g>
+  <g stroke="#b23a2b" stroke-width="3" marker-end="url(#ar3)"><line pathLength="1" class="ld" x1="150" y1="75" x2="248" y2="75"/><line pathLength="1" class="ld" x1="370" y1="75" x2="468" y2="75"/><line pathLength="1" class="ld" x1="590" y1="75" x2="688" y2="75"/></g>
+  <defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b23a2b"/></marker></defs>
+  <text x="400" y="140" font-size="14" fill="#b23a2b" font-weight="700">StackOverflowError — dos espejos enfrentados</text>
+  <text x="400" y="30" font-size="13" fill="#14212b">El ResumenDTO pone un cartón en medio: solo id + nombre, sin lista de vuelta.</text>
+</svg>
+<figcaption>Por qué existen los *ResumenDTO</figcaption>
+</figure>
+<div class="kid">El cliente nunca ve la cocina. Le servimos un plato bonito (<b>DTO</b>) y no le damos los ingredientes con sus cables (la <b>Entity</b>). Y si dos espejos se miran, la imagen se repite sin fin: los DTO «Resumen» ponen un cartón en medio.</div>
+
+<h3><span class="step">3</span>El Servicio, interfaz e implementación</h3>
+<p>Vamos a crear el servicio, una interfaz y su implementación. Primero creamos paquete de service, a la misma altura que <code>model</code>. Luego creamos dentro los archivos correspondientes. En este caso una interfaz y dentro de otro paquete <code>impl</code>, una clase de implementación.</p>
+<p>El <b>Service</b> es la capa donde vive la <b>lógica</b> de la aplicación. Está en medio: el Controller le pide cosas y él habla con el Repository (la base de datos). Se escribe en <b>dos archivos</b> que van juntos:</p>
+<table>
+<tr><th>Archivo</th><th>Qué es</th><th>Para qué sirve</th></tr>
+<tr><td><code>IJugadorService</code></td><td>Una <b>interfaz</b>: una lista de métodos <b>sin código dentro</b>, solo con su nombre, lo que reciben y lo que devuelven.</td><td>Es el <b>contrato</b>. Dice <i>qué</i> operaciones ofrece el servicio (crear, buscar, listar, borrar), sin decir <i>cómo</i> se hacen. El Controller solo conoce este archivo.</td></tr>
+<tr><td><code>JugadorServiceImpl</code></td><td>Una <b>clase</b> que hace <code>implements IJugadorService</code>: escribe el código real de cada método prometido.</td><td>Es quien <b>trabaja</b>: pide los datos al Repository, convierte entre Entity y DTO y decide qué devolver (el objeto, «vacío», <code>true</code> o <code>false</code>).</td></tr>
+</table>
+<h4>¿Para qué dos archivos y no uno?</h4>
+<ul>
+<li><b>El Controller no depende del «cómo».</b> Si mañana cambias la forma de guardar, el Controller no se toca, porque solo conoce la interfaz.</li>
+<li><b>Fija las reglas.</b> La interfaz solo habla de DTO. Si ves una Entity en una firma de <code>IJugadorService</code>, el diseño está mal.</li>
+<li><b>Facilita las pruebas</b>: se puede sustituir la implementación real por una falsa.</li>
+<li><b>Es lo que se pide en el examen</b>: RestController → IService → Service → Repository.</li>
+</ul>
+<h4>¿Cómo se conectan sin escribir <code>new</code>?</h4>
+<p>La anotación <code>@Service</code> de <code>JugadorServiceImpl</code> le dice a Spring: «crea un objeto de esta clase y guárdalo». Después, el Controller escribe <code>@Autowired private IJugadorService jugadorService;</code> y Spring le entrega ese objeto. El Controller pide «algo que cumpla el contrato <code>IJugadorService</code>» y Spring le da el <code>JugadorServiceImpl</code>, que es el único que lo cumple. Sin <code>@Service</code>, Spring no encontraría nada que entregar y la aplicación no arrancaría.</p>
+<p>Fíjate en lo que <b>devuelve</b> cada método de la interfaz: es el «idioma» con el que el servicio le cuenta al controller qué ha pasado.</p>
+<pre class="code" data-f="service/IJugadorService.java  (la carta: solo DTO)">package leo.astray.examen.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import leo.astray.examen.dto.JugadorRequestDTO;
+import leo.astray.examen.dto.JugadorResponseDTO;
+
+/** El contrato solo habla de DTO: ninguna Entity aparece aqui. */
+public interface IJugadorService {
+
+    JugadorResponseDTO crear(JugadorRequestDTO dto);
+
+    // Optional vacio = no existe (el controller lo traduce a 404)
+    Optional&lt;JugadorResponseDTO&gt; obtenerPorId(Long id);
+
+    List&lt;JugadorResponseDTO&gt; listar();
+
+    // true = borrado, false = no existe (el controller lo traduce a 204 / 404)
+    boolean eliminar(Long id);
+}</pre>
+<pre class="code" data-f="service/impl/JugadorServiceImpl.java  (el cocinero)">package leo.astray.examen.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import leo.astray.examen.dto.FichajeResumenDTO;
+import leo.astray.examen.dto.JugadorRequestDTO;
+import leo.astray.examen.dto.JugadorResponseDTO;
+import leo.astray.examen.entity.Fichaje;
+import leo.astray.examen.entity.Jugador;
+import leo.astray.examen.entity.PerfilEstadistico;
+import leo.astray.examen.repository.IJugadorRepository;
+import leo.astray.examen.service.IJugadorService;
+
+@Service
+public class JugadorServiceImpl implements IJugadorService {
+
+    @Autowired
+    private IJugadorRepository jugadorRepository;
+
+    @Override
+    @Transactional
+    public JugadorResponseDTO crear(JugadorRequestDTO dto) {
+        // DTO -&gt; Entity (la conversion ocurre AQUI, en el servicio)
+        // El perfil se crea primero: el constructor de Jugador lo exige (paso 11).
+        // Solo conocemos los goles; el resto de estadisticas empieza en 0.
+        PerfilEstadistico perfil = new PerfilEstadistico(0, dto.goles(), 0, 0.0);
+        Jugador jugador = new Jugador(dto.nombre(), dto.mote(), dto.posicion(), perfil);
+        Jugador guardado = jugadorRepository.save(jugador);
+        return mapearADTO(guardado);
+    }
+
+    // @Transactional(readOnly = true): la sesion sigue abierta al recorrer fichajes (LAZY)
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;JugadorResponseDTO&gt; obtenerPorId(Long id) {
+        Optional&lt;Jugador&gt; opt = jugadorRepository.findById(id);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(mapearADTO(opt.get()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;JugadorResponseDTO&gt; listar() {
+        List&lt;JugadorResponseDTO&gt; lista = new ArrayList&lt;&gt;();
+        for (Jugador j : jugadorRepository.findAll()) {
+            lista.add(mapearADTO(j));
+        }
+        return lista;
+    }
+
+    @Override
+    @Transactional
+    public boolean eliminar(Long id) {
+        if (!jugadorRepository.existsById(id)) {
+            return false;
+        }
+        jugadorRepository.deleteById(id);
+        return true;
+    }
+
+    // Entity -&gt; DTO
+    private JugadorResponseDTO mapearADTO(Jugador j) {
+        List&lt;FichajeResumenDTO&gt; fichajes = new ArrayList&lt;&gt;();
+        for (Fichaje f : j.getFichajes()) {
+            fichajes.add(new FichajeResumenDTO(f.getTemporada(), f.getEquipo().getNombre()));
+        }
+        return new JugadorResponseDTO(j.getId(), j.getNombre(), j.getMote(), j.getPosicion(),
+                j.getPerfil().getGoles(), fichajes);
+    }
+}</pre>
+<table>
+<tr><th>Pieza</th><th>Qué hace</th></tr>
+<tr><td><code>@Service</code></td><td>«Spring, esta clase es un cocinero: créala y guárdala.»</td></tr>
+<tr><td><code>@Autowired IJugadorRepository</code></td><td>El servicio recibe el repositorio, el <b>mismo</b> de la Parte 1.</td></tr>
+<tr><td><code>@Transactional</code></td><td>Mantiene abierta la sesión con la base mientras el método trabaja. Es lo mismo que el tutorial pide para <code>run</code> en el paso 16, pero ahora en el servicio.</td></tr>
+<tr><td><code>@Transactional(readOnly = true)</code></td><td>En los métodos que solo leen: más rápido y más seguro.</td></tr>
+<tr><td><code>Optional&lt;JugadorResponseDTO&gt;</code></td><td>Una caja que puede venir <b>vacía</b>. Vacía significa «no existe».</td></tr>
+<tr><td><code>boolean eliminar</code></td><td><code>true</code> si borró; <code>false</code> si el jugador no existía.</td></tr>
+<tr><td><code>mapearADTO</code> y el <code>new Jugador(...)</code> de <code>crear</code></td><td>Aquí ocurre la <b>conversión</b> DTO a Entity y Entity a DTO: solo en el Service.</td></tr>
+</table>
+<h4>Método por método: qué hace <code>JugadorServiceImpl</code></h4>
+<table>
+<tr><th>Método</th><th>Qué hace, paso a paso</th></tr>
+<tr><td><code>crear</code></td><td>(1) Recibe el <code>JugadorRequestDTO</code>. (2) Crea primero el <code>PerfilEstadistico</code> con los goles que llegan (el resto de estadísticas empieza en 0) y después el <code>Jugador</code>, pasándole el perfil en el constructor, porque la relación del paso 11 es obligatoria. (3) <code>save</code> lo guarda en MySQL y devuelve el jugador ya con su <code>id</code>. (4) Lo convierte en <code>JugadorResponseDTO</code> y lo devuelve.</td></tr>
+<tr><td><code>obtenerPorId</code></td><td>Busca con <code>findById</code>, que devuelve un <code>Optional</code>. Si está vacío, devuelve <code>Optional.empty()</code> (el Controller dirá 404). Si no, convierte el jugador en DTO y lo mete en el <code>Optional</code>.</td></tr>
+<tr><td><code>listar</code></td><td>Pide todos los jugadores con <code>findAll</code>, convierte cada uno en DTO dentro de un bucle y devuelve la lista. Si no hay ninguno, la lista sale vacía (no es un error).</td></tr>
+<tr><td><code>eliminar</code></td><td>Comprueba si existe. Si no, devuelve <code>false</code>. Si existe, lo borra y devuelve <code>true</code>.</td></tr>
+<tr><td><code>mapearADTO</code></td><td>Método <code>private</code> de ayuda: pasa de Entity a DTO. Es <code>private</code> porque no forma parte del contrato; solo lo usan los demás métodos de esta clase.</td></tr>
+</table>
+
+<h4>¿Qué hace el <code>!</code> en <code>if (!jugadorRepository.existsById(id))</code>?</h4>
+<p>El símbolo <code>!</code> significa <b>NO</b>: <b>invierte</b> un valor booleano. <code>existsById(id)</code> responde <code>true</code> si hay un jugador con ese id y <code>false</code> si no. Con el <code>!</code> delante, la condición se lee: <b>«si NO existe…»</b>.</p>
+<table>
+<tr><th>Situación</th><th><code>existsById(id)</code></th><th><code>!existsById(id)</code></th><th>Qué pasa</th></tr>
+<tr><td>El jugador <b>existe</b></td><td><code>true</code></td><td><code>false</code></td><td>No entra en el <code>if</code>. Sigue, borra y devuelve <code>true</code>.</td></tr>
+<tr><td>El jugador <b>no existe</b></td><td><code>false</code></td><td><code>true</code></td><td>Entra en el <code>if</code> y hace <code>return false</code>. El método termina sin borrar nada.</td></tr>
+</table>
+<p>Sin esa comprobación no podríamos distinguir los dos casos: <code>deleteById</code> no avisa si el id no existe, así que el Controller nunca sabría cuándo responder <b>404</b> en lugar de <b>204</b>.</p>
+
+<div class="warn"><b>Error frecuente: «The constructor Jugador(...) is undefined».</b> Significa que los datos del <code>new Jugador(...)</code> no coinciden con ningún constructor de tu <code>Jugador.java</code>. Aquí se usa el de 4 parámetros del paso 11: <code>Jugador(String nombre, String mote, Posicion posicion, PerfilEstadistico perfil)</code>. Si el error menciona <code>(String, String, Posicion)</code>, todavía tienes el constructor de 3 parámetros del paso 6: cámbialo como indica el paso 11. Si tienes otro distinto, por ejemplo con <code>fichajes</code>, deja solo el vacío y el de 4. Para comprobarlo, abre <code>Jugador.java</code> y mira sus constructores.</div>
+
+<div class="why"><b>Las 4 reglas de oro.</b> (1) El Controller nunca importa una Entity. (2) El Repository nunca recibe ni devuelve DTO. (3) La conversión ocurre solo en el Service. (4) El contrato <code>IService</code> solo habla de DTO: si una firma menciona una Entity, el diseño está roto.</div>
+<div class="kid">La <b>interfaz</b> es el menú (promete platos) y la <b>implementación</b> es el cocinero que los hace. El camarero solo conoce el menú, no al cocinero, así que puedes cambiar de cocinero sin avisar al camarero.</div>
+
+<h3><span class="step">4</span>El Controller: el camarero que traduce</h3>
+<pre class="code" data-f="controller/JugadorController.java">package leo.astray.examen.controller;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import jakarta.validation.Valid;
+import leo.astray.examen.dto.JugadorRequestDTO;
+import leo.astray.examen.dto.JugadorResponseDTO;
+import leo.astray.examen.service.IJugadorService;
+
+/** El camarero: solo importa DTO y el IService. Nunca una Entity ni un Repository. */
+@RestController
+@RequestMapping("/api/jugadores")
+public class JugadorController {
+
+    @Autowired
+    private IJugadorService jugadorService;
+
+    // POST /api/jugadores -&gt; 201 + Location | 400 (si @Valid falla, Spring ya responde 400)
+    @PostMapping
+    public ResponseEntity&lt;JugadorResponseDTO&gt; crear(@Valid @RequestBody JugadorRequestDTO dto) {
+        JugadorResponseDTO creado = jugadorService.crear(dto);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(creado.id())
+                .toUri();
+        return ResponseEntity.created(location).body(creado);
+    }
+
+    // GET /api/jugadores/{id} -&gt; 200 | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;JugadorResponseDTO&gt; obtenerPorId(@PathVariable Long id) {
+        Optional&lt;JugadorResponseDTO&gt; opt = jugadorService.obtenerPorId(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // GET /api/jugadores -&gt; 200
+    @GetMapping
+    public ResponseEntity&lt;List&lt;JugadorResponseDTO&gt;&gt; listar() {
+        return ResponseEntity.ok(jugadorService.listar());
+    }
+
+    // DELETE /api/jugadores/{id} -&gt; 204 | 404
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        if (jugadorService.eliminar(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}</pre>
+<table>
+<tr><th>Anotación</th><th>Significado</th></tr>
+<tr><td><code>@RestController</code></td><td>Esta clase atiende peticiones HTTP y devuelve datos (JSON), no páginas web.</td></tr>
+<tr><td><code>@RequestMapping("/api/jugadores")</code></td><td>Todas las rutas de esta clase empiezan así.</td></tr>
+<tr><td><code>@GetMapping</code>, <code>@PostMapping</code>, <code>@DeleteMapping</code></td><td>El <b>verbo HTTP</b> que atiende cada método: leer, crear, borrar (<code>@PutMapping</code> sería actualizar).</td></tr>
+<tr><td><code>@PathVariable Long id</code></td><td>Coge el <code>{id}</code> de la URL: <code>/api/jugadores/<b>1</b></code>.</td></tr>
+<tr><td><code>@RequestBody</code></td><td>Convierte el JSON que llega en un objeto Java (el DTO).</td></tr>
+<tr><td><code>@Valid</code></td><td>Comprueba las reglas (<code>@NotBlank</code>…) antes de entrar al método. Si fallan, 400.</td></tr>
+<tr><td><code>ResponseEntity</code></td><td>Una caja con <b>código HTTP, cuerpo y cabeceras</b>.</td></tr>
+<tr><td><code>ResponseEntity.created(location)</code></td><td><b>201</b> más la cabecera <code>Location</code>: dónde está lo que acabas de crear.</td></tr>
+<tr><td><code>ResponseEntity.noContent().build()</code></td><td><b>204</b>: hecho, no hay nada que devolver.</td></tr>
+</table>
+
+<h3>Cómo se traduce lo que devuelve el servicio</h3>
+<table>
+<tr><th>El Service devuelve</th><th>El Controller responde</th></tr>
+<tr><td><code>Optional</code> con valor</td><td>200 con el DTO (<code>ResponseEntity.ok</code>)</td></tr>
+<tr><td><code>Optional.empty()</code></td><td>404 (<code>ResponseEntity.notFound().build()</code>)</td></tr>
+<tr><td><code>true</code> al borrar</td><td>204</td></tr>
+<tr><td><code>false</code> al borrar</td><td>404</td></tr>
+<tr><td>Un DTO tras crear</td><td>201 más <code>Location</code></td></tr>
+<tr><td>La validación falla</td><td>400, automático gracias a <code>@Valid</code></td></tr>
+</table>
+<div class="why">Otra forma, que también se usa mucho, es que el Service lance excepciones propias y un <code>@RestControllerAdvice</code> las convierta en códigos HTTP en un solo sitio. La solución del ejercicio de la biblioteca (Parte 3) usa <code>Optional</code>, <code>int</code> y <code>boolean</code>, así que esta guía hace lo mismo. Conviene conocer las dos.</div>
+
+<h3>Los códigos HTTP, como semáforos</h3>
+<div class="grid">
+  <div class="box"><b>200 OK</b><br>Todo bien (GET, PUT).</div>
+  <div class="box"><b>201 Created</b> y <code>Location</code><br>Se creó algo (POST).</div>
+  <div class="box"><b>204 No Content</b><br>Hecho y sin nada que devolver (DELETE).</div>
+  <div class="box"><b>400 Bad Request</b><br>Datos mal enviados.</div>
+  <div class="box"><b>404 Not Found</b><br>Ese id no existe.</div>
+  <div class="box"><b>409 Conflict</b><br>Choca con lo que ya hay (por ejemplo, borrar algo que otros usan).</div>
+</div>
+
+<h3><span class="step">5</span>Probar la API</h3>
+<p>Una API se prueba <b>enviándole peticiones HTTP</b>, igual que haría una web o una app. Para enviarlas necesitas un «cliente»: <b>Postman</b> (un programa con ventanas, el más cómodo) o <code>curl</code> (una orden de terminal). Primero Postman, paso a paso.</p>
+
+<h4>Antes de empezar</h4>
+<ul>
+<li><b>La aplicación tiene que estar arrancada</b> (en la consola debe aparecer <code>Started ExamenApplication</code>). Escucha en el puerto <b>8080</b>. Si Postman dice <i>Could not send request</i> o <i>Connection refused</i>, la app no está en marcha.</li>
+<li><b>Postman</b> es gratuito: descárgalo desde <code>postman.com/downloads</code>. No necesitas cuenta para lo que vamos a hacer; si te pide iniciar sesión, busca la opción de continuar sin ella.</li>
+</ul>
+
+<h4>Una petición GET (no lleva cuerpo)</h4>
+<p class="paso">1. Abre una pestaña de petición nueva: el botón <b>+</b> junto a las pestañas (o <b>New</b> &gt; <b>HTTP</b>).</p>
+<p class="paso">2. A la izquierda de la barra de dirección hay un desplegable con el <b>método</b> HTTP. Elige <b>GET</b>.</p>
+<p class="paso">3. Escribe la dirección: <code>http://localhost:8080/api/jugadores/1</code></p>
+<p class="paso">4. Pulsa <b>Send</b>. Abajo aparece la respuesta: arriba a la derecha el <b>código</b> (<code>200 OK</code>), en la pestaña <b>Body</b> el JSON con el jugador y en <b>Headers</b> las cabeceras.</p>
+<p>Cada trozo de la dirección tiene su razón: <code>localhost</code> es tu propio ordenador, <code>8080</code> el puerto de Spring, <code>/api/jugadores</code> viene del <code>@RequestMapping</code> del Controller y el <code>/1</code> final es el <code>{id}</code> que recoge <code>@PathVariable</code>. Los <b>GET</b> y los <b>DELETE</b> <b>no llevan cuerpo</b>: el dato que necesitan (el id) viaja en la dirección.</p>
+
+<h4>Un POST con cuerpo: crear un jugador</h4>
+<p>Un POST envía datos, y esos datos van en el <b>cuerpo</b> (<i>body</i>) de la petición. Se configura así:</p>
+<p class="paso">1. Pestaña nueva. Método <b>POST</b>. Dirección: <code>http://localhost:8080/api/jugadores</code> (sin id: aún no existe, lo creará MySQL).</p>
+<p class="paso">2. Justo debajo de la dirección hay pestañas (<i>Params, Authorization, Headers, Body…</i>). Abre <b>Body</b>.</p>
+<p class="paso">3. Marca la opción <b>raw</b>.</p>
+<p class="paso">4. A la derecha de las opciones aparece un desplegable que pone <b>Text</b>. <b>Cámbialo a JSON.</b> Es el paso que más se olvida: al elegir JSON, Postman añade solo la cabecera <code>Content-Type: application/json</code> (puedes verla en la pestaña <b>Headers</b>). Esa cabecera le dice a Spring «el cuerpo es JSON». Sin ella, el servidor responde <b>415 Unsupported Media Type</b>.</p>
+<p class="paso">5. En el recuadro grande escribe el cuerpo:</p>
+<pre class="code" data-f="Body (raw, JSON) de POST /api/jugadores">{
+    "nombre": "Nuevo",
+    "mote": "Cohete",
+    "posicion": "DEFENSA",
+    "goles": 2
+}</pre>
+<p class="paso">6. Pulsa <b>Send</b>. Debes recibir <b>201 Created</b>. En <b>Body</b> verás el <code>JugadorResponseDTO</code> con el <code>id</code> que ha asignado MySQL y la lista de fichajes vacía. En <b>Headers</b> verás <code>Location: http://localhost:8080/api/jugadores/N</code>, la dirección del jugador recién creado. Cópiala en una pestaña GET para comprobar que existe.</p>
+
+<h4>Cómo se construye el cuerpo y por qué así</h4>
+<p>El cuerpo no se inventa: <b>su forma sale del Request DTO</b>. Spring lee el JSON y rellena el <code>record JugadorRequestDTO</code> campo por campo. Por eso el JSON tiene que ser un reflejo del record:</p>
+<pre class="code" data-f="De record a JSON: cada campo del DTO es una clave">record JugadorRequestDTO(             {
+    String   nombre,                    "nombre":   "Nuevo",
+    String   mote,                      "mote":     "Cohete",
+    Posicion posicion,                  "posicion": "DEFENSA",
+    Integer  goles)                     "goles":    2
+                                      }</pre>
+<table>
+<tr><th>Campo del record</th><th>Cómo se escribe en el JSON</th><th>Qué pasa si se hace mal</th></tr>
+<tr><td><code>String nombre</code></td><td>Clave <code>"nombre"</code> y texto entre comillas dobles.</td><td>Vacío, solo espacios o ausente: <code>@NotBlank</code> → <b>400</b>.</td></tr>
+<tr><td><code>String mote</code></td><td>Igual: <code>"mote": "Cohete"</code>.</td><td>Igual que el nombre → <b>400</b>.</td></tr>
+<tr><td><code>Posicion posicion</code></td><td>Es un enum: se escribe como <b>texto con el nombre exacto de la constante</b>: <code>"PORTERO"</code>, <code>"DEFENSA"</code>, <code>"CENTROCAMPISTA"</code> o <code>"DELANTERO"</code>.</td><td>Ausente (<code>@NotNull</code>) o un valor que no existe, como <code>"LATERAL"</code> o <code>"defensa"</code> en minúsculas → <b>400</b>.</td></tr>
+<tr><td><code>Integer goles</code></td><td>Un número <b>sin comillas</b>: <code>"goles": 2</code>.</td><td>Ausente (<code>@NotNull</code>) o negativo (<code>@PositiveOrZero</code>) → <b>400</b>.</td></tr>
+</table>
+<p>Las reglas que se deducen del DTO:</p>
+<ul>
+<li><b>Las claves se llaman igual que los campos del record</b>, respetando mayúsculas y minúsculas: <code>nombre</code>, no <code>Nombre</code>. Jackson, la biblioteca que convierte el JSON, empareja por nombre.</li>
+<li><b>No hay <code>id</code> en el cuerpo</b> porque <code>JugadorRequestDTO</code> no lo tiene: lo genera MySQL (paso 2). Si lo envías, Spring Boot ignora por defecto los campos desconocidos, así que no tendría ningún efecto.</li>
+<li><b>El JSON es plano</b>: <code>goles</code> va suelto y no dentro de un objeto «perfil», porque el DTO lo pide así (el cliente no conoce el <code>PerfilEstadistico</code>; la conversión la hace el Service).</li>
+<li><b>Tipos</b>: el texto va entre comillas dobles; los números y <code>true</code>/<code>false</code>, sin comillas.</li>
+<li><b>Sintaxis estricta</b>: solo comillas dobles (nunca simples), sin coma después del último campo y sin comentarios. Un error de sintaxis da <b>400</b> antes de llegar siquiera a validar.</li>
+</ul>
+<div class="kid">El DTO es el <b>formulario en blanco</b> y el cuerpo JSON es el formulario <b>rellenado</b>: cada casilla del formulario tiene su nombre y solo se rellenan las casillas que existen.</div>
+
+<h4>Probar los errores a propósito</h4>
+<p>Cambia el cuerpo del POST por cada uno de estos y comprueba el código. Si te sale otro, el problema está en tu código:</p>
+<table>
+<tr><th>Cuerpo que envías</th><th>Código</th><th>Por qué</th></tr>
+<tr><td><code>{"nombre": "", "mote": ""}</code></td><td><b>400</b></td><td>Nombre y mote vacíos y faltan <code>posicion</code> y <code>goles</code>.</td></tr>
+<tr><td><code>{"nombre":"Nuevo","mote":"Cohete","posicion":"LATERAL","goles":2}</code></td><td><b>400</b></td><td><code>LATERAL</code> no es una constante de <code>Posicion</code>.</td></tr>
+<tr><td><code>{"nombre":"Nuevo","mote":"Cohete","posicion":"DEFENSA"}</code></td><td><b>400</b></td><td>Falta <code>goles</code> (<code>@NotNull</code>).</td></tr>
+<tr><td><code>{"nombre":"Nuevo","mote":"Cohete","posicion":"DEFENSA","goles":-1}</code></td><td><b>400</b></td><td><code>@PositiveOrZero</code> no admite negativos.</td></tr>
+<tr><td><code>{"nombre": "Nuevo",}</code> (coma de más)</td><td><b>400</b></td><td>JSON mal escrito.</td></tr>
+<tr><td>Cuerpo correcto, pero con el desplegable en <b>Text</b></td><td><b>415</b></td><td>No viaja <code>Content-Type: application/json</code>.</td></tr>
+<tr><td>POST con la pestaña Body vacía (sin cuerpo)</td><td><b>400</b></td><td>El POST exige un cuerpo (<code>@RequestBody</code>).</td></tr>
+</table>
+<div class="warn">El <code>mote</code> es <b>único</b> en la base de datos. Si repites el mismo POST con el mismo mote, MySQL lo rechaza y recibirás un <b>500</b> (en este puente no controlamos duplicados). Cambia el mote en cada prueba.</div>
+
+<h4>El DELETE</h4>
+<p>Método <b>DELETE</b>, dirección <code>http://localhost:8080/api/jugadores/999</code> y <b>sin cuerpo</b>. Un id que no existe da <b>404</b>. Con un id que sí existe, la respuesta es <b>204</b> y la pestaña Body sale vacía: es correcto, significa «borrado y no hay nada que devolver».</p>
+
+<h4>La misma prueba con curl (alternativa)</h4>
+<p>Con <code>curl</code> haces lo mismo desde la terminal. <code>-i</code> muestra el código y las cabeceras, <code>-X</code> indica el método, <code>-H</code> añade una cabecera (aquí el <code>Content-Type</code> que Postman ponía solo) y <code>-d</code> es el cuerpo. En CMD y Git Bash, las comillas dobles del JSON se escriben con <code>\</code> delante. En PowerShell escribe <code>curl.exe</code>, porque <code>curl</code> a secas es otra orden.</p>
+<pre class="code" data-f="curl (CMD o Git Bash)">curl -i http://localhost:8080/api/jugadores/1
+curl -i http://localhost:8080/api/jugadores/999
+curl -i -X POST http://localhost:8080/api/jugadores -H "Content-Type: application/json" -d "{\"nombre\":\"Nuevo\",\"mote\":\"Cohete\",\"posicion\":\"DEFENSA\",\"goles\":2}"
+curl -i -X POST http://localhost:8080/api/jugadores -H "Content-Type: application/json" -d "{\"nombre\":\"\",\"mote\":\"\"}"
+curl -i -X DELETE http://localhost:8080/api/jugadores/999</pre>
+<table>
+<tr><th>Petición</th><th>Debe devolver</th></tr>
+<tr><td><code>GET /api/jugadores/1</code></td><td><b>200</b> con Ana (mote Rayo), 6 goles y 1 fichaje: 26/27 con «Estrellas»</td></tr>
+<tr><td><code>GET /api/jugadores/999</code></td><td><b>404</b></td></tr>
+<tr><td><code>POST</code> con datos buenos</td><td><b>201</b> más la cabecera <code>Location</code></td></tr>
+<tr><td><code>POST</code> con nombre y mote vacíos</td><td><b>400</b></td></tr>
+<tr><td><code>DELETE /api/jugadores/999</code></td><td><b>404</b></td></tr>
+</table>
+<div class="warn">Si dejaste en <code>run</code> las pruebas de los pasos 9 y 15, la aplicación cambia el nombre de Ana (queda «Ana García») y su posición cada vez que arranca. Para ver los datos tal y como los carga <code>data.sql</code>, vacía el cuerpo de <code>run</code> antes de probar.</div>
+<div class="ok">Añadí este código al proyecto del tutorial, cargué los datos de su <code>data.sql</code> y un test automático (MockMvc) confirmó esos 200, 201, 400 y 404. Lo hice sin MySQL, con una base H2 en memoria.</div>
+
+<h3>La ruta completa de una petición</h3>
+<pre class="code" data-f="GET /api/jugadores/1: de punta a punta">Cliente ──GET──▶ JugadorController.obtenerPorId(1)
+                     │  @Autowired IJugadorService
+                     ▼
+              JugadorServiceImpl.obtenerPorId(1)     ◀── empieza la @Transactional
+                     │  @Autowired IJugadorRepository
+                     ▼
+              jugadorRepository.findById(1)  ──▶ MySQL (SELECT jugadores…)
+                     │
+                     ▼  recorre fichajes y equipo (LAZY, con la transacción aún abierta)
+              mapearADTO(jugador)  → JugadorResponseDTO
+                                                      ◀── termina la @Transactional
+                     │
+                     ▼  Optional con valor
+Cliente ◀── 200 + JSON ── ResponseEntity.ok(dto)</pre>
+<div class="warn">Spring Boot deja, por defecto, la sesión abierta durante <b>toda la petición web</b> (<code>open-in-view=true</code>), y eso <b>oculta</b> los fallos de LAZY mal resueltos. En la biblioteca lo desactivamos (<code>spring.jpa.open-in-view=false</code>) para que el <code>LazyInitializationException</code> sea real y se entienda por qué la conversión a DTO se hace <b>dentro</b> del Service con <code>@Transactional</code>.</div>
+
+<h3>Lista del puente</h3>
+<ul class="check">
+<li>Dependencia <code>spring-boot-starter-validation</code> en el <code>pom.xml</code></li>
+<li>Paquetes <code>dto</code>, <code>service</code> (con <code>impl</code>) y <code>controller</code></li>
+<li>DTO de entrada y de salida, con «Resumen» para romper bucles</li>
+<li>IService solo con DTO; Service con <code>@Transactional</code> y la conversión</li>
+<li>Controller solo con DTO e IService, y <code>ResponseEntity</code> con su código</li>
+<li>Probado con Postman o curl</li>
+</ul>
+<p>Si todo esto lo entiendes con <b>un</b> jugador, estás listo para la Parte 3.</p>
+</section>

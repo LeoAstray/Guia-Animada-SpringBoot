@@ -1,0 +1,108 @@
+<!-- ENUNCIADO del ejercicio 1. Los datos de la tarjeta de la lista salen de los atributos de <article>.
+     La solución, cuando exista, va en 01-academia-de-idiomas-solucion.html (mismo número y nombre). -->
+<article data-titulo="La academia de idiomas"
+         data-resumen="Entidades con relaciones 1:N, 1:1 y N:M con datos propios, consultas, datos iniciales y la API REST de alumnos y matrículas."
+         data-tiempo="2 horas" data-puntos="10">
+<p>Un ejercicio completo, con el formato de un examen. Haz el proyecto <b>sin mirar la solución</b> y, cuando termines, compara. Es el mismo recorrido de la guía (entidades, repositorios, datos, API REST y preguntas de comprensión) aplicado a un tema nuevo.</p>
+
+<table>
+<tr><th>Ficha del ejercicio</th><th></th></tr>
+<tr><td>Proyecto</td><td>Spring Boot + Spring Data JPA + MySQL, con Validation y Spring Web</td></tr>
+<tr><td>Paquete base</td><td><code>com.academia.babel</code>, con los subpaquetes <code>entity</code>, <code>enums</code>, <code>repository</code>, <code>dto</code>, <code>service</code> (y <code>impl</code>) y <code>controller</code></td></tr>
+<tr><td>Tiempo orientativo</td><td>2 horas</td></tr>
+<tr><td>Puntuación</td><td>Parte 1: 3 · Parte 2: 1,5 · Parte 3: 1 · Parte 4: 3 · Parte 5: 1,5</td></tr>
+</table>
+<div class="warn">La academia <b>Babel</b> tiene varias sedes. En cada sede trabajan profesores. Los alumnos se matriculan en cursos, y cada alumno tiene un expediente propio. Todo lo que no diga el enunciado, decídelo tú y justifícalo.</div>
+
+<h3>Parte 1: entidades y relaciones (3 puntos)</h3>
+<p class="paso"><b>1.</b> Crea los enums <code>Idioma</code> (<code>INGLES</code>, <code>FRANCES</code>, <code>ALEMAN</code>, <code>ITALIANO</code>), <code>Nivel</code> (<code>A1</code>, <code>A2</code>, <code>B1</code>, <code>B2</code>, <code>C1</code>, <code>C2</code>) y <code>EstadoMatricula</code> (<code>ACTIVA</code>, <code>FINALIZADA</code>, <code>ABANDONADA</code>).</p>
+<p class="paso"><b>2.</b> Crea la entidad <code>Academia</code>, con tabla <code>academias</code>: <code>id</code> (clave autogenerada, columna <code>id_academia</code>), <code>nombre</code> (obligatorio, máximo 80 caracteres) y <code>ciudad</code> (obligatoria).</p>
+<p class="paso"><b>3.</b> Crea la entidad <code>Profesor</code>, con tabla <code>profesores</code>: <code>id</code> (columna <code>id_profesor</code>), <code>nombre</code> (obligatorio), <code>salarioHora</code> (<code>BigDecimal</code>, precisión 8 y escala 2, obligatorio), <code>idioma</code> (el enum, guardado como texto, obligatorio) y <code>activo</code> (<code>boolean</code>).</p>
+<p class="paso"><b>4.</b> Crea la entidad <code>Alumno</code>, con tabla <code>alumnos</code>: <code>id</code> (columna <code>id_alumno</code>), <code>nombre</code> (obligatorio), <code>email</code> (obligatorio y único) y <code>fechaNacimiento</code> (<code>LocalDate</code>, obligatoria).</p>
+<p class="paso"><b>5.</b> Crea la entidad <code>Expediente</code>, con tabla <code>expedientes</code>: <code>id</code> (columna <code>id_expediente</code>), <code>numeroMatricula</code> (obligatorio y único), <code>nivelInicial</code> (el enum <code>Nivel</code>, como texto, obligatorio) y <code>observaciones</code> (texto largo, puede ser nulo).</p>
+<p class="paso"><b>6.</b> Crea la entidad <code>Curso</code>, con tabla <code>cursos</code>: <code>id</code> (columna <code>id_curso</code>), <code>titulo</code> (obligatorio), <code>idioma</code> y <code>nivel</code> (enums, como texto, obligatorios) y <code>precio</code> (<code>BigDecimal</code>, precisión 8 y escala 2, obligatorio).</p>
+<p class="paso"><b>7.</b> Haz una <b>relación bidireccional uno a muchos</b> entre <code>Academia</code> y <code>Profesor</code>. El propietario es <code>Profesor</code>, con la columna <code>id_academia</code>, obligatoria. Al borrar una academia <b>no</b> deben borrarse sus profesores. Inicializa la lista y escribe un método <code>addProfesor</code> que mantenga sincronizados los dos lados.</p>
+<p class="paso"><b>8.</b> Haz una <b>relación uno a uno unidireccional</b> entre <code>Alumno</code> y <code>Expediente</code>. El propietario es <code>Alumno</code>, con la columna <code>id_expediente</code>, obligatoria y única. Al guardar un alumno debe guardarse su expediente, y al borrarlo, también. Diseña el <b>constructor</b> de <code>Alumno</code> de forma que sea imposible crear un alumno sin expediente.</p>
+<p class="paso"><b>9.</b> Haz una <b>relación muchos a muchos con datos propios</b> entre <code>Alumno</code> y <code>Curso</code>, creando la entidad <code>Matricula</code> (tabla <code>matriculas</code>): <code>id</code>, <code>alumno</code> y <code>curso</code> (<code>@ManyToOne</code> obligatorios y con carga perezosa), <code>fecha</code> (<code>LocalDate</code>, obligatoria), <code>nota</code> (<code>Double</code>; <b>puede ser nula</b>, porque al matricularse aún no hay nota), <code>estado</code> (<code>EstadoMatricula</code>, como texto) y <code>pagada</code> (<code>boolean</code>). Añade las listas inversas de matrículas con <code>mappedBy</code>: en <code>Alumno</code>, que se borren con él (<code>orphanRemoval</code>); en <code>Curso</code>, sin cascada.</p>
+<p class="paso"><b>10.</b> Responde con tus palabras:</p>
+<ul>
+<li>a) ¿Por qué <code>Matricula</code> es una entidad y no un <code>@ManyToMany</code> directo entre <code>Alumno</code> y <code>Curso</code>?</li>
+<li>b) ¿En qué tabla está cada clave foránea del modelo?</li>
+<li>c) ¿Qué ocurre con <code>FetchType.EAGER</code> en un <code>@ManyToOne</code> cuando se listan 100 matrículas?</li>
+</ul>
+
+<h3>Parte 2: repositorios y consultas (1,5 puntos)</h3>
+<p class="paso"><b>11.</b> Crea los repositorios de las cinco entidades (<code>JpaRepository</code>), con la convención <code>I</code> + entidad + <code>Repository</code>.</p>
+<p class="paso"><b>12.</b> En <code>IProfesorRepository</code>, escribe estos métodos (consulta derivada donde se pueda, <code>@Query</code> donde haga falta):</p>
+<ul>
+<li>a) Profesores de un idioma dado.</li>
+<li>b) Profesores activos de una academia (por el id de la academia).</li>
+<li>c) Profesores con <code>salarioHora</code> mayor que una cantidad, de mayor a menor.</li>
+<li>d) Número de profesores de cada academia (JPQL con <code>GROUP BY</code>).</li>
+</ul>
+<p class="paso"><b>13.</b> En <code>IMatriculaRepository</code>, escribe:</p>
+<ul>
+<li>a) Matrículas de un alumno, de la más reciente a la más antigua.</li>
+<li>b) Nota media de un curso (<code>@Query</code> con <code>AVG</code>). Las matrículas sin nota no cuentan.</li>
+<li>c) Matrículas <code>ACTIVA</code> que todavía no están pagadas.</li>
+</ul>
+<p class="paso"><b>14.</b> En <code>IAlumnoRepository</code>, escribe una consulta que devuelva los alumnos matriculados en un curso concreto, sin repetidos (<code>JOIN</code> y <code>DISTINCT</code>), y un método que diga si ya existe un alumno con un email dado.</p>
+<p class="paso"><b>15.</b> En <code>ICursoRepository</code>, escribe los cursos de un idioma y un nivel dados, y los cursos cuyo precio no supera una cantidad.</p>
+
+<h3>Parte 3: datos iniciales (1 punto)</h3>
+<p class="paso"><b>16.</b> Configura la aplicación para que cargue los datos al arrancar (<code>create-drop</code>) y escribe el <code>data.sql</code> con:</p>
+<ul>
+<li>2 academias,</li>
+<li>4 profesores, de idiomas distintos y repartidos entre las academias,</li>
+<li>4 cursos,</li>
+<li>3 alumnos, cada uno con su expediente,</li>
+<li>5 matrículas, de modo que un alumno esté en dos cursos, un curso tenga dos alumnos, una matrícula tenga la nota nula y otra esté <code>ABANDONADA</code>.</li>
+</ul>
+<p>Respeta el orden de inserción y los textos exactos de los enums.</p>
+<p class="paso"><b>17.</b> Desde <code>run()</code>, crea y guarda un alumno nuevo con su expediente y matrícúlalo en un curso que ya exista. Indica en qué orden creas y guardas cada objeto, y por qué.</p>
+
+<h3>Parte 4: API REST por capas (3 puntos)</h3>
+<p class="paso"><b>18.</b> <b>DTO.</b> Crea, como <code>record</code>:</p>
+<ul>
+<li><code>AlumnoRequestDTO</code>: <code>nombre</code>, <code>email</code>, <code>fechaNacimiento</code>, <code>numeroMatricula</code> y <code>nivelInicial</code>. Valida con <code>@Valid</code>: nombre no vacío, email con formato correcto, fecha de nacimiento en el pasado, número de matrícula con el formato <code>AL-</code> seguido de 4 cifras, y todos los campos obligatorios.</li>
+<li><code>MatriculaRequestDTO</code>: <code>cursoId</code> y <code>fecha</code>.</li>
+<li><code>MatriculaResumenDTO</code>: <code>tituloCurso</code>, <code>fecha</code>, <code>estado</code> y <code>nota</code>.</li>
+<li><code>AlumnoResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>email</code>, <code>numeroMatricula</code>, <code>nivelInicial</code> y la lista de <code>MatriculaResumenDTO</code>.</li>
+</ul>
+<p class="paso"><b>19.</b> <b>Servicio.</b> Crea <code>IAlumnoService</code> y <code>AlumnoServiceImpl</code>, con los repositorios inyectados con <code>@Autowired</code>. Implementa:</p>
+<ul>
+<li>a) <code>crear(AlumnoRequestDTO)</code>: si el email ya existe, hay que informar al controlador para responder 409.</li>
+<li>b) <code>obtenerPorId(Long)</code>.</li>
+<li>c) <code>listarPorNivel(Nivel)</code>: filtra por el nivel inicial del expediente. Una lista vacía es válida.</li>
+<li>d) <code>matricular(Long alumnoId, MatriculaRequestDTO)</code>: 404 si no existe el alumno o el curso; 409 si el alumno ya tiene una matrícula <code>ACTIVA</code> en ese curso.</li>
+<li>e) <code>eliminar(Long)</code>: 409 si el alumno tiene alguna matrícula <code>ACTIVA</code>.</li>
+<li>f) El método privado que convierte <code>Alumno</code> en <code>AlumnoResponseDTO</code>.</li>
+</ul>
+<p>Explica cómo comunica tu servicio cada uno de esos resultados al controlador.</p>
+<p class="paso"><b>20.</b> <b>Controlador.</b> Crea <code>AlumnoController</code> con estos endpoints. Escribe el código HTTP de éxito y los de error de cada uno:</p>
+<table>
+<tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
+<tr><td><code>POST /api/alumnos</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/alumnos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>GET /api/alumnos?nivel=</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>POST /api/alumnos/{id}/matriculas</code></td><td>¿?</td><td>¿?</td></tr>
+<tr><td><code>DELETE /api/alumnos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
+</table>
+<p>El primer <code>POST</code> debe devolver la cabecera <code>Location</code> con la dirección del alumno creado.</p>
+<p class="paso"><b>21.</b> <b>Postman.</b> Escribe:</p>
+<ul>
+<li>a) El cuerpo JSON para crear un alumno con datos válidos, y explica por qué sus claves son las que son.</li>
+<li>b) Un cuerpo que provoque un <b>400</b> por el email, y otro que lo provoque por el número de matrícula.</li>
+<li>c) El cuerpo para matricular a ese alumno en un curso.</li>
+<li>d) Qué hay que marcar en la pestaña <b>Body</b> y qué error obtienes si te olvidas de hacerlo.</li>
+</ul>
+
+<h3>Parte 5: preguntas de comprensión (1,5 puntos)</h3>
+<p class="paso"><b>22.</b> Una petición <code>GET /api/alumnos/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo se evita.</p>
+<p class="paso"><b>23.</b> Al listar 50 alumnos con sus matrículas se lanzan 51 consultas. ¿Cómo se llama el problema y cómo se arregla? Da dos soluciones.</p>
+<p class="paso"><b>24.</b> ¿Por qué el constructor de <code>Alumno</code> exige el expediente en lugar de asignarlo después con un <i>setter</i>?</p>
+<p class="paso"><b>25.</b> <code>DELETE</code> de una academia que tiene profesores devuelve un 500. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
+<p class="paso"><b>26.</b> Dibuja el esquema de tablas que genera todo el modelo, con sus claves primarias y foráneas, y marca dónde está cada clave foránea.</p>
+
+<div class="why">Intenta hacerlo tú primero y no abras el solucionario hasta terminar: lo que más enseña es comparar tus fallos con la solución.</div>
+</article>

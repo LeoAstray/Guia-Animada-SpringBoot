@@ -1,0 +1,35 @@
+<section id="s25">
+<h2>27 Misión 5: las trampas de comprensión</h2>
+<p>El ejercicio pide <b>provocar</b> cada trampa a propósito, entender por qué ocurre y arreglarla. El código de esta guía ya está en su versión correcta; para ver cada fallo hay que estropearlo.</p>
+
+<h3>1. Bucle infinito al devolver Entities directamente</h3>
+<p>Si el controlador devuelve un <code>Libro</code> con su colección bidireccional de autores, Jackson llamará a <code>libro.getAutores()</code> y, en cada autor, a <code>autor.getLibros()</code>, generando una recursión infinita (el error que aparece es del tipo «Document nesting depth exceeds 500», <code>StreamConstraintsException</code>, o un <code>StackOverflowError</code>, según la versión de Jackson). Se soluciona aislando el controlador con DTO basados en records.</p>
+<p><b>Para provocarlo:</b> haz que un método de prueba del controlador devuelva el <code>Libro</code> en lugar del <code>LibroResponseDTO</code>.</p>
+
+<h3>2. <code>LazyInitializationException</code> fuera de la transacción</h3>
+<p>Ocurre al intentar resolver un proxy LAZY (por ejemplo <code>libro.getEditorial().getNombre()</code>) cuando la sesión de Hibernate ya se ha cerrado. Se resuelve anotando los métodos del <b>Service</b> con <code>@Transactional(readOnly = true)</code> (los que leen) o <code>@Transactional</code> (los que escriben), lo que garantiza que la sesión siga abierta durante el ensamblado del DTO.</p>
+<p><b>Para provocarlo:</b> quita <code>@Transactional</code> de <code>obtenerPorId</code> en un método que use <code>findById</code> (no el de JOIN FETCH) y deja <code>open-in-view=false</code>.</p>
+
+<h3>3. El problema N+1</h3>
+<p>Si consultas una lista de 50 libros y, en un bucle, accedes a la editorial o a los autores de cada uno, Hibernate lanza 1 consulta para los libros más 50 consultas individuales. Se soluciona en el repositorio con <code>JOIN FETCH</code> (como <code>findByIdConRelaciones</code>) o con <code>@EntityGraph</code>.</p>
+<p><b>Para provocarlo:</b> crea 50 libros con autores, llama a <code>GET /api/libros?editorialId=</code> y cuenta los <code>select</code> que salen en la terminal con <code>show-sql=true</code>.</p>
+<div class="warn">En esta solución <code>findByIdConRelaciones</code> arregla el N+1 del <b>detalle</b> de un libro, pero <code>listarPorEditorial</code> usa <code>findByEditorialId</code> sin fetch, así que listar muchos libros sigue lanzando consultas extra para los autores. La mejora natural es anotar ese método con <code>@EntityGraph(attributePaths = {"editorial", "autores"})</code>.</div>
+
+<h3>4. Borrar una Editorial con libros: 409 y no 500</h3>
+<p>Si se ejecutara directamente <code>editorialRepo.deleteById(id)</code> sobre una editorial con libros vinculados, MySQL lanzaría un <code>DataIntegrityViolationException</code> y el cliente vería un <b>500 Internal Server Error</b>. En <code>EditorialServiceImpl.eliminar</code> se valida antes con <code>libroRepo.countByEditorialId(id)</code>: si hay libros devuelve <code>-1</code> y el controlador responde un <b>409 CONFLICT</b> limpio.</p>
+<p><b>Para provocarlo:</b> quita la comprobación del servicio y borra una editorial que tenga un libro.</p>
+
+<h3>5. Añadir un autor dos veces: List frente a Set</h3>
+<p>Con un <code>List</code>, añadir el mismo autor dos veces crearía dos entradas idénticas en la tabla intermedia <code>libro_autor</code>, o fallaría por clave primaria duplicada. Con un <code>Set</code>, Java descarta la segunda inserción en memoria basándose en <code>equals()</code> y MySQL no recibe sentencias redundantes.</p>
+<p><b>Para provocarlo:</b> cambia <code>Set</code> por <code>List</code> en <code>Libro.autores</code> y llama dos veces a <code>POST /api/libros/{id}/autores/{autorId}</code>.</p>
+
+<table>
+<tr><th>#</th><th>Trampa</th><th>Qué se ve</th><th>Arreglo</th></tr>
+<tr><td>1</td><td>Devolver una Entity</td><td>Recursión infinita en el JSON</td><td>DTO con <code>*ResumenDTO</code></td></tr>
+<tr><td>2</td><td>LAZY fuera de transacción</td><td><code>LazyInitializationException</code></td><td><code>@Transactional(readOnly = true)</code> en el Service</td></tr>
+<tr><td>3</td><td>Lista con N+1</td><td>1 + N consultas en el log</td><td><code>JOIN FETCH</code> o <code>@EntityGraph</code></td></tr>
+<tr><td>4</td><td>Borrar editorial con libros</td><td>500 por integridad</td><td>Contar antes y devolver 409</td></tr>
+<tr><td>5</td><td>Autor repetido</td><td><code>List</code> duplica, <code>Set</code> no</td><td>Usar <code>Set</code></td></tr>
+</table>
+<div class="warn">Después de cada experimento, <b>devuelve el código a su versión correcta</b>. Y apunta lo que ves en el log: son las observaciones de tu documento de respuestas.</div>
+</section>

@@ -1,0 +1,70 @@
+<section id="s22">
+<h2>24 Misión 2: los DTO como contrato de la API</h2>
+<p>El cliente <b>nunca</b> ve una Entity ni sabe que existe JPA. Cada DTO responde a una pregunta: <b>¿qué necesita el cliente para esta operación?</b> Se crean como <code>record</code>, sin ninguna librería externa, y se dividen en entrada, salida y resúmenes.</p>
+<figure class="fig">
+<svg viewBox="0 0 860 200" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+  <rect x="20" y="30" width="230" height="140" rx="14" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/>
+  <text x="135" y="60" font-size="15" font-weight="700">Cliente</text>
+  <text x="135" y="95" font-size="13">envía <b>RequestDTO</b></text><text x="135" y="118" font-size="12" fill="#4f5d68">(solo ids y datos)</text>
+  <text x="135" y="150" font-size="13">recibe <b>ResponseDTO</b></text>
+  <rect x="320" y="30" width="230" height="140" rx="14" fill="#e0f1e7" stroke="#2e7d4f" stroke-width="3"/>
+  <text x="435" y="60" font-size="15" font-weight="700">Service</text>
+  <text x="435" y="95" font-size="13">convierte</text><text x="435" y="118" font-size="12" fill="#4f5d68">DTO ⇄ Entity</text>
+  <text x="435" y="150" font-size="12" fill="#4f5d68">(único que conoce ambos)</text>
+  <rect x="620" y="30" width="220" height="140" rx="14" fill="#e8edf1" stroke="#536171" stroke-width="3"/>
+  <text x="730" y="60" font-size="15" font-weight="700">Repository</text>
+  <text x="730" y="95" font-size="13">solo <b>Entities</b></text><text x="730" y="118" font-size="12" fill="#4f5d68">nunca DTO</text>
+  <g stroke="#14212b" stroke-width="2.5" marker-end="url(#ar)"><line pathLength="1" class="ld" x1="250" y1="100" x2="318" y2="100"/><line pathLength="1" class="ld" x1="550" y1="100" x2="618" y2="100"/></g>
+</svg>
+<figcaption>Quién habla con quién</figcaption>
+</figure>
+<table>
+<tr><th>DTO</th><th>Dirección</th><th>Contenido</th></tr>
+<tr><td><code>EditorialRequestDTO</code> y <code>EditorialResponseDTO</code></td><td>entrada y salida</td><td>nombre, país (y el id en la respuesta)</td></tr>
+<tr><td><code>AutorRequestDTO</code> y <code>AutorResponseDTO</code></td><td>entrada y salida</td><td>nombre, nacionalidad; la respuesta lleva <code>List&lt;LibroResumenDTO&gt;</code></td></tr>
+<tr><td><code>LibroRequestDTO</code></td><td>entrada</td><td>título, <b><code>editorialId</code></b>, <b><code>autoresIds</code></b>, ficha</td></tr>
+<tr><td><code>LibroResponseDTO</code></td><td>salida</td><td>id, título, <code>EditorialResumenDTO</code>, <code>List&lt;AutorResumenDTO&gt;</code>, ficha</td></tr>
+<tr><td><code>FichaLibroDTO</code></td><td>entrada y salida</td><td>isbn, paginas, anio</td></tr>
+<tr><td><code>*ResumenDTO</code></td><td>salida anidada</td><td>solo <code>id</code> y nombre o título. Rompen los bucles.</td></tr>
+</table>
+
+<h3>Pregunta 1: ¿por qué <code>LibroRequestDTO</code> recibe identificadores y no entidades completas?</h3>
+<p>Porque el cliente web no gestiona objetos persistentes de Hibernate: solo conoce las claves primarias de los recursos existentes. Además evitamos que el cliente intente modificar datos de la editorial o de los autores a través del endpoint de creación de un libro. El servidor es quien busca los objetos reales.</p>
+<div class="kid">En el cole dices «quiero el libro número 5», no traes el libro a cuestas.</div>
+
+<h3>Pregunta 2: ¿cómo evitamos la recursión infinita con los <code>*ResumenDTO</code>?</h3>
+<figure class="fig">
+<svg viewBox="0 0 800 170" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+  <g font-size="13" font-weight="700">
+    <rect x="30" y="50" width="120" height="50" rx="10" fill="#e8edf1" stroke="#536171" stroke-width="3"/><text x="90" y="80">Autor</text>
+    <rect x="250" y="50" width="120" height="50" rx="10" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><text x="310" y="80">Libro</text>
+    <rect x="470" y="50" width="120" height="50" rx="10" fill="#e8edf1" stroke="#536171" stroke-width="3"/><text x="530" y="80">Autor</text>
+    <rect x="690" y="50" width="100" height="50" rx="10" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/><text x="740" y="80">Libro…</text>
+  </g>
+  <g stroke="#b23a2b" stroke-width="3" marker-end="url(#ar3)"><line pathLength="1" class="ld" x1="150" y1="75" x2="248" y2="75"/><line pathLength="1" class="ld" x1="370" y1="75" x2="468" y2="75"/><line pathLength="1" class="ld" x1="590" y1="75" x2="688" y2="75"/></g>
+  <defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b23a2b"/></marker></defs>
+  <text x="400" y="140" font-size="14" fill="#b23a2b" font-weight="700">StackOverflowError — dos espejos enfrentados</text>
+  <text x="400" y="30" font-size="13" fill="#14212b">El ResumenDTO pone un cartón en medio: solo id + nombre, sin lista de vuelta.</text>
+</svg>
+<figcaption>Por qué existen los *ResumenDTO</figcaption>
+</figure>
+<p>Al serializar un Autor <b>no</b> incluimos el árbol completo de sus libros con sus editoriales y otros autores. En su lugar incluimos un <code>LibroResumenDTO</code> que contiene únicamente <code>id</code> y <code>titulo</code>. Eso rompe la cadena de serialización de raíz.</p>
+
+<h3>Los records, en su primera versión (sin validar)</h3>
+<pre class="code" data-f="dto/  (versión 1, tal como se crean al principio)">public record EditorialResumenDTO(Long id, String nombre) {}
+public record AutorResumenDTO(Long id, String nombre) {}
+public record LibroResumenDTO(Long id, String titulo) {}
+
+public record FichaLibroDTO(String isbn, int paginas, int anio) {}
+
+public record EditorialRequestDTO(String nombre, String pais) {}
+public record EditorialResponseDTO(Long id, String nombre, String pais) {}
+
+public record AutorRequestDTO(String nombre, String nacionalidad) {}
+public record AutorResponseDTO(Long id, String nombre, String nacionalidad, List&lt;LibroResumenDTO&gt; libros) {}
+
+public record LibroRequestDTO(String titulo, Long editorialId, Set&lt;Long&gt; autoresIds, FichaLibroDTO ficha) {}
+public record LibroResponseDTO(Long id, String titulo, EditorialResumenDTO editorial,
+                               List&lt;AutorResumenDTO&gt; autores, FichaLibroDTO ficha) {}</pre>
+<p>La versión final, con las anotaciones de validación, está en la sección 28.</p>
+</section>

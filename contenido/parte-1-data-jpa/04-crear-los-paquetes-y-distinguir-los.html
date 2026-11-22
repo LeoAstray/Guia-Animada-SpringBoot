@@ -1,0 +1,41 @@
+<section id="paso-4">
+  <h2>4 Crear los paquetes y distinguir los tipos Java</h2>
+  <p class="paso">1. Despliega <code>src/main/java/leo/astray/examen</code>.</p>
+  <p class="paso">2. Clic derecho sobre la carpeta de examen y elige <b>New Java Package</b>. Escribe
+    <code>model</code> y pulsa Intro. Dentro de model ahora repite y crea <code>entity</code>, <code>enums</code> y
+    <code>repository</code>.
+  </p>
+  <pre class="code" data-f="estructura de paquetes">leo/astray/examen/
+  ExamenApplication.java
+  model/       
+    entity/   Jugador.java...
+    enums/        Posicion.java...
+    repository/   IJugadorRepository.java...</pre>
+  <p>Un paquete organiza y da una dirección a las clases. En este ejemplo, la dirección de Jugador será
+    leo.astray.examen.model.entity.Jugador. Entity contiene las entidades que representan datos de tablas y repository
+    contiene las interfaces de acceso a esos datos, no palabras obligatorias de Java.</p>
+  <h3>Porque elegir Class Interface o Enum</h3>
+  <table>
+    <tr>
+      <th><b>Tipo</b></th>
+      <th><b>Idea sencilla</b></th>
+      <th><b>Uso en el proyecto</b></th>
+    </tr>
+    <tr>
+      <td>class</td>
+      <td>Un molde para fabricar objetos con datos y acciones.</td>
+      <td>Jugador, Equipo, Fichaje...</td>
+    </tr>
+    <tr>
+      <td>interface</td>
+      <td>Un contrato de operaciones que alguien debe ofrecer.</td>
+      <td>El repositorio promete buscar y guardar.</td>
+    </tr>
+    <tr>
+      <td>enum</td>
+      <td>Una lista cerrada de opciones permitidas.</td>
+      <td>Posicion, ponemos un listado de valores permitidos en precisamente ese campo.</td>
+    </tr>
+  </table>
+  <p>Para crear cada uno, haz clic derecho sobre la carpeta &gt; New Java File &gt; escogemos class/enum/interface.</p>
+</section>

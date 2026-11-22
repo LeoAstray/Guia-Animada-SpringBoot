@@ -1,0 +1,141 @@
+/* =========================================================
+   GUÍA RESUMIDA y EJERCICIOS
+   Usa los colores y tipografías de css/01-variables.css y las reglas
+   generales de css/02-base.css (construir.py las junta antes que este archivo).
+   ========================================================= */
+body.resumida, body.ejercicios {
+  background:
+    radial-gradient(45% 40% at 85% 0%, rgba(139, 91, 255, .22), transparent 70%),
+    radial-gradient(35% 35% at 5% 100%, rgba(61, 224, 255, .10), transparent 70%),
+    var(--void);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+code {
+  padding: .1em .38em; border-radius: 5px; background: var(--void-3); color: #e6e1ff;
+  font: .88em var(--mono); white-space: normal; overflow-wrap: anywhere;
+}
+
+/* ---------- GUÍA RESUMIDA ---------- */
+/* (la barra superior, header.bar, es común a todas las páginas y está en css/02-base.css) */
+.wrap { max-width: 56rem; margin: 0 auto; padding: 2.6rem 1.25rem 4rem; }
+html { scroll-padding-top: 4.5rem; }
+.intro h1 {
+  margin: 0 0 .8rem; color: var(--lime); text-wrap: balance;
+  font: 900 clamp(1.9rem, 6vw, 3rem)/1.04 var(--disp); letter-spacing: -.035em;
+}
+.intro .sub { max-width: 40rem; margin: 0 0 1.8rem; color: var(--ink-2); font-size: 1.1rem; text-wrap: pretty; }
+
+/* Índice de saltos: una fila de números por parte */
+.jump { display: grid; gap: .9rem; margin-bottom: 2.4rem; padding: 1.1rem 1.2rem; border-radius: 18px; background: var(--void-2); border: 1px solid var(--line); }
+.jump .row { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+.jump .row b { flex: 0 0 100%; color: var(--acc); font: 700 .72rem var(--pix); letter-spacing: .05em; }
+.jump a {
+  display: inline-grid; place-items: center; min-width: 2.4rem; height: 2.4rem; padding: 0 .5rem; border-radius: 8px;
+  background: var(--void-3); border: 1px solid var(--line); color: var(--ink); text-decoration: none; font: 700 .8rem var(--pix);
+  transition: background .25s, color .25s, border-color .25s;
+}
+.jump a:hover { background: var(--acc); color: var(--void); border-color: var(--acc); }
+
+/* Partes y pasos */
+.p1 { --acc: var(--cyan); }
+.p2 { --acc: var(--pink); }
+.p3 { --acc: var(--gold); }
+.p4 { --acc: var(--green); }
+.parte { margin-top: 3.2rem; }
+.parte > header { margin-bottom: 1.2rem; padding-bottom: .9rem; border-bottom: 1px solid var(--line); }
+.parte > header .n { margin: 0 0 .15rem; color: var(--acc); font: 700 .75rem var(--pix); letter-spacing: .08em; }
+.parte > header h2 { margin: 0; font: 900 clamp(1.3rem, 4vw, 1.8rem)/1.1 var(--disp); letter-spacing: -.03em; color: #fff; text-wrap: balance; }
+.parte > header p { margin: .35rem 0 0; color: var(--ink-2); }
+
+article.paso {
+  display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); gap: 0 1.1rem;
+  margin: 0 0 1rem; padding: 1.2rem 1.3rem 1.2rem 1.1rem; border-radius: 18px;
+  background: var(--void-2); border: 1px solid var(--line);
+}
+article.paso:target { border-color: var(--acc); outline: 2px solid var(--acc); outline-offset: 3px; }
+article.paso .num { grid-row: 1 / span 3; color: var(--acc); font: 900 2rem/1 var(--disp); letter-spacing: -.04em; text-align: center; }
+article.paso h3 { margin: .1rem 0 .6rem; color: #fff; font: 700 1.12rem/1.25 var(--body); }
+/* minmax(0, 1fr) y min-width: 0: sin esto, una línea larga de código ensancha toda la columna y la página */
+article.paso ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+article.paso li { position: relative; counter-increment: s; padding-left: 1.9rem; line-height: 1.5; min-width: 0; }
+article.paso > * { min-width: 0; }
+article.paso li::before {
+  content: counter(s); position: absolute; left: 0; top: .12em; display: grid; place-items: center;
+  width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--void-3); color: var(--acc);
+  font: 700 .66rem var(--pix);
+}
+/* Código dentro de un paso: ocupa todo el ancho de la tarjeta (sale del hueco de la numeración) */
+article.paso pre { max-width: 100%; font-size: .8rem; }
+article.paso details { max-width: 100%; }
+article.paso li > pre, article.paso li > details { margin: .7rem 0 .3rem -1.9rem; }
+article.paso li > details.cod > pre { margin: 0; border-radius: 0 0 14px 14px; border-top: 0; }
+article.paso details.cod { border: 1px solid var(--line); border-radius: 14px; background: var(--code-bg); }
+article.paso details.cod[open] { border-color: var(--violet); }
+article.paso details.cod > summary {
+  cursor: pointer; list-style: none; padding: .7rem 1rem; border-radius: 14px;
+  color: var(--cyan); font: 700 .72rem var(--pix); letter-spacing: .03em;
+}
+article.paso details.cod > summary::-webkit-details-marker { display: none; }
+article.paso details.cod > summary::before { content: "▸ "; }
+article.paso details.cod[open] > summary { border-radius: 14px 14px 0 0; border-bottom: 1px solid var(--line); }
+article.paso details.cod[open] > summary::before { content: "▾ "; }
+
+article.paso .mas {
+  justify-self: start; margin-top: 1rem; display: inline-flex; align-items: center; gap: .5rem;
+  padding: .55rem 1rem; border-radius: 999px; border: 1.5px solid var(--lime);
+  color: var(--lime); text-decoration: none; font: 700 .74rem var(--pix);
+  transition: background .25s, color .25s;
+}
+article.paso .mas:hover { background: var(--lime); color: var(--void); }
+
+.end { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1.4rem; border-top: 1px solid var(--line); font: 700 .78rem var(--pix); }
+.end a { text-decoration: none; }
+
+/* ---------- EJERCICIOS ---------- */
+/* La lista y los paneles viven en la misma página: un panel solo se ve cuando la dirección apunta a él (#ejercicio-1) */
+.panel { display: none; --acc: var(--green); }
+.panel:target { display: block; }
+body:has(.panel:target) .hub { display: none; }
+
+.ej-list { display: grid; gap: 1rem; }
+.ej {
+  --acc: var(--green);
+  display: grid; gap: .55rem; padding: 1.3rem 1.4rem; border-radius: 18px;
+  background: var(--void-2); border: 1px solid var(--line);
+}
+.ej .n, .panel .n { margin: 0; color: var(--acc); font: 700 .75rem var(--pix); letter-spacing: .08em; }
+.ej h2, .panel h2 { margin: 0; color: #fff; text-wrap: balance; font: 900 clamp(1.25rem, 3.6vw, 1.7rem)/1.1 var(--disp); letter-spacing: -.03em; }
+.ej p { margin: 0; color: var(--ink-2); }
+.ej .meta { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ej .meta span { padding: .2rem .65rem; border-radius: 999px; background: var(--void-3); color: var(--ink-2); font: 700 .7rem var(--pix); }
+.ej .acciones { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .5rem; }
+.acciones > *, .panel .nav a {
+  padding: .7rem 1.1rem; border-radius: 999px; text-decoration: none; text-align: center; font: 700 .76rem var(--pix);
+}
+.acciones .ver { background: var(--acc); color: var(--void); }
+.acciones .sol { border: 1.5px solid var(--acc); color: var(--acc); transition: background .25s, color .25s; }
+.acciones .sol:hover { background: var(--acc); color: var(--void); }
+.acciones .off { border: 1.5px dashed var(--line); color: var(--ink-3); }
+
+.panel > header { margin: 1.2rem 0 1.6rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+.panel .nav { display: flex; flex-wrap: wrap; gap: .6rem; }
+.panel .nav a { border: 1.5px solid var(--line); color: var(--ink); }
+.panel .nav a:hover { border-color: var(--acc); color: var(--acc); }
+.panel .nav.pie { margin-top: 2.4rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
+.panel h3 { color: var(--acc); }
+
+/* ---------- MÓVIL ---------- */
+@media (max-width: 40rem) {
+  .wrap { padding: 1.8rem 1rem 3rem; }
+  .jump { padding: .9rem; }
+  article.paso { grid-template-columns: minmax(0, 1fr); padding: 1rem 1rem 1.1rem; }
+  article.paso .num { grid-row: auto; text-align: left; font-size: 1.6rem; margin-bottom: .1rem; }
+  article.paso h3 { font-size: 1.08rem; }
+  article.paso .mas { justify-self: stretch; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; }
+}

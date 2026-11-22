@@ -1,0 +1,88 @@
+/* =========================================================
+   PORTADA: título, botones, los tres sobres y la cinta
+   ========================================================= */
+.hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  min-height: calc(100vh - var(--bar)); min-height: calc(100svh - var(--bar));
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center; gap: 2rem;
+  padding: 6rem 6vw 7rem;
+}
+.hero::before {
+  content: ""; position: absolute; inset: -20%; z-index: -1;
+  background:
+    radial-gradient(40% 50% at 78% 45%, rgba(139, 91, 255, .28), transparent 70%),
+    radial-gradient(30% 40% at 15% 85%, rgba(61, 224, 255, .12), transparent 70%);
+}
+
+/* Título: cada palabra aparece con efecto píxel */
+.hero h1 {
+  margin: 0 0 1.6rem; color: var(--lime); text-wrap: balance;
+  font: 900 clamp(2.9rem, 7.2vw, 6rem)/.93 var(--disp); letter-spacing: -.04em;
+}
+/* El recorte deja margen por arriba, abajo y a los lados: con line-height .93 y
+   letter-spacing negativo, los rabillos (la "g" de Spring) y la última letra
+   sobresalen de la caja y se cortarían. */
+.hero h1 .w { display: inline-block; padding: .08em .06em .22em 0; margin-bottom: -.22em; clip-path: inset(-.1em 100% -.1em -.1em); animation: pix .9s steps(8) forwards; }
+.hero h1 .w.p { color: var(--pink); }
+@keyframes pix { to { clip-path: inset(-.1em -.1em -.1em -.1em); } }
+
+.hero .lede { max-width: 34rem; margin: 0 0 2.2rem; font-size: 1.2rem; color: var(--ink-2); text-wrap: pretty; }
+
+/* Botones */
+.cta { display: flex; flex-wrap: wrap; gap: .8rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: .6rem;
+  padding: 1rem 1.5rem; border-radius: 999px; text-decoration: none;
+  font: 700 .8rem var(--pix);
+  transition: transform .45s var(--out), box-shadow .45s var(--out), background .3s;
+}
+.btn.main { background: var(--lime); color: var(--void); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .8); }
+.btn.main:hover { color: var(--void); transform: translateY(-3px); box-shadow: 0 18px 30px -14px rgba(0, 0, 0, .9); }
+.btn.ghost { border: 2px solid var(--violet); color: var(--ink); }
+.btn.ghost:hover { background: var(--void-3); color: var(--ink); }
+.btn.ghost[hidden] { display: none; }
+.btn .flag { padding: .15rem .45rem; border-radius: 4px; background: var(--pink); color: var(--void); }
+
+/* Los tres sobres (se reparten, se inclinan y brillan con el ratón) */
+.packs { position: relative; height: 460px; perspective: 1200px; }
+.pack {
+  position: absolute; top: 50%; left: 50%; overflow: hidden;
+  width: 230px; height: 330px; margin: -165px 0 0 -115px; padding: 1.15rem;
+  border-radius: 18px; color: var(--ink); text-decoration: none;
+  transform: translateX(var(--x)) translateY(var(--y, 0)) rotate(var(--r)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .7s var(--out), box-shadow .7s var(--out);
+  box-shadow: 0 30px 50px -22px rgba(0, 0, 0, .85);
+  animation: deal 1.1s var(--out) backwards;
+}
+.pack:nth-child(1) { animation-delay: 1.5s; }
+.pack:nth-child(2) { animation-delay: 1.65s; }
+.pack:nth-child(3) { animation-delay: 1.8s; }
+@keyframes deal { from { transform: translateX(0) translateY(120px) rotate(0) scale(.7); opacity: 0; } }
+
+.pack::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .4), transparent 45%);
+  mix-blend-mode: overlay; transition: opacity .4s;
+}
+.pack:hover, .pack:focus-visible { z-index: 5; color: inherit; --y: -14px; }
+.pack:hover::after, .pack:focus-visible::after { opacity: 1; }
+.pack .no { font: 700 .75rem var(--pix); letter-spacing: .05em; }
+.pack .pt { margin: 8.6rem 0 .5rem; font: 900 1.75rem/1 var(--disp); letter-spacing: -.03em; }
+.pack p { margin: 0; font-size: .9rem; line-height: 1.4; }
+
+.pack.c { --x: -185px; --r: -9deg; background: var(--void-2); border: 2px solid var(--cyan); }
+.pack.c .no, .pack.c .pt { color: var(--cyan); }
+.pack.r { --x: 0px; --r: -1deg; z-index: 2; background: var(--plum); border: 2px solid var(--pink); }
+.pack.r .no, .pack.r .pt { color: var(--pink); }
+.pack.h { --x: 185px; --r: 8deg; z-index: 3; background: var(--holo); color: var(--void);
+  animation: deal 1.1s var(--out) 1.8s backwards, spin 7s linear infinite; }
+.pack.h:hover { color: var(--void); }
+
+/* Cinta de anotaciones en contorno (decorativa) */
+.marquee {
+  position: absolute; left: 0; right: 0; bottom: 2.2rem; overflow: hidden; pointer-events: none;
+  white-space: nowrap; font: 900 2.4rem var(--disp); color: transparent; -webkit-text-stroke: 1px var(--line);
+}
+.marquee span { display: inline-block; animation: mq 50s linear infinite; }
+@keyframes mq { to { transform: translateX(-50%); } }

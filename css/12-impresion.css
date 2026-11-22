@@ -1,0 +1,29 @@
+/* =========================================================
+   IMPRESIÓN (Ctrl+P): papel blanco y tinta oscura
+   ========================================================= */
+@media print {
+  :root {
+    --void: #fff; --void-2: #fff; --void-3: #f2f0fa; --void-4: #e6e2f5;
+    --ink: #111; --ink-2: #333; --ink-3: #444; --line: #ccc;
+    --lime: #3b5200; --cyan: #00566b; --pink: #99104f; --gold: #6b4d00;
+    --violet: #4b2aa8; --green: #0b5a32; --red: #9b1c1c;
+    --plum: #fff; --plum-2: #fff; --code-bg: #f6f6f6;
+  }
+  body { background: #fff; color: #111; font-size: 11pt; }
+  b, strong, td:first-child { color: #000; }
+  .kid::before, .why::before, .warn::before, .ok::before, .step { color: #fff; }
+  p code, li code, td code, h3 code { color: #00566b; }
+
+  .loader, .sidebar, header.bar, .copy, .dock, .hud, .progress, .hero .packs, .marquee, .cta, .scrim { display: none !important; }
+  .hero { display: block; min-height: 0; padding: 0 0 1rem; }
+  .hero h1 .w { clip-path: none; animation: none; }
+  .layout { display: block; border: 0; }
+  main { max-width: none; padding: 0; }
+
+  .opener, .part { animation: none !important; opacity: 1 !important; transform: none !important; border: 1px solid #999 !important; background: #fff !important; }
+  .opener h2 { clip-path: none !important; }
+  pre { white-space: pre-wrap; break-inside: avoid-page; color: #111; }
+  .fig { background: #fff; }
+  .fig svg text { fill: #111; }
+  .fig, .kid, .why, .warn, .ok { break-inside: avoid; }
+}

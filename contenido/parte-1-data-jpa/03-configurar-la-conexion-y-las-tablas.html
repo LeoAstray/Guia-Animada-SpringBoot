@@ -1,0 +1,65 @@
+<section id="paso-3">
+    <h2>3 Configurar la conexión y las tablas</h2>
+    <p class="paso">1. En el explorador de VS Code, despliega <code>src &gt; main &gt; resources</code>.</p>
+    <p class="paso">2. Haz clic en <code>application.properties</code>.</p>
+    <p class="paso">3. Escribe este contenido. Sustituye usuario, contraseña y puerto por los de tu MySQL.</p>
+    <pre class="code" data-f="src/main/resources/application.properties">spring.application.name=examen
+server.port=8080
+
+spring.datasource.url=jdbc:mysql://localhost:3308/examen?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true
+spring.jpa.properties.hibernate.format_sql=true</pre>
+    <p class="paso">4. Guarda con <b>Ctrl+S</b>.</p>
+    <p>Es importante mencionar que en la linea de spring.application.name=examen se tiene que cambiar examen por el
+        nombre que hayamos puesto en Artifact al crear el proyecto en start.spring.io. En la URL,
+        <code>jdbc:mysql</code> indica el tipo de conexión; <code>localhost</code>, tu ordenador;
+        <code>3308</code>, el puerto del servidor; y <code>examen</code>, el archivador que abrimos.
+    </p>
+    <p><code>show-sql</code> enseña las consultas en la terminal y <code>format_sql</code> las distribuye para leerlas
+        mejor. <code>ddl-auto</code> indica qué hará Hibernate con la estructura. Los valores que puede tener ddl-auto
+        son los siguientes, en este tutorial vamos a usar o create-drop o update:</p>
+    <table>
+        <tr>
+            <th><b>Valor</b></th>
+            <th><b>Qué ocurre</b></th>
+        </tr>
+        <tr>
+            <td>update</td>
+            <td>Intenta ajustar las tablas al modelo. Útil al practicar; no resuelve todas las migraciones.</td>
+        </tr>
+        <tr>
+            <td>create</td>
+            <td>Recrea las tablas gestionadas al arrancar y se pierden sus datos anteriores.</td>
+        </tr>
+        <tr>
+            <td>create-drop</td>
+            <td>Recrea al arrancar y elimina las tablas al cerrar normalmente.</td>
+        </tr>
+        <tr>
+            <td>validate</td>
+            <td>Comprueba que las tablas encajan con las entidades; no las crea.</td>
+        </tr>
+        <tr>
+            <td>none</td>
+            <td>No pide a Hibernate crear ni modificar el esquema.</td>
+        </tr>
+    </table>
+    <p class="note">Al principio dejamos update. En el paso 3A (el de debajo de este) añadimos el servidor web para
+        mantener la
+        aplicación abierta. En el paso 14 cambiaremos la configuración de la base de práctica para cargar un juego de
+        datos repetible con create-drop.</p>
+    <h3 id="paso-3A" data-indice="Añadir el servidor web (paso 3A)">Añadir el servidor web y mantener la aplicación
+        abierta</h3>
+    <p>El servidor web de Spring Boot permite que la aplicación siga arrancada después de terminar las instrucciones de
+        run. Así puedes abrir phpMyAdmin y examinar las tablas mientras el programa sigue funcionando. Con create-drop,
+        las tablas se mantienen durante la ejecución y se eliminan al cerrar normalmente la aplicación.</p>
+</section>

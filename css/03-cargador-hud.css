@@ -1,0 +1,37 @@
+/* =========================================================
+   CARGADOR, BARRA DE PROGRESO Y MARCAS DE LAS ESQUINAS
+   ========================================================= */
+
+/* Cargador con porcentaje (solo la primera vez por sesión) */
+.loader {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  background: var(--void);
+  transition: clip-path .9s var(--out);
+}
+.loader.done { clip-path: inset(0 0 100% 0); }
+.loader .bar { display: flex; gap: 8px; justify-content: center; }
+.loader .bar i { width: 10px; height: 10px; background: var(--line); transition: background .15s; }
+.loader .bar i.on { background: var(--lime); }
+.loader p {
+  margin: .9rem 0 0; text-align: center;
+  font: 700 .75rem var(--pix); color: var(--ink-2); letter-spacing: .1em;
+}
+
+/* Barra de progreso de lectura (arriba del todo) */
+.progress {
+  position: fixed; top: 0; left: 0; z-index: 60;
+  width: 100%; height: 4px;
+  transform-origin: 0 50%; transform: scaleX(var(--p, 0));
+  background: var(--holo);
+}
+
+/* Marcas HUD de las esquinas */
+.hud {
+  position: fixed; z-index: 55; pointer-events: none; opacity: .8;
+  width: 20px; height: 20px; border: 2px solid var(--violet);
+}
+.hud.tl { top: 12px;    left: 12px;  border-right: 0; border-bottom: 0; }
+.hud.tr { top: 12px;    right: 12px; border-left: 0;  border-bottom: 0; }
+.hud.bl { bottom: 12px; left: 12px;  border-right: 0; border-top: 0; }
+.hud.br { bottom: 12px; right: 12px; border-left: 0;  border-top: 0; }

@@ -1,0 +1,33 @@
+<!-- GUÍA RESUMIDA · PARTE 2 (pasos 18 y 19). Mismo formato que pasos-parte-1.html
+     (ahí se explica la marca [[codigo:N:texto]] para mostrar código de la guía completa). -->
+
+<article data-paso="18">
+<ol>
+<li>Antes pedías tú desde <code>run()</code>. Ahora pide un <b>cliente HTTP</b> (Postman, una web, una app).</li>
+<li>Entidades, relaciones y repositorios se quedan igual. Se añaden capas: <code>RestController → IService → Service → Repository</code>.</li>
+<li>Hacia fuera salen <b>DTO</b>, nunca Entities.</li>
+<li>Los resultados se comunican con códigos HTTP: 200, 201, 204, 400, 404 y 409.</li>
+<li>Los 5 pasos del puente: dependencia de validación, DTO, Service, Controller y probar.</li>
+</ol>
+</article>
+
+<article data-paso="19">
+<ol>
+<li><b>Validación:</b> comprueba que <code>spring-boot-starter-validation</code> está en el <code>pom.xml</code>. Si no, clic derecho en <code>pom.xml</code> &gt; <b>Add Starters</b> &gt; Validation.</li>
+<li><b>DTO:</b> crea el paquete <code>dto</code> con tres <code>record</code>. Lo que entra (con validaciones):
+[[codigo:19:public record JugadorRequestDTO]]
+Una pieza anidada, para no crear bucles:
+[[codigo:19:public record FichajeResumenDTO]]
+Y lo que sale:
+[[codigo:19:public record JugadorResponseDTO]]</li>
+<li><b>Service:</b> el contrato, que solo habla de DTO.
+[[codigo:19:public interface IJugadorService]]
+Y quien hace el trabajo, con <code>@Transactional</code> y la conversión entre DTO y Entity:
+[[codigo:19:public class JugadorServiceImpl]]</li>
+<li><b>Controller:</b> recibe HTTP y responde con <code>ResponseEntity</code> (201 con <code>Location</code>, 200, 204 y 404).
+[[codigo:19:public class JugadorController]]</li>
+<li><b>Probar:</b> arranca y usa Postman. En el POST, <b>Body &gt; raw &gt; JSON</b>, con este cuerpo (sus claves son los campos del <code>RequestDTO</code>, sin <code>id</code>).
+[[codigo:19:"nombre": "Nuevo"]]
+Prueba también los errores a propósito (nombre vacío, una posición que no existe, sin <code>goles</code>…): deben dar <b>400</b>.</li>
+</ol>
+</article>

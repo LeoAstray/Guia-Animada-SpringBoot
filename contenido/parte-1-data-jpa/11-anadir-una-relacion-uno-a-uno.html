@@ -1,0 +1,93 @@
+<section id="paso-11">
+<h2>11 Añadir una relación uno a uno</h2>
+<p>Una relación <b>uno a uno</b> conecta un objeto con otro.</p>
+<div class="kid">Piensa en un jugador y su ficha personal de estadísticas: cada jugador tiene una ficha y esa ficha no se comparte con otro jugador. En este ejemplo la ficha es obligatoria.</div>
+
+<h3>Preparar la clase principal</h3>
+<p class="paso">1. Abre <code>ExamenApplication.java</code> en <code>src/main/java/leo/astray/examen</code>.</p>
+<p class="paso">2. Borra solamente las instrucciones de las pruebas anteriores que están <b>dentro de las llaves de <code>run</code></b>. Conserva <code>main</code>, <code>@SpringBootApplication</code>, <code>implements CommandLineRunner</code>, los campos con <code>@Autowired</code> y el propio método <code>run</code>.</p>
+<p class="paso">3. Deja temporalmente esta instrucción dentro de <code>run</code>:</p>
+<pre data-f="ExamenApplication.java (dentro de run)">System.out.println("Preparando las relaciones");</pre>
+<div class="why">A partir de ahora, guardar un jugador exige darle también un perfil. Las pruebas antiguas que lo guardaban sin perfil dejarían de ser válidas.</div>
+
+<h3>Crear la entidad del perfil</h3>
+<p class="paso">4. En el explorador de VS Code, busca el paquete <code>entity</code>. Haz clic derecho sobre él → <b>New Java File → Class</b>. Escribe <code>PerfilEstadistico</code>. VS Code crea <code>PerfilEstadistico.java</code>.</p>
+<p class="paso">5. Sustituye el contenido del archivo por este código completo:</p>
+<pre data-f="entity/PerfilEstadistico.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "perfiles_estadisticos")
+public class PerfilEstadistico {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_perfil")
+    private Long id;
+
+    @Column(nullable = false)
+    private int partidos;
+    @Column(nullable = false)
+    private int goles;
+    @Column(nullable = false)
+    private int asistencias;
+    @Column(nullable = false)
+    private double valoracion;
+
+    public PerfilEstadistico() {}
+
+    public PerfilEstadistico(int partidos, int goles,
+            int asistencias, double valoracion) {
+        this.partidos = partidos;
+        this.goles = goles;
+        this.asistencias = asistencias;
+        this.valoracion = valoracion;
+    }
+
+    public Long getId() { return id; }
+    public int getPartidos() { return partidos; }
+    public int getGoles() { return goles; }
+    public int getAsistencias() { return asistencias; }
+    public double getValoracion() { return valoracion; }
+}</pre>
+
+<h3>Conectar el jugador con su perfil</h3>
+<p class="paso">6. Abre <code>Jugador.java</code>. Añade este campo junto a sus otros atributos, <b>dentro de la clase y fuera de cualquier método</b>:</p>
+<pre data-f="entity/Jugador.java (nuevo campo)">@OneToOne(cascade = CascadeType.ALL, optional = false)
+@JoinColumn(name = "id_perfil", nullable = false, unique = true)
+private PerfilEstadistico perfil;</pre>
+<p class="paso">7. Añade estos métodos (getters y setters) dentro de la clase, junto a sus otros getters y setters, puedes usar el generate getters and setters que mencionamos en pasos anteriores:</p>
+<pre data-f="entity/Jugador.java (nuevos métodos)">public PerfilEstadistico getPerfil() {
+    return perfil;
+}
+
+public void setPerfil(PerfilEstadistico perfil) {
+    this.perfil = perfil;
+}</pre>
+<p class="paso">8. Cambia el constructor de <code>Jugador</code>. <b>Sustituye</b> el de 3 parámetros del paso 6 por este de 4, que añade el perfil. Conserva también el constructor vacío <code>public Jugador() {}</code>:</p>
+<pre data-f="entity/Jugador.java (constructor nuevo, sustituye al de 3 parámetros)">public Jugador(String nombre, String mote,
+        Posicion posicion, PerfilEstadistico perfil) {
+    this.nombre = nombre;
+    this.mote = mote;
+    this.posicion = posicion;
+    this.perfil = perfil;
+}</pre>
+<p>Si prefieres generarlo con VS Code: borra el de 3 parámetros, clic derecho dentro de la clase &gt; <b>Source Action &gt; Generate Constructors</b> y marca solo <code>nombre</code>, <code>mote</code>, <code>posicion</code> y <code>perfil</code>. No marques <code>id</code> (lo pone MySQL).</p>
+<div class="why"><b>¿Por qué exigir el perfil en el constructor?</b> Porque la relación es obligatoria: un jugador sin perfil no puede guardarse. Con este constructor, el compilador no te deja crear un <code>Jugador</code> sin él, y el error aparece en rojo en VS Code, no al ejecutar y guardar. Por eso solo dejamos <b>una</b> forma de crear un jugador: <code>new Jugador(nombre, mote, posicion, perfil)</code>. El constructor vacío se queda porque JPA lo necesita para crear los objetos al leer filas de la base; tú no lo uses. Las pruebas antiguas del paso 9 que usaban 3 parámetros ya no compilan, y por eso el paso 2 pedía vaciar <code>run</code>.</div>
+<p><b>Qué significa cada parte:</b> <code>@OneToOne</code> declara la relación. <code>@JoinColumn</code> crea en <code>jugadores</code> la columna <code>id_perfil</code>, que guarda el número de una fila de <code>perfiles_estadisticos</code>. Ese número es una <b>clave foránea</b>: una referencia a otra tabla, como apuntar el número de la ficha en la tarjeta del jugador.</p>
+<p><code>nullable = false</code> obliga a indicar un perfil. <code>unique = true</code> impide que dos jugadores compartan el mismo. <code>optional = false</code> expresa también en el modelo Java que la relación es obligatoria.</p>
+<p>El <b>propietario de la relación</b> es el lado que controla la columna de unión; aquí es <code>Jugador</code>. <code>cascade = CascadeType.ALL</code> propaga las operaciones JPA al perfil: al guardar un jugador nuevo se guarda su perfil y al borrar ese jugador también se borra su perfil. Tiene sentido porque esa ficha pertenece a ese jugador.</p>
+
+<h3>Cómo se guardará desde Java</h3>
+<p>Este bloque es un ejemplo para poner <b>dentro de <code>run</code></b>, cuando hayas terminado el modelo y cargado los datos del paso 14. No lo añadas todavía a la prueba final:</p>
+<pre data-f="ExamenApplication.java (ejemplo)">PerfilEstadistico perfil = new PerfilEstadistico(
+    10, 2, 1, 7.5);
+
+Jugador jugador = new Jugador(
+    "Leo", "Flecha", Posicion.DEFENSA, perfil);
+
+jugadorRepository.save(jugador);</pre>
+<p>Primero preparas la ficha; después fabricas el jugador pasándosela en el constructor, y por último lo guardas. Al guardar el jugador, la cascada guarda también la ficha. El orden importa: el perfil tiene que existir antes que el jugador, porque el constructor lo pide.</p>
+<div class="warn"><b>No ejecutes todavía el modelo nuevo con las filas antiguas.</b> Esas filas podrían no tener el perfil obligatorio. Termina las relaciones de los pasos 12 y 13; en el 14 prepararás datos que encajan con ellas.</div>
+<p>Si un ejercicio pide navegar también desde el perfil hasta su jugador, el lado inverso llevaría <code>@OneToOne(mappedBy = "perfil")</code>. <code>perfil</code> es el nombre del atributo de <code>Jugador</code>. Para nuestro ejemplo basta con poder ir de jugador a perfil.</p>
+</section>

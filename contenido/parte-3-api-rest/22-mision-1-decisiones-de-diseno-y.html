@@ -1,0 +1,304 @@
+<section id="s20">
+<h2>22 Misión 1: decisiones de diseño y entidades</h2>
+<p>Antes de codificar se responden, por escrito, las preguntas clave sobre el modelo. Estas son las respuestas, razonadas, y debajo el código que las cumple.</p>
+
+<h3>1. Lado propietario y <code>mappedBy</code></h3>
+<p>El <b>lado propietario</b> es el que tiene la clave foránea física (o el <code>@JoinTable</code>). El otro lado lleva <code>mappedBy</code>, que significa «yo no tengo la cuerda, ya la tiene el otro».</p>
+<figure class="fig">
+<svg viewBox="0 0 900 190" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+  <g font-size="34">
+    <use href="#i-person" class="ic" x="80.8" y="54.36" width="18.4" height="18.4"/><text x="90" y="125" font-size="13" font-weight="700">Editorial</text><text x="90" y="145" font-size="12" fill="#4f5d68">mappedBy = "editorial"</text>
+    <use href="#i-child" class="ic" x="390.8" y="54.36" width="18.4" height="18.4"/><text x="400" y="125" font-size="13" font-weight="700">Libro</text><text x="400" y="145" font-size="12" fill="#b23a2b">PROPIETARIO (FK)</text>
+    <use href="#i-card" class="ic" x="690.8" y="54.36" width="18.4" height="18.4"/><text x="700" y="125" font-size="13" font-weight="700">FichaLibro</text><text x="700" y="145" font-size="12" fill="#b23a2b">PROPIETARIO (FK)</text>
+  </g>
+  <path d="M385 60 Q240 20 120 55" stroke="#0b6b6b" stroke-width="3" fill="none" stroke-dasharray="2 6" stroke-linecap="round"/>
+  <path d="M440 55 Q560 20 665 55" stroke="#0b6b6b" stroke-width="3" fill="none" stroke-dasharray="2 6" stroke-linecap="round" transform="rotate(180 552 45) translate(-0 0)" opacity="0"/>
+  <text x="250" y="25" font-size="13" fill="#0b6b6b" font-weight="700">«llevo a mi mamá de la mano»</text>
+  <text x="550" y="25" font-size="13" fill="#4f5d68">Libro tiene mappedBy="libro" hacia su ficha</text>
+  <text x="450" y="178" font-size="13" fill="#4f5d68">N:M → elige un dueño del @JoinTable (lo natural: Libro). Autor lleva mappedBy="autores".</text>
+</svg>
+<figcaption>Quién tiene la cuerda</figcaption>
+</figure>
+<table>
+<tr><th>Relación</th><th>Propietario</th><th>Lleva <code>mappedBy</code></th><th>Por qué</th></tr>
+<tr><td>Editorial 1:N Libro</td><td><b>Libro</b></td><td>Editorial (<code>mappedBy = "editorial"</code>)</td><td>Libro aloja la FK física <code>editorial_id</code> (<code>@JoinColumn</code>).</td></tr>
+<tr><td>Libro 1:1 FichaLibro</td><td><b>FichaLibro</b></td><td>Libro (<code>mappedBy = "libro"</code>)</td><td>FichaLibro contiene la columna <code>libro_id</code> (<code>@JoinColumn</code>).</td></tr>
+<tr><td>Libro N:M Autor</td><td><b>Libro</b></td><td>Autor (<code>mappedBy = "autores"</code>)</td><td>Hay que elegir un dueño de la tabla intermedia; elegimos Libro con <code>@JoinTable(name = "libro_autor", ...)</code>.</td></tr>
+</table>
+
+<h3>2. ¿Por qué <code>@ManyToOne(fetch = LAZY)</code> hacia Editorial?</h3>
+<p>JPA aplica por defecto <code>FetchType.EAGER</code> en <code>@ManyToOne</code>. Si listamos 100 libros, Hibernate dispararía consultas inmediatas a la tabla <code>editorial</code> por cada uno, o forzaría un JOIN constante. Con <b>LAZY</b>, la editorial solo se consulta cuando el servicio realmente la pide.</p>
+<div class="grid">
+  <div class="box"><b class="bad">EAGER</b> (por defecto)<br>Pides la hamburguesa y te traen también bebida, patatas y juguete, aunque no lo pediste.</div>
+  <div class="box"><b class="good">LAZY</b><br>Te traen solo la hamburguesa. La bebida, cuando la pidas.</div>
+</div>
+
+<h3>3. En el N:M, ¿<code>Set</code> o <code>List</code>?</h3>
+<p>Usamos <b>Set</b> para evitar duplicidades lógicas (un autor no puede estar asignado dos veces al mismo libro) y para que Hibernate gestione la tabla intermedia con sentencias INSERT y DELETE puntuales, en lugar de recrear toda la colección como hace con <code>List</code>. La desventaja de Set es que exige implementar bien <code>equals()</code> y <code>hashCode()</code>, basados en el identificador o en una clave de negocio.</p>
+<div class="grid">
+  <div class="box"><b>List</b><br>Una fila donde «Pepe» puede estar dos veces. Al borrar uno, Hibernate puede borrar y reinsertar toda la tabla intermedia.</div>
+  <div class="box"><b>Set</b><br>Un corro donde cada niño entra una vez. Sin duplicados, pero hay que hacer bien <code>equals</code> y <code>hashCode</code>.</div>
+</div>
+
+<h3>4. Cascada y <code>orphanRemoval</code>: Libro con Ficha frente a Editorial con Libro</h3>
+<ul>
+<li><b>Libro a FichaLibro:</b> <code>CascadeType.ALL</code> y <code>orphanRemoval = true</code>, porque la ficha es un componente dependiente con ciclo de vida supeditado al libro. Si se elimina el libro, o se desvincula la ficha, la ficha debe desaparecer.</li>
+<li><b>Editorial a Libro:</b> ni <code>CascadeType.REMOVE</code> ni <code>orphanRemoval</code>. Si se borrara una editorial, se borraría en cascada todo el catálogo de libros y sus registros históricos: una pérdida masiva de datos en vez de una restricción de integridad. Por eso se responde con un <b>409</b>.</li>
+</ul>
+<div class="kid">Si tiras tu cuaderno, su portada va a la basura contigo (cascade). Pero si cierra el cole, no tiras a todos los niños.</div>
+
+<h3>5. Sincronización en memoria: <code>addAutor</code> y <code>removeAutor</code></h3>
+<p>En una relación bidireccional hay que actualizar <b>los dos lados</b> para que los objetos no se contradigan durante la transacción. Para eso se diseñan en Libro los métodos de conveniencia <code>addAutor</code> y <code>removeAutor</code> (y <code>setFicha</code> para el 1:1).</p>
+<figure class="fig">
+<svg viewBox="0 0 700 150" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
+  <use href="#i-child" class="ic" x="94.7" y="16.99" width="50.6" height="50.6"/><text x="120" y="95" font-size="13" font-weight="700">Libro</text><text x="120" y="115" font-size="12">autores = {Ana}</text>
+  <use href="#i-child" class="ic" x="554.7" y="16.99" width="50.6" height="50.6"/><text x="580" y="95" font-size="13" font-weight="700">Autor Ana</text><text x="580" y="115" font-size="12">libros = {Libro}</text>
+  <path pathLength="1" class="ld" d="M200 45 H500" stroke="#2e7d4f" stroke-width="4" marker-end="url(#ar2)"/>
+  <path pathLength="1" class="ld" d="M500 75 H200" stroke="#2e7d4f" stroke-width="4" marker-end="url(#ar2)"/>
+  <defs><marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2e7d4f"/></marker></defs>
+  <text x="350" y="35" font-size="13">1. libro.autores.add(ana)</text>
+  <text x="350" y="100" font-size="13">2. ana.libros.add(libro)</text>
+  <text x="350" y="135" font-size="12" fill="#4f5d68">¡Los DOS lados! si no, se contradicen.</text>
+</svg>
+<figcaption>Ambos lados al día</figcaption>
+</figure>
+<div class="kid">Si Ana dice «Pepe es mi amigo», Pepe también tiene que apuntar «Ana es mi amiga». Si no, uno cree que son amigos y el otro no.</div>
+
+<h3>Las cuatro entidades</h3>
+<details open><summary>Libro.java: propietario del N:M y de la FK a editorial, con los métodos helper</summary>
+<pre class="code" data-f="entity/Libro.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "libro")
+public class Libro {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 150)
+    private String titulo;
+
+    // Lado propietario de 1:N con carga perezosa
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "editorial_id", nullable = false)
+    private Editorial editorial;
+
+    // Relación 1:1 con propagación total y borrado de huérfanos
+    @OneToOne(mappedBy = "libro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private FichaLibro ficha;
+
+    // Lado propietario de N:M mediante tabla intermedia
+    @ManyToMany
+    @JoinTable(
+        name = "libro_autor",
+        joinColumns = @JoinColumn(name = "libro_id"),
+        inverseJoinColumns = @JoinColumn(name = "autor_id")
+    )
+    private Set&lt;Autor&gt; autores = new HashSet&lt;&gt;();
+
+    public Libro() {
+    }
+
+    public Libro(String titulo) {
+        this.titulo = titulo;
+    }
+
+    // Métodos helper de sincronización bidireccional
+    public void addAutor(Autor autor) {
+        this.autores.add(autor);
+        autor.getLibros().add(this);
+    }
+
+    public void removeAutor(Autor autor) {
+        this.autores.remove(autor);
+        autor.getLibros().remove(this);
+    }
+
+    public void setFicha(FichaLibro ficha) {
+        this.ficha = ficha;
+        if (ficha != null) {
+            ficha.setLibro(this);
+        }
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
+    public Editorial getEditorial() { return editorial; }
+    public void setEditorial(Editorial editorial) { this.editorial = editorial; }
+    public FichaLibro getFicha() { return ficha; }
+    public Set&lt;Autor&gt; getAutores() { return autores; }
+    public void setAutores(Set&lt;Autor&gt; autores) { this.autores = autores; }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Libro other &amp;&amp; id != null &amp;&amp; id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Libro.class.hashCode();
+    }
+}</pre></details>
+<details><summary>Editorial.java: lado «uno», <code>mappedBy</code>, sin cascade REMOVE</summary>
+<pre class="code" data-f="entity/Editorial.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "editorial")
+public class Editorial {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, length = 60)
+    private String pais;
+
+    // Relación 1:N inversa (no lleva CascadeType.REMOVE para proteger los libros)
+    @OneToMany(mappedBy = "editorial")
+    private List&lt;Libro&gt; libros = new ArrayList&lt;&gt;();
+
+    public Editorial() {
+    }
+
+    public Editorial(String nombre, String pais) {
+        this.nombre = nombre;
+        this.pais = pais;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getPais() { return pais; }
+    public void setPais(String pais) { this.pais = pais; }
+    public List&lt;Libro&gt; getLibros() { return libros; }
+    public void setLibros(List&lt;Libro&gt; libros) { this.libros = libros; }
+}</pre></details>
+<details><summary>Autor.java: lado inverso del N:M</summary>
+<pre class="code" data-f="entity/Autor.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "autor")
+public class Autor {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, length = 60)
+    private String nacionalidad;
+
+    // Lado inverso de la relación N:M
+    @ManyToMany(mappedBy = "autores")
+    private Set&lt;Libro&gt; libros = new HashSet&lt;&gt;();
+
+    public Autor() {
+    }
+
+    public Autor(String nombre, String nacionalidad) {
+        this.nombre = nombre;
+        this.nacionalidad = nacionalidad;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNacionalidad() { return nacionalidad; }
+    public void setNacionalidad(String nacionalidad) { this.nacionalidad = nacionalidad; }
+    public Set&lt;Libro&gt; getLibros() { return libros; }
+    public void setLibros(Set&lt;Libro&gt; libros) { this.libros = libros; }
+
+    // El Set necesita saber cuándo dos autores son "el mismo": por id.
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Autor other &amp;&amp; id != null &amp;&amp; id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Autor.class.hashCode();
+    }
+}</pre></details>
+<details><summary>FichaLibro.java: propietaria del 1:1</summary>
+<pre class="code" data-f="entity/FichaLibro.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "ficha_libro")
+public class FichaLibro {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 20)
+    private String isbn;
+
+    @Column(nullable = false)
+    private int paginas;
+
+    @Column(nullable = false)
+    private int anio;
+
+    // Lado propietario de la relación 1:1
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "libro_id", nullable = false, unique = true)
+    private Libro libro;
+
+    public FichaLibro() {
+    }
+
+    public FichaLibro(String isbn, int paginas, int anio) {
+        this.isbn = isbn;
+        this.paginas = paginas;
+        this.anio = anio;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getIsbn() { return isbn; }
+    public void setIsbn(String isbn) { this.isbn = isbn; }
+    public int getPaginas() { return paginas; }
+    public void setPaginas(int paginas) { this.paginas = paginas; }
+    public int getAnio() { return anio; }
+    public void setAnio(int anio) { this.anio = anio; }
+    public Libro getLibro() { return libro; }
+    public void setLibro(Libro libro) { this.libro = libro; }
+}</pre></details>
+
+<table>
+<tr><th>Detalle</th><th>Qué explica</th></tr>
+<tr><td><code>@Column(nullable = false, length = 100)</code></td><td>La columna es obligatoria y con longitud máxima; la BD lo hará cumplir.</td></tr>
+<tr><td><code>unique = true</code> en <code>isbn</code> y en <code>libro_id</code></td><td>Un ISBN no se repite, y una ficha pertenece a un único libro (eso es lo que hace que sea 1:1).</td></tr>
+<tr><td><code>@OneToMany(mappedBy = "editorial")</code></td><td>Apunta al <b>atributo Java</b> <code>editorial</code> de Libro, no a la columna SQL.</td></tr>
+<tr><td>Constructor vacío y constructor con datos</td><td>El vacío lo necesita JPA para fabricar objetos al leer; el otro, para crearlos cómodamente.</td></tr>
+<tr><td><code>setFicha(...)</code> que también hace <code>ficha.setLibro(this)</code></td><td>Mantiene coherentes los dos lados del 1:1, igual que <code>addAutor</code> en el N:M.</td></tr>
+<tr><td><code>equals</code> y <code>hashCode</code> por <code>id</code> en Libro y Autor</td><td>Es lo que necesita el <code>Set</code> para saber cuándo dos autores son «el mismo». No aparecen en las capturas del docx; los añado porque la propia Misión 1 los exige.</td></tr>
+</table>
+</section>

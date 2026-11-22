@@ -1,0 +1,73 @@
+<section id="paso-8">
+<h2>8 Ejecutar la primera prueba desde ExamenApplication</h2>
+<p class="paso">1. Abre <code>ExamenApplication.java</code>. Está en <code>src/main/java/leo/astray/examen/ExamenApplication.java</code>. Es el archivo que Spring Initializr creó para arrancar el proyecto.</p>
+<p class="paso">2. Sustituye su contenido por este código completo:</p>
+<pre data-f="ExamenApplication.java">package leo.astray.examen;
+
+import leo.astray.examen.entity.Jugador;
+import leo.astray.examen.enums.Posicion;
+import leo.astray.examen.repository.IJugadorRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ExamenApplication implements CommandLineRunner {
+
+    @Autowired
+    private IJugadorRepository jugadorRepository;
+
+    public static void main(String[] args) {
+        SpringApplication.run(ExamenApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) {
+
+        if (jugadorRepository.count() == 0) {
+
+            Jugador jugador1 = new Jugador
+                  ("Lionel Messi","La Pulga",Posicion.DELANTERO);
+
+            jugadorRepository.save(jugador1);
+
+            System.out.println("ID creado: " + jugador1.getId());
+        }
+
+        System.out.println("Total: " + jugadorRepository.count());
+
+        for (Jugador jugador : jugadorRepository.findAll()) {
+            System.out.println(jugador.getNombre());
+        }
+    }
+}</pre>
+
+<p class="paso">3. Entiende qué hace cada parte.</p>
+<ul>
+<li><code>@SpringBootApplication</code>: marca la clase que arranca y configura la aplicación. Ya venía en el archivo generado.</li>
+<li><code>implements CommandLineRunner</code>: permite que esta misma clase tenga un método <code>run</code> que Spring ejecutará al terminar de preparar la aplicación y la conexión con la base de datos.</li>
+<li><code>@Autowired</code>: le pide a Spring que coloque en <code>jugadorRepository</code> el repositorio preparado para trabajar con los jugadores.</li>
+<li><code>main</code>: arranca Spring. Conservamos este método.</li>
+<li><code>run</code>: contiene las operaciones que queremos probar después del arranque. Aquí escribiremos los ejercicios.</li>
+<li><code>@Override</code>: indica que estamos escribiendo el método <code>run</code> exigido por <code>CommandLineRunner</code>.</li>
+</ul>
+<p>Dentro de <code>run</code>:</p>
+<table>
+<tr><th>Instrucción</th><th>Qué hace</th></tr>
+<tr><td><code>if (jugadorRepository.count() == 0)</code></td><td>Comprueba si la tabla está vacía. Si está vacía, crea a Lionel Messi. Así evitamos intentar guardar otra vez el mismo mote al reiniciar esta primera prueba.</td></tr>
+<tr><td><code>Jugador jugador1 = new Jugador(...);</code></td><td>Crea el objeto <b>en la memoria del programa</b>.</td></tr>
+<tr><td><code>jugadorRepository.save(jugador1);</code></td><td>Lo guarda <b>en MySQL</b>. Crear el objeto con <code>new</code> no basta para guardarlo.</td></tr>
+<tr><td><code>for (Jugador jugador : jugadorRepository.findAll())</code></td><td>Recupera todos los jugadores y los recorre uno a uno para imprimir sus nombres.</td></tr>
+</table>
+
+<p class="paso">4. Guarda todos los archivos. Pulsa <b>File &gt; Save All</b> o <b>Archivo &gt; Guardar todo</b>.</p>
+<p class="paso">5. Ejecuta el proyecto.</p>
+<p class="paso">6. Comprueba el resultado. Si la tabla estaba vacía, aparecerá algo parecido a:</p>
+<pre>ID creado: 1
+Total: 1
+Lionel Messi</pre>
+<p>El ID puede ser diferente de 1. Si ya había jugadores, mostrará la cantidad y los nombres existentes. Además ten en cuenta que hemos puesto en application.properties que nos enseñe el sql de cada consulta entonces va a aparecer el código SQL generado entre los resultados.</p>
+<div class="ok">En phpMyAdmin, abre <code>examen &gt; jugadores &gt; Examinar</code>. Con <code>ddl-auto=update</code>, los datos permanecen al detener la aplicación. Con el servidor web añadido, la aplicación seguirá en marcha hasta que la detengas con <code>Ctrl+C</code> o dando clic en el botón de parar.</div>
+</section>

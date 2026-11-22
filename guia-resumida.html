@@ -1,0 +1,2185 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<script src="resumen/entrada.js"></script>
+<title>Spring Boot de cero a REST · guía resumida</title>
+<link rel="stylesheet" href="css/00-fuentes.css">
+<link rel="stylesheet" href="css/01-variables.css">
+<link rel="stylesheet" href="css/02-base.css">
+<link rel="stylesheet" href="css/08-codigo-y-tablas.css">
+<link rel="stylesheet" href="resumen/resumen.css">
+</head>
+<body class="resumida" id="inicio">
+<header class="bar">
+  <a class="back" href="index.html">← Elegir otra guía</a>
+  <span class="tag">GUÍA RESUMIDA</span>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <h1>Spring Boot de cero a REST</h1>
+    <p class="sub">Los 33 pasos, uno por uno y sin complicarse. En cada paso, <b>«Ver explicación completa»</b> te lleva a ese mismo paso de la guía principal.</p>
+  </section>
+
+  <nav class="jump" aria-label="Ir a un paso">
+    <div class="row p1"><b>PARTE 1</b><a href="#r-1" title="1. Crear el proyecto en Spring Initializr">1</a><a href="#r-2" title="2. Abrir el proyecto en VS Code">2</a><a href="#r-3" title="3. Configurar la conexión y las tablas">3</a><a href="#r-4" title="4. Crear los paquetes y distinguir los tipos Java">4</a><a href="#r-5" title="5. Crear el enum Posicion">5</a><a href="#r-6" title="6. Crear la entidad Jugador">6</a><a href="#r-7" title="7. Crear la interfaz del repositorio">7</a><a href="#r-8" title="8. Ejecutar la primera prueba desde ExamenApplication">8</a><a href="#r-9" title="9. Practicar buscar, cambiar y borrar desde ExamenApplication">9</a><a href="#r-10" title="10. Escribir consultas en la interfaz">10</a><a href="#r-11" title="11. Añadir una relación uno a uno">11</a><a href="#r-12" title="12. Crear una relación uno a muchos">12</a><a href="#r-13" title="13. Representar una relación muchos a muchos">13</a><a href="#r-14" title="14. Cargar los datos iniciales">14</a><a href="#r-15" title="15. Escribir consultas en el repositorio y ejecutarlas en la aplicación">15</a><a href="#r-16" title="16. Corregir errores y terminar el proyecto">16</a><a href="#r-17" title="17. Materiales utilizados y documentación de apoyo">17</a></div>
+    <div class="row p2"><b>PARTE 2</b><a href="#r-18" title="18. Qué cambia al pasar a REST (y por qué)">18</a><a href="#r-19" title="19. El puente paso a paso, con el proyecto de fútbol">19</a></div>
+    <div class="row p3"><b>PARTE 3</b><a href="#r-20" title="20. El ejercicio: qué se pide y cómo se resuelve">20</a><a href="#r-21" title="21. Crear y configurar el proyecto">21</a><a href="#r-22" title="22. Misión 1: decisiones de diseño y entidades">22</a><a href="#r-23" title="23. Los repositorios">23</a><a href="#r-24" title="24. Misión 2: los DTO como contrato de la API">24</a><a href="#r-25" title="25. Los servicios: interfaces, implementaciones y conversión">25</a><a href="#r-26" title="26. Los controladores y los códigos de estado">26</a><a href="#r-27" title="27. Misión 5: las trampas de comprensión">27</a><a href="#r-28" title="28. Ampliación: validación declarativa con @Valid">28</a><a href="#r-29" title="29. Probar con Postman o curl">29</a><a href="#r-30" title="30. Cómo explicar el ejercicio">30</a><a href="#r-31" title="31. Entregables y rúbrica">31</a><a href="#r-32" title="32. Chuleta final">32</a></div>
+    <div class="row p4"><b>PARTE 4</b><a href="#r-33" title="33. Ejercicios de práctica">33</a></div>
+  </nav>
+
+<section class="parte p1" id="parte1">
+  <header><p class="n">PARTE 1</p><h2>Spring Data JPA</h2><p>El proyecto «examen»: jugadores, equipos, estadios y fichajes.</p></header>
+<article class="paso" id="r-1">
+  <span class="num" aria-hidden="true">1</span>
+  <h3>Crear el proyecto en Spring Initializr</h3>
+  <ol>
+<li>Abre <code>start.spring.io</code>.</li>
+<li>Elige <b>Maven</b>, <b>Java</b> y Spring Boot <b>4.1.3</b>.</li>
+<li>Rellena: Group <code>leo.astray</code>, Artifact <code>examen</code>, Package <code>leo.astray.examen</code>, Jar y Java 21.</li>
+<li>En <b>Add Dependencies</b> añade Spring Data JPA, MySQL Driver, Spring Boot DevTools, Spring Web y Validation.</li>
+<li>Pulsa <b>Generate</b> y guarda el ZIP.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-1">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-2">
+  <span class="num" aria-hidden="true">2</span>
+  <h3>Abrir el proyecto en VS Code</h3>
+  <ol>
+<li>Extrae el ZIP con clic derecho &gt; <b>Extraer todo</b>. No trabajes dentro del ZIP.</li>
+<li>En VS Code: <b>File &gt; Open Folder</b> y elige la carpeta extraída.</li>
+<li>Acepta importar el proyecto Maven y espera a que descargue las dependencias (necesita Internet).</li>
+<li>Reconoce las carpetas: <code>pom.xml</code> (dependencias), <code>src/main/java</code> (tu código), <code>src/main/resources</code> (configuración) y <code>ExamenApplication.java</code> (arranque).</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-2">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-3">
+  <span class="num" aria-hidden="true">3</span>
+  <h3>Configurar la conexión y las tablas</h3>
+  <ol>
+<li>Abre <code>src/main/resources/application.properties</code>.</li>
+<li>Pega esta configuración. Cambia usuario, contraseña, puerto (aquí <code>3308</code>) y <code>spring.application.name</code>, que debe ser el mismo nombre que el Artifact.
+<pre class="code" data-f="src/main/resources/application.properties">spring.application.name=examen
+server.port=8080
+
+spring.datasource.url=jdbc:mysql://localhost:3308/examen?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true
+spring.jpa.properties.hibernate.format_sql=true</pre></li>
+<li>Guarda con <code>Ctrl+S</code>.</li>
+<li>Spring Web (que ya marcaste en el paso 1) mantiene la aplicación arrancada para poder mirar phpMyAdmin.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-3">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-4">
+  <span class="num" aria-hidden="true">4</span>
+  <h3>Crear los paquetes y distinguir los tipos Java</h3>
+  <ol>
+<li>Despliega <code>src/main/java/leo/astray/examen</code>.</li>
+<li>Clic derecho &gt; <b>New Java Package</b>: crea <code>model</code> y, dentro, <code>entity</code>, <code>enums</code> y <code>repository</code>. Quedará así:
+<pre class="code" data-f="estructura de paquetes">leo/astray/examen/
+  ExamenApplication.java
+  model/       
+    entity/   Jugador.java...
+    enums/        Posicion.java...
+    repository/   IJugadorRepository.java...</pre></li>
+<li>Recuerda qué es cada tipo: <b>class</b> es un molde de objetos, <b>interface</b> un contrato y <b>enum</b> una lista cerrada de valores.</li>
+<li>Para crear cada uno: clic derecho sobre la carpeta &gt; <b>New Java File</b> &gt; Class, Interface o Enum.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-4">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-5">
+  <span class="num" aria-hidden="true">5</span>
+  <h3>Crear el enum Posicion</h3>
+  <ol>
+<li>Clic derecho en <code>enums</code> &gt; <b>New Java File &gt; Enum</b> y escribe <code>Posicion</code>.</li>
+<li>Sustituye el contenido por este código y guarda.
+<pre data-f="enums/Posicion.java">package leo.astray.examen.enums;
+
+public enum Posicion {
+    PORTERO, DEFENSA, CENTROCAMPISTA, DELANTERO
+}</pre></li>
+<li>En Java se usa <code>Posicion.PORTERO</code>; en SQL, el texto exacto <code>'PORTERO'</code>.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-5">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-6">
+  <span class="num" aria-hidden="true">6</span>
+  <h3>Crear la entidad Jugador</h3>
+  <ol>
+<li>Clic derecho en <code>entity</code> &gt; <b>New Java File &gt; Class</b> y escribe <code>Jugador</code>.</li>
+<li>Pega el archivo completo.
+<pre data-f="entity/Jugador.java">package leo.astray.examen.entity;
+
+import leo.astray.examen.enums.Posicion;
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "jugadores")
+public class Jugador {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_jugador")
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String mote;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Posicion posicion;
+
+    public Jugador() {}
+
+    public Jugador(String nombre, String mote, Posicion posicion) {
+        this.nombre = nombre;
+        this.mote = mote;
+        this.posicion = posicion;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getMote() { return mote; }
+    public Posicion getPosicion() { return posicion; }
+
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setMote(String mote) { this.mote = mote; }
+    public void setPosicion(Posicion posicion) {
+        this.posicion = posicion;
+    }
+}</pre></li>
+<li>Marca <code>@Entity</code> y <code>@Table</code> la clase, <code>@Id</code> y <code>@GeneratedValue(IDENTITY)</code> el <code>id</code>, y <code>@Enumerated(EnumType.STRING)</code> la posición. El constructor vacío lo necesita JPA.</li>
+<li>Abre <b>Problems</b> con <code>Ctrl+Shift+M</code>: no debe haber errores.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-6">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-7">
+  <span class="num" aria-hidden="true">7</span>
+  <h3>Crear la interfaz del repositorio</h3>
+  <ol>
+<li>Clic derecho en <code>repository</code> &gt; <b>New Java File &gt; Interface</b> y escribe <code>IJugadorRepository</code>.</li>
+<li>Pega el archivo completo.
+<pre data-f="repository/IJugadorRepository.java">package leo.astray.examen.repository;
+
+import leo.astray.examen.entity.Jugador;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface IJugadorRepository
+        extends JpaRepository&lt;Jugador, Long&gt; {
+}</pre></li>
+<li>Sin escribir más código ya tienes <code>save</code>, <code>findById</code>, <code>findAll</code>, <code>existsById</code>, <code>count</code> y <code>deleteById</code>.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-7">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-8">
+  <span class="num" aria-hidden="true">8</span>
+  <h3>Ejecutar la primera prueba desde ExamenApplication</h3>
+  <ol>
+<li>Abre <code>ExamenApplication.java</code> y sustituye su contenido por este código.
+<pre data-f="ExamenApplication.java">package leo.astray.examen;
+
+import leo.astray.examen.entity.Jugador;
+import leo.astray.examen.enums.Posicion;
+import leo.astray.examen.repository.IJugadorRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ExamenApplication implements CommandLineRunner {
+
+    @Autowired
+    private IJugadorRepository jugadorRepository;
+
+    public static void main(String[] args) {
+        SpringApplication.run(ExamenApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) {
+
+        if (jugadorRepository.count() == 0) {
+
+            Jugador jugador1 = new Jugador
+                  ("Lionel Messi","La Pulga",Posicion.DELANTERO);
+
+            jugadorRepository.save(jugador1);
+
+            System.out.println("ID creado: " + jugador1.getId());
+        }
+
+        System.out.println("Total: " + jugadorRepository.count());
+
+        for (Jugador jugador : jugadorRepository.findAll()) {
+            System.out.println(jugador.getNombre());
+        }
+    }
+}</pre></li>
+<li>Si <code>count() == 0</code>, crea y guarda un jugador. Después recorre <code>findAll()</code> e imprime los nombres.</li>
+<li>Guarda todo (<b>File &gt; Save All</b>) y ejecuta.</li>
+<li>Comprueba la consola y, en phpMyAdmin, <code>examen &gt; jugadores</code>.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-8">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-9">
+  <span class="num" aria-hidden="true">9</span>
+  <h3>Practicar buscar, cambiar y borrar desde ExamenApplication</h3>
+  <ol>
+<li>Añade este import en <code>ExamenApplication</code>, antes de <code>@SpringBootApplication</code>.
+<pre data-f="ExamenApplication.java (imports)">import java.util.Optional;</pre></li>
+<li><b>Buscar y cambiar un nombre.</b> Pégalo dentro de <code>run</code>, después del <code>for</code> anterior. Si el jugador tiene otro ID, cambia <code>1L</code>.
+<pre data-f="ExamenApplication.java (dentro de run)">Optional&lt;Jugador&gt; resultado = jugadorRepository.findById(1L);
+
+if (resultado.isPresent()) {
+
+    Jugador jugador = resultado.get();
+
+    jugador.setNombre("Ana García");
+
+    jugadorRepository.save(jugador);
+
+    System.out.println(
+        "Nombre cambiado: " + jugador.getNombre()
+    );
+
+} else {
+
+    System.out.println("No existe ese jugador");
+
+}</pre></li>
+<li><b>Borrar un jugador temporal.</b> Debajo del bloque anterior, todavía dentro de <code>run</code>:
+<pre data-f="ExamenApplication.java (dentro de run)">Jugador temporal = new Jugador(
+    "Temporal",
+    "PruebaUnica",
+    Posicion.PORTERO
+);
+
+jugadorRepository.save(temporal);
+
+Long idTemporal = temporal.getId();
+
+System.out.println(
+    "ID del jugador temporal: " + idTemporal
+);
+
+jugadorRepository.deleteById(idTemporal);
+
+System.out.println(
+    "¿Sigue existiendo? " + jugadorRepository.existsById(idTemporal)
+);</pre>
+Debe imprimir <code>¿Sigue existiendo? false</code>.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-9">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-10">
+  <span class="num" aria-hidden="true">10</span>
+  <h3>Escribir consultas en la interfaz</h3>
+  <ol>
+<li>Deja <code>IJugadorRepository</code> así (solo las firmas, sin cuerpo; el nombre del método usa el nombre exacto del campo Java).
+<pre data-f="repository/IJugadorRepository.java">package leo.astray.examen.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import leo.astray.examen.entity.Jugador;
+import leo.astray.examen.enums.Posicion;
+
+public interface IJugadorRepository
+        extends JpaRepository&lt;Jugador, Long&gt; {
+
+    Jugador findByMote(String mote);
+
+    List&lt;Jugador&gt; findByPosicionAndNombre(
+        Posicion posicion, String nombre
+    );
+}</pre></li>
+<li>Pruébala dentro de <code>run</code>. <code>findByMote</code> devuelve <code>null</code> si no encuentra nada.
+<pre data-f="ExamenApplication.java (dentro de run)">Jugador encontrado = jugadorRepository.findByMote("Rayo");
+
+if (encontrado != null) {
+    System.out.println(encontrado.getNombre());
+} else {
+    System.out.println("No existe ningún jugador con ese mote");
+}</pre></li>
+<li>Y la segunda consulta:
+<pre data-f="ExamenApplication.java (dentro de run)">for (Jugador jugador :
+        jugadorRepository.findByPosicionAndNombre(
+            Posicion.DELANTERO, "Ana García")) {
+
+    System.out.println(jugador.getNombre());
+    System.out.println(jugador.getMote());
+}</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-10">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-11">
+  <span class="num" aria-hidden="true">11</span>
+  <h3>Añadir una relación uno a uno</h3>
+  <ol>
+<li>Vacía las pruebas antiguas de <code>run</code> y deja solo esta línea.
+<pre data-f="ExamenApplication.java (dentro de run)">System.out.println("Preparando las relaciones");</pre></li>
+<li>Crea la clase <code>PerfilEstadistico</code> en <code>entity</code> con este código.
+<pre data-f="entity/PerfilEstadistico.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "perfiles_estadisticos")
+public class PerfilEstadistico {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_perfil")
+    private Long id;
+
+    @Column(nullable = false)
+    private int partidos;
+    @Column(nullable = false)
+    private int goles;
+    @Column(nullable = false)
+    private int asistencias;
+    @Column(nullable = false)
+    private double valoracion;
+
+    public PerfilEstadistico() {}
+
+    public PerfilEstadistico(int partidos, int goles,
+            int asistencias, double valoracion) {
+        this.partidos = partidos;
+        this.goles = goles;
+        this.asistencias = asistencias;
+        this.valoracion = valoracion;
+    }
+
+    public Long getId() { return id; }
+    public int getPartidos() { return partidos; }
+    public int getGoles() { return goles; }
+    public int getAsistencias() { return asistencias; }
+    public double getValoracion() { return valoracion; }
+}</pre></li>
+<li>En <code>Jugador</code> añade este campo, dentro de la clase y fuera de cualquier método.
+<pre data-f="entity/Jugador.java (nuevo campo)">@OneToOne(cascade = CascadeType.ALL, optional = false)
+@JoinColumn(name = "id_perfil", nullable = false, unique = true)
+private PerfilEstadistico perfil;</pre></li>
+<li>Añade su getter y su setter junto a los demás.
+<pre data-f="entity/Jugador.java (nuevos métodos)">public PerfilEstadistico getPerfil() {
+    return perfil;
+}
+
+public void setPerfil(PerfilEstadistico perfil) {
+    this.perfil = perfil;
+}</pre></li>
+<li><b>Sustituye</b> el constructor de 3 parámetros por este de 4. Conserva el constructor vacío.
+<pre data-f="entity/Jugador.java (constructor nuevo, sustituye al de 3 parámetros)">public Jugador(String nombre, String mote,
+        Posicion posicion, PerfilEstadistico perfil) {
+    this.nombre = nombre;
+    this.mote = mote;
+    this.posicion = posicion;
+    this.perfil = perfil;
+}</pre></li>
+<li>Así se guarda un jugador desde <code>run</code>: primero el perfil y después el jugador con él.
+<pre data-f="ExamenApplication.java (ejemplo)">PerfilEstadistico perfil = new PerfilEstadistico(
+    10, 2, 1, 7.5);
+
+Jugador jugador = new Jugador(
+    "Leo", "Flecha", Posicion.DEFENSA, perfil);
+
+jugadorRepository.save(jugador);</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-11">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-12">
+  <span class="num" aria-hidden="true">12</span>
+  <h3>Crear una relación uno a muchos</h3>
+  <ol>
+<li>Crea <code>Estadio</code> en <code>entity</code>.
+<pre data-f="entity/Estadio.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "estadios")
+public class Estadio {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_estadio")
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+    @Column(nullable = false)
+    private int capacidad;
+
+    public Estadio() {}
+
+    public Estadio(String nombre, int capacidad) {
+        this.nombre = nombre;
+        this.capacidad = capacidad;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public int getCapacidad() { return capacidad; }
+}</pre></li>
+<li>Crea <code>Equipo</code> con su lista de estadios.
+<pre data-f="entity/Equipo.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "equipos")
+public class Equipo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_equipo")
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+    @Column(nullable = false, length = 100)
+    private String ciudad;
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal presupuesto;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "id_equipo")
+    private List&lt;Estadio&gt; estadios = new ArrayList&lt;&gt;();
+
+    public Equipo() {}
+
+    public Equipo(String nombre, String ciudad,
+            BigDecimal presupuesto) {
+        this.nombre = nombre;
+        this.ciudad = ciudad;
+        this.presupuesto = presupuesto;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getCiudad() { return ciudad; }
+    public BigDecimal getPresupuesto() { return presupuesto; }
+    public List&lt;Estadio&gt; getEstadios() { return estadios; }
+
+    public void addEstadio(Estadio estadio) {
+        estadios.add(estadio);
+    }
+}</pre></li>
+<li>Para hacerla bidireccional, añade esto en <code>Estadio</code>.
+<pre data-f="entity/Estadio.java (nuevo campo y métodos)">@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "id_equipo", nullable = false)
+private Equipo equipo;
+
+public Equipo getEquipo() {
+    return equipo;
+}
+
+public void setEquipo(Equipo equipo) {
+    this.equipo = equipo;
+}</pre></li>
+<li>En <code>Equipo</code>, <b>sustituye</b> las dos anotaciones de la lista <code>estadios</code> por esta y quita el <code>@JoinColumn</code> antiguo.
+<pre data-f="entity/Equipo.java (lista estadios)">@OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL,
+    orphanRemoval = true)
+private List&lt;Estadio&gt; estadios = new ArrayList&lt;&gt;();</pre>
+<code>mappedBy</code> apunta al campo Java <code>equipo</code>, no a la columna SQL.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-12">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-13">
+  <span class="num" aria-hidden="true">13</span>
+  <h3>Representar una relación muchos a muchos</h3>
+  <ol>
+<li>Aquí no basta con un <code>@ManyToMany</code>, porque la relación lleva datos propios (temporada, precio…). Por eso se crea la entidad <code>Fichaje</code>. Primero, dos enums en <code>enums</code>.
+<pre data-f="enums/PeriodoMercado.java">package leo.astray.examen.enums;
+
+public enum PeriodoMercado {
+    VERANO,
+    INVIERNO
+}</pre>
+<pre data-f="enums/TipoOperacion.java">package leo.astray.examen.enums;
+
+public enum TipoOperacion {
+    TRASPASO,
+    CESION,
+    LIBRE
+}</pre></li>
+<li>Crea <code>Fichaje</code> en <code>entity</code>.
+<details class="cod"><summary>Ver el código completo (65 líneas)</summary><pre data-f="entity/Fichaje.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import leo.astray.examen.enums.PeriodoMercado;
+import leo.astray.examen.enums.TipoOperacion;
+
+@Entity
+@Table(name = "fichajes")
+public class Fichaje {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_fichaje")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_jugador", nullable = false)
+    private Jugador jugador;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_equipo", nullable = false)
+    private Equipo equipo;
+
+    @Column(nullable = false, length = 5)
+    private String temporada;
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal precio;
+    @Column(name = "clausula_pagada", nullable = false)
+    private boolean clausulaPagada;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private PeriodoMercado mercado;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TipoOperacion tipo;
+
+    public Fichaje() {}
+
+    public Fichaje(Jugador jugador, Equipo equipo,
+            String temporada, BigDecimal precio,
+            boolean clausulaPagada, PeriodoMercado mercado,
+            TipoOperacion tipo) {
+        this.jugador = jugador;
+        this.equipo = equipo;
+        this.temporada = temporada;
+        this.precio = precio;
+        this.clausulaPagada = clausulaPagada;
+        this.mercado = mercado;
+        this.tipo = tipo;
+    }
+
+    public Long getId() { return id; }
+    public Jugador getJugador() { return jugador; }
+    public Equipo getEquipo() { return equipo; }
+    public String getTemporada() { return temporada; }
+    public BigDecimal getPrecio() { return precio; }
+    public boolean isClausulaPagada() { return clausulaPagada; }
+    public PeriodoMercado getMercado() { return mercado; }
+    public TipoOperacion getTipo() { return tipo; }
+
+    public void setJugador(Jugador jugador) {
+        this.jugador = jugador;
+    }
+}</pre></details></li>
+<li>En <code>Jugador</code> añade la lista <code>fichajes</code> (con imports de <code>List</code> y <code>ArrayList</code>), su getter y <code>addFichaje</code>.
+<pre data-f="entity/Jugador.java (fichajes)">@OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL,
+    orphanRemoval = true)
+private List&lt;Fichaje&gt; fichajes = new ArrayList&lt;&gt;();
+
+public List&lt;Fichaje&gt; getFichajes() {
+    return fichajes;
+}
+
+public void addFichaje(Fichaje fichaje) {
+    fichajes.add(fichaje);
+    fichaje.setJugador(this);
+}</pre></li>
+<li>En <code>Equipo</code> añade su lista y su getter.
+<pre data-f="entity/Equipo.java (fichajes)">@OneToMany(mappedBy = "equipo")
+private List&lt;Fichaje&gt; fichajes = new ArrayList&lt;&gt;();
+
+public List&lt;Fichaje&gt; getFichajes() {
+    return fichajes;
+}</pre></li>
+<li>No vuelvas a generar constructores: <code>Jugador</code> conserva el vacío y el de 4 parámetros.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-13">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-14">
+  <span class="num" aria-hidden="true">14</span>
+  <h3>Cargar los datos iniciales</h3>
+  <ol>
+<li>Detén la aplicación. En <code>application.properties</code> sustituye la línea de <code>ddl-auto</code> y añade las otras dos (deja una sola línea de cada propiedad).
+<pre data-f="src/main/resources/application.properties">spring.jpa.hibernate.ddl-auto=create-drop
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true</pre></li>
+<li>Crea <code>src/main/resources/data.sql</code> (clic derecho &gt; <b>New File</b>). El orden de los <code>INSERT</code> importa.
+<pre data-f="src/main/resources/data.sql">INSERT INTO perfiles_estadisticos
+  (id_perfil, partidos, goles, asistencias, valoracion)
+VALUES (1, 10, 6, 3, 8.5),
+       (2, 12, 0, 1, 7.2);
+
+INSERT INTO jugadores
+  (id_jugador, nombre, mote, posicion, id_perfil)
+VALUES (1, 'Ana', 'Rayo', 'DELANTERO', 1),
+       (2, 'Luis', 'Muro', 'PORTERO', 2);
+
+INSERT INTO equipos (id_equipo, nombre, ciudad, presupuesto)
+VALUES (1, 'Estrellas', 'Madrid', 100000.00),
+       (2, 'Cometas', 'Sevilla', 80000.00);
+
+INSERT INTO estadios (id_estadio, nombre, capacidad, id_equipo)
+VALUES (1, 'Campo Norte', 5000, 1),
+       (2, 'Campo Sur', 3000, 2);
+
+INSERT INTO fichajes
+  (id_fichaje, id_jugador, id_equipo, temporada, precio,
+   clausula_pagada, mercado, tipo)
+VALUES (1, 1, 1, '26/27', 1200.00, false, 'VERANO', 'TRASPASO'),
+       (2, 2, 2, '26/27', 500.00, false, 'INVIERNO', 'CESION');</pre></li>
+<li>Crea <code>IEquipoRepository</code> (<b>New Java File &gt; Interface</b>).
+<pre data-f="repository/IEquipoRepository.java">package leo.astray.examen.repository;
+
+import leo.astray.examen.entity.Equipo;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface IEquipoRepository
+        extends JpaRepository&lt;Equipo, Long&gt; {
+}</pre></li>
+<li>Deja solo esta línea dentro de <code>run</code>, ejecuta y mira las tablas en phpMyAdmin (2 filas en cada una).
+<pre data-f="ExamenApplication.java (dentro de run)">System.out.println("Datos iniciales cargados");</pre></li>
+<li>Cierra con <code>Ctrl+C</code>: <code>create-drop</code> borra las tablas al cerrar.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-14">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-15">
+  <span class="num" aria-hidden="true">15</span>
+  <h3>Escribir consultas en el repositorio y ejecutarlas en la aplicación</h3>
+  <ol>
+<li>El repositorio <b>declara</b> la búsqueda y <code>run</code> la <b>ejecuta</b>.</li>
+<li>Añade estos imports a <code>IJugadorRepository</code>.
+<pre data-f="repository/IJugadorRepository.java (imports)">import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;</pre></li>
+<li><b>Posición y trozo del nombre.</b> En el repositorio, dentro de la interfaz:
+<pre data-f="repository/IJugadorRepository.java">@Query(value = """
+    SELECT * FROM jugadores
+    WHERE posicion = 'DELANTERO' AND nombre LIKE '%Ana%'
+    """, nativeQuery = true)
+List&lt;Jugador&gt; buscarPorPosicionYNombre();</pre>
+Y en <code>run</code>:
+<pre data-f="ExamenApplication.java (dentro de run)">for (Jugador jugador : jugadorRepository.buscarPorPosicionYNombre()) {
+    System.out.println(jugador.getNombre());
+}</pre></li>
+<li><b>Jugadores con fichaje en equipos de una ciudad</b> (<code>JOIN</code> y <code>DISTINCT</code>). En el repositorio:
+<pre data-f="repository/IJugadorRepository.java">@Query(value = """
+    SELECT DISTINCT j.*
+    FROM jugadores j
+    JOIN fichajes f ON f.id_jugador = j.id_jugador
+    JOIN equipos e ON e.id_equipo = f.id_equipo
+    WHERE e.ciudad = :ciudad
+    """, nativeQuery = true)
+List&lt;Jugador&gt; buscarPorCiudad(@Param("ciudad") String ciudad);</pre>
+Y en <code>run</code>:
+<pre data-f="ExamenApplication.java (dentro de run)">for (Jugador jugador : jugadorRepository.buscarPorCiudad("Madrid")) {
+    System.out.println(jugador.getNombre());
+}</pre></li>
+<li><b>Cambiar la posición</b> de los jugadores de un equipo (<code>@Modifying</code>, devuelve un <code>int</code>). En el repositorio:
+<pre data-f="repository/IJugadorRepository.java">@Modifying(clearAutomatically = true, flushAutomatically = true)
+@Transactional
+@Query(value = """
+    UPDATE jugadores SET posicion = :posicion
+    WHERE id_jugador IN (
+        SELECT id_jugador FROM fichajes
+        WHERE id_equipo = :idEquipo
+    )
+    """, nativeQuery = true)
+int cambiarPosicionPorEquipo(
+    @Param("posicion") String posicion,
+    @Param("idEquipo") Long idEquipo);</pre>
+Y al final de <code>run</code>:
+<pre data-f="ExamenApplication.java (al final de run)">int cambiados = jugadorRepository.cambiarPosicionPorEquipo(
+    "DEFENSA", 1L);
+System.out.println("Filas cambiadas: " + cambiados);</pre></li>
+<li><b>Si piden JPQL</b> (clases y atributos Java en vez de tablas y columnas):
+<pre data-f="repository/IJugadorRepository.java">@Query("select j from Jugador j where j.posicion = :posicion")
+List&lt;Jugador&gt; buscarJPQL(@Param("posicion") Posicion posicion);</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-15">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-16">
+  <span class="num" aria-hidden="true">16</span>
+  <h3>Corregir errores y terminar el proyecto</h3>
+  <ol>
+<li>Abre <b>Problems</b> (<code>Ctrl+Shift+M</code>) y corrige primero los errores de Java.</li>
+<li>Revisa el JDK 21, las dependencias del <code>pom.xml</code> y la conexión a MySQL (puerto, usuario, contraseña).</li>
+<li>Si falla un <code>INSERT</code>, mira la causa en la terminal y revisa el orden de <code>data.sql</code>.</li>
+<li>Ejecuta las pruebas, desde la carpeta del <code>pom.xml</code>:
+<pre data-f="terminal (en la carpeta del pom.xml)">.\mvnw.cmd test</pre></li>
+<li>Construye el JAR (si dice <code>BUILD SUCCESS</code>, está en <code>target</code>):
+<pre data-f="terminal (en la carpeta del pom.xml)">.\mvnw.cmd clean package</pre></li>
+<li>Ejecútalo, ajustando el nombre al del archivo generado:
+<pre data-f="terminal (en la carpeta del pom.xml)">java -jar .\target\examen-0.0.1-SNAPSHOT.jar</pre></li>
+<li>Para entregar incluye <code>pom.xml</code>, <code>src</code>, <code>mvnw</code>, <code>mvnw.cmd</code> y la carpeta <code>.mvn</code>.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-16">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-17">
+  <span class="num" aria-hidden="true">17</span>
+  <h3>Materiales utilizados y documentación de apoyo</h3>
+  <ol>
+<li>Consulta la documentación oficial: consultas de Spring Data JPA, inicialización de la base de datos, transacciones, <code>start.spring.io</code> y el servidor web.</li>
+<li>Al adaptar un ejemplo, revisa paquetes, imports, columnas e identificadores.</li>
+<li>En el examen respeta los nombres, tipos y restricciones del enunciado, incluido <code>Optional</code> si lo pide.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#paso-17">Ver explicación completa →</a>
+</article>
+</section>
+
+<section class="parte p2" id="parte2">
+  <header><p class="n">PARTE 2</p><h2>El puente, de run() a una API REST</h2><p>Qué se añade por encima de lo que ya sabes, con el proyecto del fútbol</p></header>
+<article class="paso" id="r-18">
+  <span class="num" aria-hidden="true">18</span>
+  <h3>Qué cambia al pasar a REST (y por qué)</h3>
+  <ol>
+<li>Antes pedías tú desde <code>run()</code>. Ahora pide un <b>cliente HTTP</b> (Postman, una web, una app).</li>
+<li>Entidades, relaciones y repositorios se quedan igual. Se añaden capas: <code>RestController → IService → Service → Repository</code>.</li>
+<li>Hacia fuera salen <b>DTO</b>, nunca Entities.</li>
+<li>Los resultados se comunican con códigos HTTP: 200, 201, 204, 400, 404 y 409.</li>
+<li>Los 5 pasos del puente: dependencia de validación, DTO, Service, Controller y probar.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s16">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-19">
+  <span class="num" aria-hidden="true">19</span>
+  <h3>El puente paso a paso, con el proyecto de fútbol</h3>
+  <ol>
+<li><b>Validación:</b> comprueba que <code>spring-boot-starter-validation</code> está en el <code>pom.xml</code>. Si no, clic derecho en <code>pom.xml</code> &gt; <b>Add Starters</b> &gt; Validation.</li>
+<li><b>DTO:</b> crea el paquete <code>dto</code> con tres <code>record</code>. Lo que entra (con validaciones):
+<pre class="code" data-f="dto/JugadorRequestDTO.java  (lo que ENTRA)">package leo.astray.examen.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import leo.astray.examen.enums.Posicion;
+
+/** Lo que el cliente ENVIA para crear un jugador. Nunca una Entity. */
+public record JugadorRequestDTO(
+        @NotBlank(message = "El nombre es obligatorio") String nombre,
+        @NotBlank(message = "El mote es obligatorio") String mote,
+        @NotNull(message = "La posicion es obligatoria") Posicion posicion,
+        @NotNull(message = "Los goles son obligatorios")
+        @PositiveOrZero(message = "Los goles no pueden ser negativos") Integer goles) {
+}</pre>
+Una pieza anidada, para no crear bucles:
+<pre class="code" data-f="dto/FichajeResumenDTO.java  (pieza anidada)">package leo.astray.examen.dto;
+
+/** Solo lo necesario de un fichaje: sin bucles Jugador -&gt; Fichaje -&gt; Jugador. */
+public record FichajeResumenDTO(String temporada, String equipo) {
+}</pre>
+Y lo que sale:
+<pre class="code" data-f="dto/JugadorResponseDTO.java  (lo que SALE)">package leo.astray.examen.dto;
+
+import java.util.List;
+
+import leo.astray.examen.enums.Posicion;
+
+/** Lo que el cliente RECIBE. */
+public record JugadorResponseDTO(
+        Long id,
+        String nombre,
+        String mote,
+        Posicion posicion,
+        Integer goles,
+        List&lt;FichajeResumenDTO&gt; fichajes) {
+}</pre></li>
+<li><b>Service:</b> el contrato, que solo habla de DTO.
+<pre class="code" data-f="service/IJugadorService.java  (la carta: solo DTO)">package leo.astray.examen.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import leo.astray.examen.dto.JugadorRequestDTO;
+import leo.astray.examen.dto.JugadorResponseDTO;
+
+/** El contrato solo habla de DTO: ninguna Entity aparece aqui. */
+public interface IJugadorService {
+
+    JugadorResponseDTO crear(JugadorRequestDTO dto);
+
+    // Optional vacio = no existe (el controller lo traduce a 404)
+    Optional&lt;JugadorResponseDTO&gt; obtenerPorId(Long id);
+
+    List&lt;JugadorResponseDTO&gt; listar();
+
+    // true = borrado, false = no existe (el controller lo traduce a 204 / 404)
+    boolean eliminar(Long id);
+}</pre>
+Y quien hace el trabajo, con <code>@Transactional</code> y la conversión entre DTO y Entity:
+<details class="cod"><summary>Ver el código completo (78 líneas)</summary><pre class="code" data-f="service/impl/JugadorServiceImpl.java  (el cocinero)">package leo.astray.examen.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import leo.astray.examen.dto.FichajeResumenDTO;
+import leo.astray.examen.dto.JugadorRequestDTO;
+import leo.astray.examen.dto.JugadorResponseDTO;
+import leo.astray.examen.entity.Fichaje;
+import leo.astray.examen.entity.Jugador;
+import leo.astray.examen.entity.PerfilEstadistico;
+import leo.astray.examen.repository.IJugadorRepository;
+import leo.astray.examen.service.IJugadorService;
+
+@Service
+public class JugadorServiceImpl implements IJugadorService {
+
+    @Autowired
+    private IJugadorRepository jugadorRepository;
+
+    @Override
+    @Transactional
+    public JugadorResponseDTO crear(JugadorRequestDTO dto) {
+        // DTO -&gt; Entity (la conversion ocurre AQUI, en el servicio)
+        // El perfil se crea primero: el constructor de Jugador lo exige (paso 11).
+        // Solo conocemos los goles; el resto de estadisticas empieza en 0.
+        PerfilEstadistico perfil = new PerfilEstadistico(0, dto.goles(), 0, 0.0);
+        Jugador jugador = new Jugador(dto.nombre(), dto.mote(), dto.posicion(), perfil);
+        Jugador guardado = jugadorRepository.save(jugador);
+        return mapearADTO(guardado);
+    }
+
+    // @Transactional(readOnly = true): la sesion sigue abierta al recorrer fichajes (LAZY)
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;JugadorResponseDTO&gt; obtenerPorId(Long id) {
+        Optional&lt;Jugador&gt; opt = jugadorRepository.findById(id);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(mapearADTO(opt.get()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;JugadorResponseDTO&gt; listar() {
+        List&lt;JugadorResponseDTO&gt; lista = new ArrayList&lt;&gt;();
+        for (Jugador j : jugadorRepository.findAll()) {
+            lista.add(mapearADTO(j));
+        }
+        return lista;
+    }
+
+    @Override
+    @Transactional
+    public boolean eliminar(Long id) {
+        if (!jugadorRepository.existsById(id)) {
+            return false;
+        }
+        jugadorRepository.deleteById(id);
+        return true;
+    }
+
+    // Entity -&gt; DTO
+    private JugadorResponseDTO mapearADTO(Jugador j) {
+        List&lt;FichajeResumenDTO&gt; fichajes = new ArrayList&lt;&gt;();
+        for (Fichaje f : j.getFichajes()) {
+            fichajes.add(new FichajeResumenDTO(f.getTemporada(), f.getEquipo().getNombre()));
+        }
+        return new JugadorResponseDTO(j.getId(), j.getNombre(), j.getMote(), j.getPosicion(),
+                j.getPerfil().getGoles(), fichajes);
+    }
+}</pre></details></li>
+<li><b>Controller:</b> recibe HTTP y responde con <code>ResponseEntity</code> (201 con <code>Location</code>, 200, 204 y 404).
+<details class="cod"><summary>Ver el código completo (67 líneas)</summary><pre class="code" data-f="controller/JugadorController.java">package leo.astray.examen.controller;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import jakarta.validation.Valid;
+import leo.astray.examen.dto.JugadorRequestDTO;
+import leo.astray.examen.dto.JugadorResponseDTO;
+import leo.astray.examen.service.IJugadorService;
+
+/** El camarero: solo importa DTO y el IService. Nunca una Entity ni un Repository. */
+@RestController
+@RequestMapping("/api/jugadores")
+public class JugadorController {
+
+    @Autowired
+    private IJugadorService jugadorService;
+
+    // POST /api/jugadores -&gt; 201 + Location | 400 (si @Valid falla, Spring ya responde 400)
+    @PostMapping
+    public ResponseEntity&lt;JugadorResponseDTO&gt; crear(@Valid @RequestBody JugadorRequestDTO dto) {
+        JugadorResponseDTO creado = jugadorService.crear(dto);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(creado.id())
+                .toUri();
+        return ResponseEntity.created(location).body(creado);
+    }
+
+    // GET /api/jugadores/{id} -&gt; 200 | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;JugadorResponseDTO&gt; obtenerPorId(@PathVariable Long id) {
+        Optional&lt;JugadorResponseDTO&gt; opt = jugadorService.obtenerPorId(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // GET /api/jugadores -&gt; 200
+    @GetMapping
+    public ResponseEntity&lt;List&lt;JugadorResponseDTO&gt;&gt; listar() {
+        return ResponseEntity.ok(jugadorService.listar());
+    }
+
+    // DELETE /api/jugadores/{id} -&gt; 204 | 404
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        if (jugadorService.eliminar(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}</pre></details></li>
+<li><b>Probar:</b> arranca y usa Postman. En el POST, <b>Body &gt; raw &gt; JSON</b>, con este cuerpo (sus claves son los campos del <code>RequestDTO</code>, sin <code>id</code>).
+<pre class="code" data-f="Body (raw, JSON) de POST /api/jugadores">{
+    "nombre": "Nuevo",
+    "mote": "Cohete",
+    "posicion": "DEFENSA",
+    "goles": 2
+}</pre>
+Prueba también los errores a propósito (nombre vacío, una posición que no existe, sin <code>goles</code>…): deben dar <b>400</b>.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s17">Ver explicación completa →</a>
+</article>
+</section>
+
+<section class="parte p3" id="parte3">
+  <header><p class="n">PARTE 3</p><h2>La API completa: biblioteca editorial</h2><p>Solución con Spring Boot, JPA, DTO y validación, explicada para presentarla</p></header>
+<article class="paso" id="r-20">
+  <span class="num" aria-hidden="true">20</span>
+  <h3>El ejercicio: qué se pide y cómo se resuelve</h3>
+  <ol>
+<li>Lo que se evalúa es saber <b>conectar las capas</b>: RestController, IService, Service, JpaRepository, Entity, DTO y ResponseEntity.</li>
+<li>El modelo: Editorial 1:N Libro, Libro 1:1 FichaLibro y Libro N:M Autor (4 entidades y 5 tablas).</li>
+<li>La guía completa trae la tabla de endpoints con su código de éxito y los de error.</li>
+<li>Orden de trabajo: proyecto, Misión 1 (entidades), repositorios, DTO, servicios y controladores, trampas, <code>@Valid</code> y probar.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s18">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-21">
+  <span class="num" aria-hidden="true">21</span>
+  <h3>Crear y configurar el proyecto</h3>
+  <ol>
+<li>En Initializr: Maven, Java 21, Spring Boot 4.1.2, Group y package <code>edu.rico.biblioteca</code>, Artifact <code>biblioteca</code>. Dependencias: MySQL Driver, Spring Data JPA, Spring Boot DevTools, Spring Web y Validation.</li>
+<li>El <code>pom.xml</code> debe quedar con estas dependencias (en Spring Boot 4.1 el starter web se llama <code>spring-boot-starter-webmvc</code>).
+<pre class="code" data-f="pom.xml  (dependencies)">&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-webmvc&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-validation&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-devtools&lt;/artifactId&gt;
+        &lt;scope&gt;runtime&lt;/scope&gt;
+        &lt;optional&gt;true&lt;/optional&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.mysql&lt;/groupId&gt;
+        &lt;artifactId&gt;mysql-connector-j&lt;/artifactId&gt;
+        &lt;scope&gt;runtime&lt;/scope&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;</pre></li>
+<li>Configura <code>application.properties</code>. Ajusta usuario, contraseña y puerto.
+<pre class="code" data-f="src/main/resources/application.properties">spring.application.name=biblioteca
+
+spring.datasource.url=jdbc:mysql://localhost:3306/biblioteca?createDatabaseIfNotExist=true&amp;serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+# Sin sesion abierta durante toda la peticion: asi el fallo LAZY es real y entendemos donde va @Transactional
+spring.jpa.open-in-view=false</pre></li>
+<li>Crea esta estructura de paquetes.
+<pre class="code" data-f="estructura">edu/rico/biblioteca/
+ ├─ BibliotecaApplication.java
+ ├─ entity/       Editorial, Libro, Autor, FichaLibro
+ ├─ repository/   IEditorialRepository, ILibroRepository, IAutorRepository, IFichaLibroRepository
+ ├─ dto/          *RequestDTO, *ResponseDTO, *ResumenDTO, FichaLibroDTO
+ ├─ service/      IEditorialService, IAutorService, ILibroService
+ │   └─ impl/     EditorialServiceImpl, AutorServiceImpl, LibroServiceImpl
+ └─ controller/   EditorialController, AutorController, LibroController</pre></li>
+<li>Con el proyecto vacío debe arrancar sin errores (Tomcat en el 8080).</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s19">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-22">
+  <span class="num" aria-hidden="true">22</span>
+  <h3>Misión 1: decisiones de diseño y entidades</h3>
+  <ol>
+<li>El <b>lado propietario</b> es el que tiene la clave foránea; el otro lleva <code>mappedBy</code>. Aquí: <code>Libro</code> (con <code>Editorial</code> y con <code>Autor</code>) y <code>FichaLibro</code> (con <code>Libro</code>).</li>
+<li><code>@ManyToOne</code> con <code>fetch = LAZY</code>; en el N:M, <code>Set</code> con <code>equals</code> y <code>hashCode</code>; <code>Libro → FichaLibro</code> con <code>cascade = ALL</code> y <code>orphanRemoval</code>; <code>Editorial → Libro</code> sin <code>REMOVE</code>.</li>
+<li><code>Libro</code>, propietario del N:M y de la clave a editorial, con los métodos <code>addAutor</code>, <code>removeAutor</code> y <code>setFicha</code>, que actualizan los dos lados:
+<details class="cod"><summary>Ver el código completo (81 líneas)</summary><pre class="code" data-f="entity/Libro.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "libro")
+public class Libro {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 150)
+    private String titulo;
+
+    // Lado propietario de 1:N con carga perezosa
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "editorial_id", nullable = false)
+    private Editorial editorial;
+
+    // Relación 1:1 con propagación total y borrado de huérfanos
+    @OneToOne(mappedBy = "libro", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private FichaLibro ficha;
+
+    // Lado propietario de N:M mediante tabla intermedia
+    @ManyToMany
+    @JoinTable(
+        name = "libro_autor",
+        joinColumns = @JoinColumn(name = "libro_id"),
+        inverseJoinColumns = @JoinColumn(name = "autor_id")
+    )
+    private Set&lt;Autor&gt; autores = new HashSet&lt;&gt;();
+
+    public Libro() {
+    }
+
+    public Libro(String titulo) {
+        this.titulo = titulo;
+    }
+
+    // Métodos helper de sincronización bidireccional
+    public void addAutor(Autor autor) {
+        this.autores.add(autor);
+        autor.getLibros().add(this);
+    }
+
+    public void removeAutor(Autor autor) {
+        this.autores.remove(autor);
+        autor.getLibros().remove(this);
+    }
+
+    public void setFicha(FichaLibro ficha) {
+        this.ficha = ficha;
+        if (ficha != null) {
+            ficha.setLibro(this);
+        }
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
+    public Editorial getEditorial() { return editorial; }
+    public void setEditorial(Editorial editorial) { this.editorial = editorial; }
+    public FichaLibro getFicha() { return ficha; }
+    public Set&lt;Autor&gt; getAutores() { return autores; }
+    public void setAutores(Set&lt;Autor&gt; autores) { this.autores = autores; }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Libro other &amp;&amp; id != null &amp;&amp; id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Libro.class.hashCode();
+    }
+}</pre></details></li>
+<li><code>Editorial</code>:
+<pre class="code" data-f="entity/Editorial.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "editorial")
+public class Editorial {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, length = 60)
+    private String pais;
+
+    // Relación 1:N inversa (no lleva CascadeType.REMOVE para proteger los libros)
+    @OneToMany(mappedBy = "editorial")
+    private List&lt;Libro&gt; libros = new ArrayList&lt;&gt;();
+
+    public Editorial() {
+    }
+
+    public Editorial(String nombre, String pais) {
+        this.nombre = nombre;
+        this.pais = pais;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getPais() { return pais; }
+    public void setPais(String pais) { this.pais = pais; }
+    public List&lt;Libro&gt; getLibros() { return libros; }
+    public void setLibros(List&lt;Libro&gt; libros) { this.libros = libros; }
+}</pre></li>
+<li><code>Autor</code>, lado inverso del N:M:
+<pre class="code" data-f="entity/Autor.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "autor")
+public class Autor {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, length = 60)
+    private String nacionalidad;
+
+    // Lado inverso de la relación N:M
+    @ManyToMany(mappedBy = "autores")
+    private Set&lt;Libro&gt; libros = new HashSet&lt;&gt;();
+
+    public Autor() {
+    }
+
+    public Autor(String nombre, String nacionalidad) {
+        this.nombre = nombre;
+        this.nacionalidad = nacionalidad;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNacionalidad() { return nacionalidad; }
+    public void setNacionalidad(String nacionalidad) { this.nacionalidad = nacionalidad; }
+    public Set&lt;Libro&gt; getLibros() { return libros; }
+    public void setLibros(Set&lt;Libro&gt; libros) { this.libros = libros; }
+
+    // El Set necesita saber cuándo dos autores son "el mismo": por id.
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Autor other &amp;&amp; id != null &amp;&amp; id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Autor.class.hashCode();
+    }
+}</pre></li>
+<li><code>FichaLibro</code>, propietaria del 1:1:
+<pre class="code" data-f="entity/FichaLibro.java">package edu.rico.biblioteca.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "ficha_libro")
+public class FichaLibro {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 20)
+    private String isbn;
+
+    @Column(nullable = false)
+    private int paginas;
+
+    @Column(nullable = false)
+    private int anio;
+
+    // Lado propietario de la relación 1:1
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "libro_id", nullable = false, unique = true)
+    private Libro libro;
+
+    public FichaLibro() {
+    }
+
+    public FichaLibro(String isbn, int paginas, int anio) {
+        this.isbn = isbn;
+        this.paginas = paginas;
+        this.anio = anio;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getIsbn() { return isbn; }
+    public void setIsbn(String isbn) { this.isbn = isbn; }
+    public int getPaginas() { return paginas; }
+    public void setPaginas(int paginas) { this.paginas = paginas; }
+    public int getAnio() { return anio; }
+    public void setAnio(int anio) { this.anio = anio; }
+    public Libro getLibro() { return libro; }
+    public void setLibro(Libro libro) { this.libro = libro; }
+}</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#s20">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-23">
+  <span class="num" aria-hidden="true">23</span>
+  <h3>Los repositorios</h3>
+  <ol>
+<li>Crea cuatro interfaces <code>JpaRepository&lt;Entidad, Long&gt;</code>, una por entidad. La interesante es la de libros: <code>findByEditorialId</code>, <code>countByEditorialId</code> (para decidir el 409) y <code>findByIdConRelaciones</code> (con <code>JOIN FETCH</code>, contra el N+1).
+<pre class="code" data-f="repository/ILibroRepository.java">package edu.rico.biblioteca.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import edu.rico.biblioteca.entity.Libro;
+
+public interface ILibroRepository extends JpaRepository&lt;Libro, Long&gt; {
+
+    // Búsqueda por FK directa
+    List&lt;Libro&gt; findByEditorialId(Long editorialId);
+
+    // Conteo de libros asignados a una editorial para validar el borrado con 409
+    long countByEditorialId(Long editorialId);
+
+    // Consulta optimizada para evitar problema N+1 al cargar el detalle completo
+    @Query("SELECT l FROM Libro l " +
+            "LEFT JOIN FETCH l.editorial " +
+            "LEFT JOIN FETCH l.ficha " +
+            "LEFT JOIN FETCH l.autores " +
+            "WHERE l.id = :id")
+    Optional&lt;Libro&gt; findByIdConRelaciones(@Param("id") Long id);
+}</pre></li>
+<li>Los otros tres:
+<pre class="code" data-f="repository/IEditorialRepository.java">package edu.rico.biblioteca.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import edu.rico.biblioteca.entity.Editorial;
+
+public interface IEditorialRepository extends JpaRepository&lt;Editorial, Long&gt; {
+    boolean existsByNombre(String nombre);
+}</pre>
+<pre class="code" data-f="repository/IAutorRepository.java">package edu.rico.biblioteca.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import edu.rico.biblioteca.entity.Autor;
+
+public interface IAutorRepository extends JpaRepository&lt;Autor, Long&gt; {
+}</pre>
+<pre class="code" data-f="repository/IFichaLibroRepository.java">package edu.rico.biblioteca.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import edu.rico.biblioteca.entity.FichaLibro;
+
+public interface IFichaLibroRepository extends JpaRepository&lt;FichaLibro, Long&gt; {
+}</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#s21">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-24">
+  <span class="num" aria-hidden="true">24</span>
+  <h3>Misión 2: los DTO como contrato de la API</h3>
+  <ol>
+<li>El cliente nunca ve una Entity. Todos los DTO son <code>record</code>: de entrada (<code>*RequestDTO</code>), de salida (<code>*ResponseDTO</code>) y <code>*ResumenDTO</code> anidados para romper los bucles.</li>
+<li>El libro recibe <b>ids</b> (<code>editorialId</code> y <code>autoresIds</code>), no objetos: el Service busca los reales.</li>
+<li>Esta es la primera versión, sin validar (cada <code>record</code> va en su archivo, en el paquete <code>dto</code>). La versión final está en el paso 28.
+<pre class="code" data-f="dto/  (versión 1, tal como se crean al principio)">public record EditorialResumenDTO(Long id, String nombre) {}
+public record AutorResumenDTO(Long id, String nombre) {}
+public record LibroResumenDTO(Long id, String titulo) {}
+
+public record FichaLibroDTO(String isbn, int paginas, int anio) {}
+
+public record EditorialRequestDTO(String nombre, String pais) {}
+public record EditorialResponseDTO(Long id, String nombre, String pais) {}
+
+public record AutorRequestDTO(String nombre, String nacionalidad) {}
+public record AutorResponseDTO(Long id, String nombre, String nacionalidad, List&lt;LibroResumenDTO&gt; libros) {}
+
+public record LibroRequestDTO(String titulo, Long editorialId, Set&lt;Long&gt; autoresIds, FichaLibroDTO ficha) {}
+public record LibroResponseDTO(Long id, String titulo, EditorialResumenDTO editorial,
+                               List&lt;AutorResumenDTO&gt; autores, FichaLibroDTO ficha) {}</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#s22">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-25">
+  <span class="num" aria-hidden="true">25</span>
+  <h3>Los servicios: interfaces, implementaciones y conversión</h3>
+  <ol>
+<li>Para cada entidad, una interfaz (solo con DTO) y su implementación con <code>@Service</code>, <code>@Autowired</code> y <code>@Transactional</code>. El Service convierte entre DTO y Entity.</li>
+<li><b>Libro</b>, el más completo. <code>LibroServiceImpl</code> usa tres repositorios y no <code>IEditorialService</code>, porque necesita Entities.
+<pre class="code" data-f="service/ILibroService.java">package edu.rico.biblioteca.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import edu.rico.biblioteca.dto.FichaLibroDTO;
+import edu.rico.biblioteca.dto.LibroRequestDTO;
+import edu.rico.biblioteca.dto.LibroResponseDTO;
+
+public interface ILibroService {
+    LibroResponseDTO crear(LibroRequestDTO dto);
+
+    Optional&lt;LibroResponseDTO&gt; obtenerPorId(Long id);
+
+    Optional&lt;List&lt;LibroResponseDTO&gt;&gt; listarPorEditorial(Long editorialId);
+
+    Optional&lt;LibroResponseDTO&gt; actualizarFicha(Long libroId, FichaLibroDTO fichaDTO);
+
+    Optional&lt;LibroResponseDTO&gt; asociarAutor(Long libroId, Long autorId);
+
+    boolean desasociarAutor(Long libroId, Long autorId);
+}</pre>
+<details class="cod"><summary>Ver el código completo (176 líneas)</summary><pre class="code" data-f="service/impl/LibroServiceImpl.java">package edu.rico.biblioteca.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.rico.biblioteca.dto.AutorResumenDTO;
+import edu.rico.biblioteca.dto.EditorialResumenDTO;
+import edu.rico.biblioteca.dto.FichaLibroDTO;
+import edu.rico.biblioteca.dto.LibroRequestDTO;
+import edu.rico.biblioteca.dto.LibroResponseDTO;
+import edu.rico.biblioteca.entity.Autor;
+import edu.rico.biblioteca.entity.Editorial;
+import edu.rico.biblioteca.entity.FichaLibro;
+import edu.rico.biblioteca.entity.Libro;
+import edu.rico.biblioteca.repository.IAutorRepository;
+import edu.rico.biblioteca.repository.IEditorialRepository;
+import edu.rico.biblioteca.repository.ILibroRepository;
+import edu.rico.biblioteca.service.ILibroService;
+
+@Service
+public class LibroServiceImpl implements ILibroService {
+
+    @Autowired
+    private ILibroRepository libroRepo;
+
+    @Autowired
+    private IEditorialRepository editorialRepo;
+
+    @Autowired
+    private IAutorRepository autorRepo;
+
+    @Override
+    @Transactional
+    public LibroResponseDTO crear(LibroRequestDTO dto) {
+        // 1. Resolver la Editorial
+        Optional&lt;Editorial&gt; editorialOpt = editorialRepo.findById(dto.editorialId());
+        if (editorialOpt.isEmpty()) {
+            throw new IllegalArgumentException("La editorial con ID " + dto.editorialId() + " no existe");
+        }
+
+        Libro libro = new Libro(dto.titulo());
+        libro.setEditorial(editorialOpt.get());
+
+        // 2. Resolver Autores
+        if (dto.autoresIds() != null &amp;&amp; !dto.autoresIds().isEmpty()) {
+            for (Long autorId : dto.autoresIds()) {
+                Optional&lt;Autor&gt; autorOpt = autorRepo.findById(autorId);
+                if (autorOpt.isEmpty()) {
+                    throw new IllegalArgumentException("El autor con ID " + autorId + " no existe");
+                }
+                libro.addAutor(autorOpt.get());
+            }
+        }
+
+        // 3. Resolver Ficha Técnica (1:1)
+        if (dto.ficha() != null) {
+            FichaLibro ficha = new FichaLibro(dto.ficha().isbn(), dto.ficha().paginas(), dto.ficha().anio());
+            libro.setFicha(ficha);
+        }
+
+        Libro guardado = libroRepo.save(libro);
+        return mapearAResponseDTO(guardado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;LibroResponseDTO&gt; obtenerPorId(Long id) {
+        Optional&lt;Libro&gt; opt = libroRepo.findByIdConRelaciones(id);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(mapearAResponseDTO(opt.get()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;List&lt;LibroResponseDTO&gt;&gt; listarPorEditorial(Long editorialId) {
+        if (!editorialRepo.existsById(editorialId)) {
+            return Optional.empty();
+        }
+
+        List&lt;Libro&gt; libros = libroRepo.findByEditorialId(editorialId);
+        List&lt;LibroResponseDTO&gt; listaDTO = new ArrayList&lt;&gt;();
+        for (Libro l : libros) {
+            listaDTO.add(mapearAResponseDTO(l));
+        }
+        return Optional.of(listaDTO);
+    }
+
+    @Override
+    @Transactional
+    public Optional&lt;LibroResponseDTO&gt; actualizarFicha(Long libroId, FichaLibroDTO fichaDTO) {
+        Optional&lt;Libro&gt; opt = libroRepo.findById(libroId);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Libro libro = opt.get();
+        FichaLibro ficha = libro.getFicha();
+
+        if (ficha == null) {
+            ficha = new FichaLibro();
+            libro.setFicha(ficha);
+        }
+
+        ficha.setIsbn(fichaDTO.isbn());
+        ficha.setPaginas(fichaDTO.paginas());
+        ficha.setAnio(fichaDTO.anio());
+
+        Libro guardado = libroRepo.save(libro);
+        return Optional.of(mapearAResponseDTO(guardado));
+    }
+
+    @Override
+    @Transactional
+    public Optional&lt;LibroResponseDTO&gt; asociarAutor(Long libroId, Long autorId) {
+        Optional&lt;Libro&gt; libroOpt = libroRepo.findById(libroId);
+        Optional&lt;Autor&gt; autorOpt = autorRepo.findById(autorId);
+
+        if (libroOpt.isEmpty() || autorOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Libro libro = libroOpt.get();
+        Autor autor = autorOpt.get();
+
+        libro.addAutor(autor);
+        Libro guardado = libroRepo.save(libro);
+        return Optional.of(mapearAResponseDTO(guardado));
+    }
+
+    @Override
+    @Transactional
+    public boolean desasociarAutor(Long libroId, Long autorId) {
+        Optional&lt;Libro&gt; libroOpt = libroRepo.findById(libroId);
+        Optional&lt;Autor&gt; autorOpt = autorRepo.findById(autorId);
+
+        if (libroOpt.isEmpty() || autorOpt.isEmpty()) {
+            return false;
+        }
+
+        Libro libro = libroOpt.get();
+        Autor autor = autorOpt.get();
+
+        libro.removeAutor(autor);
+        libroRepo.save(libro);
+        return true;
+    }
+
+    // Conversión manual entre Entity y DTO (sin librerías externas)
+    private LibroResponseDTO mapearAResponseDTO(Libro l) {
+        EditorialResumenDTO edDTO = null;
+        if (l.getEditorial() != null) {
+            edDTO = new EditorialResumenDTO(l.getEditorial().getId(), l.getEditorial().getNombre());
+        }
+
+        List&lt;AutorResumenDTO&gt; autoresDTO = new ArrayList&lt;&gt;();
+        if (l.getAutores() != null) {
+            for (Autor a : l.getAutores()) {
+                autoresDTO.add(new AutorResumenDTO(a.getId(), a.getNombre()));
+            }
+        }
+
+        FichaLibroDTO fichaDTO = null;
+        if (l.getFicha() != null) {
+            fichaDTO = new FichaLibroDTO(l.getFicha().getIsbn(), l.getFicha().getPaginas(), l.getFicha().getAnio());
+        }
+
+        return new LibroResponseDTO(l.getId(), l.getTitulo(), edDTO, autoresDTO, fichaDTO);
+    }
+}</pre></details></li>
+<li><b>Editorial</b>:
+<pre class="code" data-f="service/IEditorialService.java">package edu.rico.biblioteca.service;
+
+import java.util.Optional;
+
+import edu.rico.biblioteca.dto.EditorialRequestDTO;
+import edu.rico.biblioteca.dto.EditorialResponseDTO;
+
+public interface IEditorialService {
+    EditorialResponseDTO crear(EditorialRequestDTO dto);
+
+    Optional&lt;EditorialResponseDTO&gt; obtenerPorId(Long id);
+
+    // Devuelve: 1 = borrado con éxito (204), 0 = no existe (404), -1 = conflicto, tiene libros (409)
+    int eliminar(Long id);
+}</pre>
+<details class="cod"><summary>Ver el código completo (61 líneas)</summary><pre class="code" data-f="service/impl/EditorialServiceImpl.java">package edu.rico.biblioteca.service.impl;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.rico.biblioteca.dto.EditorialRequestDTO;
+import edu.rico.biblioteca.dto.EditorialResponseDTO;
+import edu.rico.biblioteca.entity.Editorial;
+import edu.rico.biblioteca.repository.IEditorialRepository;
+import edu.rico.biblioteca.repository.ILibroRepository;
+import edu.rico.biblioteca.service.IEditorialService;
+
+@Service
+public class EditorialServiceImpl implements IEditorialService {
+
+    @Autowired
+    private IEditorialRepository editorialRepo;
+
+    @Autowired
+    private ILibroRepository libroRepo;
+
+    @Override
+    @Transactional
+    public EditorialResponseDTO crear(EditorialRequestDTO dto) {
+        Editorial editorial = new Editorial(dto.nombre(), dto.pais());
+        Editorial guardada = editorialRepo.save(editorial);
+        return new EditorialResponseDTO(guardada.getId(), guardada.getNombre(), guardada.getPais());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;EditorialResponseDTO&gt; obtenerPorId(Long id) {
+        Optional&lt;Editorial&gt; opt = editorialRepo.findById(id);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Editorial e = opt.get();
+        return Optional.of(new EditorialResponseDTO(e.getId(), e.getNombre(), e.getPais()));
+    }
+
+    @Override
+    @Transactional
+    public int eliminar(Long id) {
+        if (!editorialRepo.existsById(id)) {
+            return 0; // 404
+        }
+
+        // Comprobación de integridad: verificar si tiene libros asociados
+        long totalLibros = libroRepo.countByEditorialId(id);
+        if (totalLibros &gt; 0) {
+            return -1; // 409 Conflicto
+        }
+
+        editorialRepo.deleteById(id);
+        return 1; // 204 Éxito
+    }
+}</pre></details></li>
+<li><b>Autor</b>:
+<pre class="code" data-f="service/IAutorService.java">package edu.rico.biblioteca.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import edu.rico.biblioteca.dto.AutorRequestDTO;
+import edu.rico.biblioteca.dto.AutorResponseDTO;
+import edu.rico.biblioteca.dto.LibroResumenDTO;
+
+public interface IAutorService {
+    AutorResponseDTO crear(AutorRequestDTO dto);
+
+    Optional&lt;List&lt;LibroResumenDTO&gt;&gt; obtenerLibrosPorAutor(Long autorId);
+}</pre>
+<pre class="code" data-f="service/impl/AutorServiceImpl.java">package edu.rico.biblioteca.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import edu.rico.biblioteca.dto.AutorRequestDTO;
+import edu.rico.biblioteca.dto.AutorResponseDTO;
+import edu.rico.biblioteca.dto.LibroResumenDTO;
+import edu.rico.biblioteca.entity.Autor;
+import edu.rico.biblioteca.entity.Libro;
+import edu.rico.biblioteca.repository.IAutorRepository;
+import edu.rico.biblioteca.service.IAutorService;
+
+@Service
+public class AutorServiceImpl implements IAutorService {
+
+    @Autowired
+    private IAutorRepository autorRepo;
+
+    @Override
+    @Transactional
+    public AutorResponseDTO crear(AutorRequestDTO dto) {
+        Autor autor = new Autor(dto.nombre(), dto.nacionalidad());
+        Autor guardado = autorRepo.save(autor);
+        return new AutorResponseDTO(guardado.getId(), guardado.getNombre(), guardado.getNacionalidad(), new ArrayList&lt;&gt;());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional&lt;List&lt;LibroResumenDTO&gt;&gt; obtenerLibrosPorAutor(Long autorId) {
+        Optional&lt;Autor&gt; opt = autorRepo.findById(autorId);
+        if (opt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Autor autor = opt.get();
+        List&lt;LibroResumenDTO&gt; resumenes = new ArrayList&lt;&gt;();
+        for (Libro l : autor.getLibros()) {
+            resumenes.add(new LibroResumenDTO(l.getId(), l.getTitulo()));
+        }
+
+        return Optional.of(resumenes);
+    }
+}</pre></li>
+<li>Devuelven <code>Optional</code>, <code>int</code> o <code>boolean</code>, y el Controller lo traduce a código HTTP.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s23">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-26">
+  <span class="num" aria-hidden="true">26</span>
+  <h3>Los controladores y los códigos de estado</h3>
+  <ol>
+<li>Cada Controller inyecta solo su <code>IService</code> y responde con <code>ResponseEntity</code>. Códigos: <b>201</b> con <code>Location</code> al crear, <b>200</b> al leer o actualizar, <b>204</b> al borrar, <b>404</b> si no existe y <b>409</b> si choca con otros datos.</li>
+<li><code>LibroController</code>:
+<details class="cod"><summary>Ver el código completo (111 líneas)</summary><pre class="code" data-f="controller/LibroController.java">package edu.rico.biblioteca.controller;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import edu.rico.biblioteca.dto.FichaLibroDTO;
+import edu.rico.biblioteca.dto.LibroRequestDTO;
+import edu.rico.biblioteca.dto.LibroResponseDTO;
+import edu.rico.biblioteca.service.ILibroService;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/libros")
+public class LibroController {
+
+    @Autowired
+    private ILibroService libroService;
+
+    // POST /api/libros → 201 + Location | 400 | 404
+    @PostMapping
+    public ResponseEntity&lt;LibroResponseDTO&gt; crear(@Valid @RequestBody LibroRequestDTO dto) {
+        try {
+            LibroResponseDTO creado = libroService.crear(dto);
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(creado.id())
+                    .toUri();
+            return ResponseEntity.created(location).body(creado);
+        } catch (IllegalArgumentException ex) {
+            // Si la causa es un recurso relacionado inexistente
+            if (ex.getMessage() != null &amp;&amp; ex.getMessage().contains("no existe")) {
+                return ResponseEntity.notFound().build(); // 404
+            }
+            return ResponseEntity.badRequest().build(); // 400
+        }
+    }
+
+    // GET /api/libros/{id} → 200 (LibroResponseDTO) | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;LibroResponseDTO&gt; obtenerPorId(@PathVariable Long id) {
+        Optional&lt;LibroResponseDTO&gt; opt = libroService.obtenerPorId(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // GET /api/libros?editorialId= → 200 | 404 si la editorial no existe
+    @GetMapping
+    public ResponseEntity&lt;List&lt;LibroResponseDTO&gt;&gt; listarPorEditorial(@RequestParam Long editorialId) {
+        Optional&lt;List&lt;LibroResponseDTO&gt;&gt; opt = libroService.listarPorEditorial(editorialId);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // PUT /api/libros/{id}/ficha → 200 | 404
+    @PutMapping("/{id}/ficha")
+    public ResponseEntity&lt;LibroResponseDTO&gt; actualizarFicha(
+            @PathVariable Long id,
+            @Valid @RequestBody FichaLibroDTO fichaDTO) {
+
+        Optional&lt;LibroResponseDTO&gt; opt = libroService.actualizarFicha(id, fichaDTO);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // POST /api/libros/{id}/autores/{autorId} → 200 | 404
+    @PostMapping("/{id}/autores/{autorId}")
+    public ResponseEntity&lt;LibroResponseDTO&gt; asociarAutor(
+            @PathVariable Long id,
+            @PathVariable Long autorId) {
+
+        Optional&lt;LibroResponseDTO&gt; opt = libroService.asociarAutor(id, autorId);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // DELETE /api/libros/{id}/autores/{autorId} → 204 | 404
+    @DeleteMapping("/{id}/autores/{autorId}")
+    public ResponseEntity&lt;Void&gt; desasociarAutor(
+            @PathVariable Long id,
+            @PathVariable Long autorId) {
+
+        boolean desasociado = libroService.desasociarAutor(id, autorId);
+        if (desasociado) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}</pre></details></li>
+<li><code>EditorialController</code>:
+<details class="cod"><summary>Ver el código completo (63 líneas)</summary><pre class="code" data-f="controller/EditorialController.java">package edu.rico.biblioteca.controller;
+
+import java.net.URI;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import edu.rico.biblioteca.dto.EditorialRequestDTO;
+import edu.rico.biblioteca.dto.EditorialResponseDTO;
+import edu.rico.biblioteca.service.IEditorialService;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/editoriales")
+public class EditorialController {
+
+    @Autowired
+    private IEditorialService editorialService;
+
+    // POST /api/editoriales → 201 + Location | 400
+    @PostMapping
+    public ResponseEntity&lt;EditorialResponseDTO&gt; crear(@Valid @RequestBody EditorialRequestDTO dto) {
+        EditorialResponseDTO creada = editorialService.crear(dto);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(creada.id())
+                .toUri();
+        return ResponseEntity.created(location).body(creada);
+    }
+
+    // GET /api/editoriales/{id} → 200 | 404
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;EditorialResponseDTO&gt; obtenerPorId(@PathVariable Long id) {
+        Optional&lt;EditorialResponseDTO&gt; opt = editorialService.obtenerPorId(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // DELETE /api/editoriales/{id} → 204 | 404 | 409
+    @DeleteMapping("/{id}")
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        int resultado = editorialService.eliminar(id);
+        if (resultado == 1) {
+            return ResponseEntity.noContent().build(); // 204
+        } else if (resultado == -1) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
+        }
+        return ResponseEntity.notFound().build(); // 404
+    }
+}</pre></details></li>
+<li><code>AutorController</code>:
+<pre class="code" data-f="controller/AutorController.java">package edu.rico.biblioteca.controller;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import edu.rico.biblioteca.dto.AutorRequestDTO;
+import edu.rico.biblioteca.dto.AutorResponseDTO;
+import edu.rico.biblioteca.dto.LibroResumenDTO;
+import edu.rico.biblioteca.service.IAutorService;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/autores")
+public class AutorController {
+
+    @Autowired
+    private IAutorService autorService;
+
+    // POST /api/autores → 201 + Location | 400
+    @PostMapping
+    public ResponseEntity&lt;AutorResponseDTO&gt; crear(@Valid @RequestBody AutorRequestDTO dto) {
+        AutorResponseDTO creado = autorService.crear(dto);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(creado.id())
+                .toUri();
+        return ResponseEntity.created(location).body(creado);
+    }
+
+    // GET /api/autores/{id}/libros → 200 (LibroResumenDTO) | 404
+    @GetMapping("/{id}/libros")
+    public ResponseEntity&lt;List&lt;LibroResumenDTO&gt;&gt; obtenerLibrosPorAutor(@PathVariable Long id) {
+        Optional&lt;List&lt;LibroResumenDTO&gt;&gt; opt = autorService.obtenerLibrosPorAutor(id);
+        if (opt.isPresent()) {
+            return ResponseEntity.ok(opt.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+}</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#s24">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-27">
+  <span class="num" aria-hidden="true">27</span>
+  <h3>Misión 5: las trampas de comprensión</h3>
+  <ol>
+<li>Se trata de <b>provocar</b> cada trampa a propósito, entender por qué ocurre y arreglarla.</li>
+<li><b>Devolver una Entity</b> → recursión infinita en el JSON → usa DTO con <code>*ResumenDTO</code>.</li>
+<li><b>LAZY fuera de la transacción</b> → <code>LazyInitializationException</code> → <code>@Transactional</code> en el Service.</li>
+<li><b>N+1</b> → muchas consultas en el log → <code>JOIN FETCH</code> o <code>@EntityGraph</code>.</li>
+<li><b>Borrar una editorial con libros</b> → 500 → cuenta antes los libros y devuelve 409.</li>
+<li><b>Autor repetido</b>: un <code>List</code> lo duplica y un <code>Set</code> no.</li>
+<li>Después de cada experimento, devuelve el código a su versión correcta.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s25">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-28">
+  <span class="num" aria-hidden="true">28</span>
+  <h3>Ampliación: validación declarativa con @Valid</h3>
+  <ol>
+<li>Con <code>@Valid</code> el 400 sale solo, antes de llegar al servicio. Comprueba que está la dependencia <code>spring-boot-starter-validation</code>.
+<pre class="code" data-f="pom.xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-validation&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre></li>
+<li><b>DTO de entrada con validaciones</b> (son los finales; sustituyen a los del paso 24). <code>@NotBlank</code>, <code>@NotNull</code>, <code>@NotEmpty</code>, <code>@Size</code>, <code>@Pattern</code> (el ISBN), <code>@Min</code> y <code>@Max</code>.
+<pre class="code" data-f="dto/EditorialRequestDTO.java">package edu.rico.biblioteca.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record EditorialRequestDTO(
+    @NotBlank(message = "El nombre de la editorial es obligatorio")
+    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
+    String nombre,
+
+    @NotBlank(message = "El país de origen es obligatorio")
+    String pais
+) {}</pre>
+<pre class="code" data-f="dto/FichaLibroDTO.java">package edu.rico.biblioteca.dto;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public record FichaLibroDTO(
+    @NotBlank(message = "El ISBN es obligatorio")
+    @Pattern(regexp = "^(97(8|9))?\\d{9}(\\d|X)$", message = "Formato de ISBN inválido")
+    String isbn,
+
+    @Min(value = 1, message = "El libro debe tener al menos una página")
+    int paginas,
+
+    @Min(value = 1450, message = "El año no puede ser anterior a la invención de la imprenta")
+    @Max(value = 2026, message = "El año no puede ser superior al año actual")
+    int anio
+) {}</pre>
+<pre class="code" data-f="dto/LibroRequestDTO.java">package edu.rico.biblioteca.dto;
+
+import java.util.Set;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+public record LibroRequestDTO(
+    @NotBlank(message = "El título es obligatorio")
+    String titulo,
+
+    @NotNull(message = "Debe indicarse la editorial")
+    Long editorialId,
+
+    @NotEmpty(message = "El libro debe tener al menos un autor asignado")
+    Set&lt;Long&gt; autoresIds,
+
+    @Valid // Valida recursivamente las restricciones internas de FichaLibroDTO
+    @NotNull(message = "La ficha técnica es obligatoria")
+    FichaLibroDTO ficha
+) {}</pre>
+<pre class="code" data-f="dto/AutorRequestDTO.java">package edu.rico.biblioteca.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record AutorRequestDTO(
+    @NotBlank(message = "El nombre del autor es obligatorio")
+    String nombre,
+
+    @NotBlank(message = "La nacionalidad es obligatoria")
+    String nacionalidad
+) {}</pre></li>
+<li><b>DTO de salida</b>, con su <code>package</code> e imports:
+<pre class="code" data-f="dto/AutorResponseDTO.java">package edu.rico.biblioteca.dto;
+
+import java.util.List;
+
+public record AutorResponseDTO(
+    Long id,
+    String nombre,
+    String nacionalidad,
+    List&lt;LibroResumenDTO&gt; libros
+) {}</pre>
+<pre class="code" data-f="dto/EditorialResponseDTO.java">package edu.rico.biblioteca.dto;
+
+public record EditorialResponseDTO(
+    Long id,
+    String nombre,
+    String pais
+) {}</pre>
+<pre class="code" data-f="dto/EditorialResumenDTO.java">package edu.rico.biblioteca.dto;
+
+public record EditorialResumenDTO(Long id, String nombre) {}</pre>
+<pre class="code" data-f="dto/AutorResumenDTO.java">package edu.rico.biblioteca.dto;
+
+public record AutorResumenDTO(Long id, String nombre) {}</pre>
+<pre class="code" data-f="dto/LibroResumenDTO.java">package edu.rico.biblioteca.dto;
+
+public record LibroResumenDTO(Long id, String titulo) {}</pre>
+<pre class="code" data-f="dto/LibroResponseDTO.java">package edu.rico.biblioteca.dto;
+
+import java.util.List;
+
+public record LibroResponseDTO(
+    Long id,
+    String titulo,
+    EditorialResumenDTO editorial,
+    List&lt;AutorResumenDTO&gt; autores,
+    FichaLibroDTO ficha
+) {}</pre></li>
+<li>En cada método del Controller que recibe un DTO va <code>@Valid</code> delante de <code>@RequestBody</code>, como en los controladores del paso 26.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s26">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-29">
+  <span class="num" aria-hidden="true">29</span>
+  <h3>Probar con Postman o curl</h3>
+  <ol>
+<li>Arranca la aplicación y haz la secuencia <b>en orden</b>. En Postman, los POST y el PUT llevan <b>Body &gt; raw &gt; JSON</b>; los GET y los DELETE no llevan cuerpo.</li>
+<li>Crear editorial (<code>POST /api/editoriales</code>):
+<pre class="code" data-f="Body de POST /api/editoriales  ←  EditorialRequestDTO(nombre, pais)">{
+    "nombre": "Planeta",
+    "pais": "España"
+}</pre></li>
+<li>Crear autor (<code>POST /api/autores</code>):
+<pre class="code" data-f="Body de POST /api/autores  ←  AutorRequestDTO(nombre, nacionalidad)">{
+    "nombre": "Cervantes",
+    "nacionalidad": "Española"
+}</pre></li>
+<li>Crear libro (<code>POST /api/libros</code>). Necesita la editorial 1 y el autor 1. <code>autoresIds</code> es una lista y <code>ficha</code> es un objeto.
+<pre class="code" data-f="Body de POST /api/libros  ←  LibroRequestDTO(titulo, editorialId, autoresIds, ficha)">{
+    "titulo": "Don Quijote",
+    "editorialId": 1,
+    "autoresIds": [1],
+    "ficha": {
+        "isbn": "9788420412146",
+        "paginas": 900,
+        "anio": 1605
+    }
+}</pre></li>
+<li>El resto: <code>GET /api/libros/1</code>, <code>GET /api/libros?editorialId=1</code>, <code>PUT /api/libros/1/ficha</code> (cuerpo: <code>{"isbn": "842041214X", "paginas": 1000, "anio": 1615}</code>), <code>POST /api/libros/1/autores/1</code> (sin cuerpo), <code>GET /api/autores/1/libros</code>, <code>DELETE /api/libros/1/autores/1</code> y <code>DELETE /api/editoriales/1</code>.</li>
+<li>Esperado: <b>201</b> al crear, <b>200</b> al leer, <b>204</b> al quitar un autor, <b>409</b> al borrar una editorial con libros, y <b>404</b> o <b>400</b> en los errores.</li>
+<li>La misma secuencia, con <code>curl</code>:
+<pre class="code" data-f="secuencia de pruebas (CMD o Git Bash)">curl -i -X POST http://localhost:8080/api/editoriales -H "Content-Type: application/json" -d "{\"nombre\":\"Planeta\",\"pais\":\"España\"}"
+curl -i -X POST http://localhost:8080/api/autores -H "Content-Type: application/json" -d "{\"nombre\":\"Cervantes\",\"nacionalidad\":\"Española\"}"
+curl -i -X POST http://localhost:8080/api/libros -H "Content-Type: application/json" -d "{\"titulo\":\"Don Quijote\",\"editorialId\":1,\"autoresIds\":[1],\"ficha\":{\"isbn\":\"9788420412146\",\"paginas\":900,\"anio\":1605}}"
+curl -i http://localhost:8080/api/libros/1
+curl -i "http://localhost:8080/api/libros?editorialId=1"
+curl -i -X PUT http://localhost:8080/api/libros/1/ficha -H "Content-Type: application/json" -d "{\"isbn\":\"842041214X\",\"paginas\":1000,\"anio\":1615}"
+curl -i -X POST http://localhost:8080/api/libros/1/autores/1
+curl -i http://localhost:8080/api/autores/1/libros
+curl -i -X DELETE http://localhost:8080/api/libros/1/autores/1
+curl -i -X DELETE http://localhost:8080/api/editoriales/1</pre></li>
+</ol>
+  <a class="mas" href="guia-completa.html#s27">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-30">
+  <span class="num" aria-hidden="true">30</span>
+  <h3>Cómo explicar el ejercicio</h3>
+  <ol>
+<li>Cuéntalo en unos diez minutos y de lo general a lo concreto: el problema, el modelo, los dueños de cada relación, las capas, los DTO, una petición completa, los códigos HTTP, las trampas, la validación y la demostración.</li>
+<li>Prepara una respuesta corta para las preguntas típicas (por qué DTO, por qué <code>Set</code>, por qué LAZY, para qué <code>@Transactional</code>…).</li>
+<li>Conoce los límites de la solución: un ISBN duplicado da 500, el 404 depende de un texto y listar libros por editorial no usa fetch.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s28">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-31">
+  <span class="num" aria-hidden="true">31</span>
+  <h3>Entregables y rúbrica</h3>
+  <ol>
+<li><b>Entrega:</b> diagrama de clases, diagrama de capas con los <code>@Autowired</code> reales, dos diagramas de recorrido, el proyecto funcionando y un documento con las respuestas de las misiones 1, 4 y 5.</li>
+<li><b>Rúbrica:</b> relaciones JPA 30 %, separación Entity y DTO 25 %, <code>ResponseEntity</code> y códigos 20 %, inyección coherente 10 % y diagramas y respuestas 15 %.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s29">Ver explicación completa →</a>
+</article>
+<article class="paso" id="r-32">
+  <span class="num" aria-hidden="true">32</span>
+  <h3>Chuleta final</h3>
+  <ol>
+<li>Una tabla con todas las anotaciones, agrupadas por dónde se usan: Controller, parámetros, validación, Service, entidades, relaciones y consultas.</li>
+<li>Las ideas clave en una línea: capas, DTO, LAZY, <code>mappedBy</code>, <code>Set</code>, <code>orphanRemoval</code>, sin <code>REMOVE</code> de Editorial a Libro, <code>@Transactional</code>, <code>JOIN FETCH</code> y <code>@Valid</code>.</li>
+</ol>
+  <a class="mas" href="guia-completa.html#s30">Ver explicación completa →</a>
+</article>
+</section>
+
+<section class="parte p4" id="parte4">
+  <header><p class="n">PARTE 4</p><h2>Ejercicios de práctica</h2><p>Enunciados tipo examen para hacerlos tú; cada uno irá seguido de su solución</p></header>
+<article class="paso" id="r-33">
+  <span class="num" aria-hidden="true">33</span>
+  <h3>Ejercicios de práctica</h3>
+  <ol>
+<li>Los ejercicios tipo examen están en su propia sección, con el enunciado de cada ejercicio y, aparte, su solucionario.</li>
+<li><a href="ejercicios.html">Ir a los ejercicios →</a></li>
+</ol>
+  <a class="mas" href="guia-completa.html#ejercicios">Ver explicación completa →</a>
+</article>
+</section>
+
+  <footer class="end">
+    <a href="#inicio">↑ Volver arriba</a>
+    <a href="index.html">← Elegir otra guía</a>
+  </footer>
+</main>
+<script src="js/2-codigo.js"></script>
+</body>
+</html>

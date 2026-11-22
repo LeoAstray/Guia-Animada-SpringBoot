@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+{{CABECERA}}
+{{ENTRADA}}
+<title>Spring Boot de cero a REST · ejercicios</title>
+{{CSS}}
+</head>
+<body class="ejercicios" id="inicio">
+<header class="bar">
+  <a class="back" href="{{ENLACE_ATRAS}}">← {{TEXTO_ATRAS}}</a>
+  <span class="tag">EJERCICIOS</span>
+</header>
+
+<main class="wrap">
+  <!-- La lista. Se oculta cuando se abre un enunciado o un solucionario (el que coincide con la dirección #...) -->
+  <section class="hub intro">
+    <h1>Ejercicios de práctica</h1>
+    <p class="sub">Enunciados tipo examen para hacer tú solo. Cada ejercicio tiene su <b>enunciado</b> y su <b>solucionario</b>: empieza por el enunciado y abre el solucionario cuando termines.</p>
+    <div class="ej-list">
+{{TARJETAS}}
+    </div>
+  </section>
+
+{{PANELES}}
+</main>
+{{JS}}
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Spring Boot de cero a REST · elige tu guía</title>
+<script>document.documentElement.classList.add('js');</script>
+<link rel="stylesheet" href="css/00-fuentes.css">
+<link rel="stylesheet" href="css/01-variables.css">
+<link rel="stylesheet" href="css/02-base.css">
+<link rel="stylesheet" href="resumen/selector.css">
+<noscript><style>
+  /* Sin JavaScript no hay escenario que gire: las tres opciones salen una debajo de otra */
+  html { scroll-snap-type: none; }
+  .pista { height: auto; }
+  .escenario { touch-action: auto; position: static; height: auto; display: block; overflow: visible; padding-bottom: 3rem; }
+  .carrusel { display: grid; gap: 1.5rem; justify-items: center; margin: 2rem 0; }
+  .carta { position: relative; left: auto; top: auto; transform: none; height: auto; width: min(22rem, 100%); }
+  .pie { display: block; }
+  .texto { position: static; opacity: 1; pointer-events: auto; margin: 0 0 2rem; }
+  .riel, .desliza, .parada { display: none; }
+  .ld { stroke-dashoffset: 0; opacity: 1; }
+</style></noscript>
+</head>
+<body class="selector">
+<header class="bar">
+  <span class="marca">Spring Boot de cero a REST</span>
+  <span class="tag" id="cuenta" aria-live="polite">1 / 3</span>
+</header>
+
+<main class="pista" id="pista" style="--n: 3">
+  <!-- Tres puntos de parada: al hacer scroll, la página se queda siempre en uno de ellos -->
+  <span class="parada" id="opcion-1" style="--i: 0"></span>
+  <span class="parada" id="opcion-2" style="--i: 1"></span>
+  <span class="parada" id="opcion-3" style="--i: 2"></span>
+
+  <div class="escenario">
+    <div class="fondos" aria-hidden="true"><i class="fondo f1"></i><i class="fondo f2"></i><i class="fondo f3"></i></div>
+
+    <h1 class="pregunta">¿Cómo quieres seguir la guía?</h1>
+    <p class="desliza" aria-hidden="true">Desliza para ver las otras
+      <svg viewBox="0 0 16 16"><path d="M8 2v11M3 8.5l5 5 5-5"/></svg>
+    </p>
+
+    <div class="carrusel">
+      <article class="carta c1" data-i="0" style="--acc: var(--lime)">
+        <div class="cara">
+          <h2 class="nombre">Guía<br>completa</h2>
+          <svg class="dibujo" viewBox="0 0 160 120" aria-hidden="true">
+            <rect class="ld" x="44" y="18" width="84" height="88" rx="9" pathLength="1"/>
+            <rect class="ld" x="30" y="12" width="84" height="88" rx="9" pathLength="1"/>
+            <rect class="ld" x="16" y="6" width="84" height="88" rx="9" pathLength="1" style="fill: var(--void-3)"/>
+            <path class="ld" d="M30 26h28M30 40h50M42 54h36M42 68h44M30 82h24" pathLength="1"/>
+          </svg>
+          <p class="dato">33 cartas</p>
+        </div>
+      </article>
+
+      <article class="carta c2" data-i="1" style="--acc: var(--cyan)">
+        <div class="cara">
+          <h2 class="nombre">Guía<br>resumida</h2>
+          <svg class="dibujo" viewBox="0 0 160 120" aria-hidden="true">
+            <rect class="ld" x="20" y="14" width="24" height="24" rx="6" pathLength="1"/>
+            <path class="ld" d="M26 26l6 6 10-13" pathLength="1"/>
+            <path class="ld" d="M58 26h78" pathLength="1"/>
+            <rect class="ld" x="20" y="48" width="24" height="24" rx="6" pathLength="1"/>
+            <path class="ld" d="M26 60l6 6 10-13" pathLength="1"/>
+            <path class="ld" d="M58 60h62" pathLength="1"/>
+            <rect class="ld" x="20" y="82" width="24" height="24" rx="6" pathLength="1"/>
+            <path class="ld" d="M58 94h70" pathLength="1"/>
+          </svg>
+          <p class="dato">33 pasos</p>
+        </div>
+      </article>
+
+      <article class="carta c3" data-i="2" style="--acc: var(--green)">
+        <div class="cara">
+          <h2 class="nombre">Ejercicios</h2>
+          <svg class="dibujo" viewBox="0 0 160 120" aria-hidden="true">
+            <rect class="ld" x="22" y="8" width="90" height="104" rx="9" pathLength="1"/>
+            <path class="ld" d="M38 30h42M38 46h58M38 62h50" pathLength="1"/>
+            <circle class="ld" cx="112" cy="88" r="24" pathLength="1" style="fill: var(--void-3)"/>
+            <text class="sello" x="112" y="96" text-anchor="middle">2</text>
+          </svg>
+          <p class="dato">2 ejercicios</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="pie">
+      <div class="texto t1 activa" style="--acc: var(--lime)">
+        <div class="cuerpo">
+          <p class="lema">Todo explicado, con calma.</p>
+          <p class="desc">33 cartas con la explicación de cada paso y su porqué, el código completo para copiar, diagramas, errores frecuentes y pruebas con Postman.</p>
+          <ul class="chips"><li>Explicaciones</li><li>Código para copiar</li><li>Diagramas</li><li>Postman</li></ul>
+        </div>
+        <a class="abrir" href="guia-completa.html" data-nombre="la guía completa">Abrir la guía completa
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M8.5 3l5 5-5 5"/></svg></a>
+      </div>
+
+      <div class="texto t2" style="--acc: var(--cyan)">
+        <div class="cuerpo">
+          <p class="lema">Solo lo que hay que hacer.</p>
+          <p class="desc">Los mismos 33 pasos, uno por uno y sin complicarse. Cada paso son unas pocas líneas, con su código y un enlace a su explicación completa.</p>
+          <ul class="chips"><li>33 pasos</li><li>Código incluido</li><li>Enlace a la completa</li></ul>
+        </div>
+        <a class="abrir" href="guia-resumida.html" data-nombre="la guía resumida">Abrir la guía resumida
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M8.5 3l5 5-5 5"/></svg></a>
+      </div>
+
+      <div class="texto t3" style="--acc: var(--green)">
+        <div class="cuerpo">
+          <p class="lema">Ponte a prueba como en un examen.</p>
+          <p class="desc">Enunciados tipo examen con puntuación. Cada ejercicio tiene su solucionario aparte: primero lo haces tú y después comparas.</p>
+          <ul class="chips"><li>2 ejercicios</li><li>Solucionarios</li><li>Con puntuación</li></ul>
+        </div>
+        <a class="abrir" href="ejercicios.html" data-nombre="los ejercicios">Abrir los ejercicios
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M8.5 3l5 5-5 5"/></svg></a>
+      </div>
+    </div>
+
+    <nav class="riel" aria-label="Elegir guía">
+      <a href="#opcion-1" aria-label="Guía completa" title="Guía completa" aria-current="true">1</a>
+      <a href="#opcion-2" aria-label="Guía resumida" title="Guía resumida">2</a>
+      <a href="#opcion-3" aria-label="Ejercicios" title="Ejercicios">3</a>
+    </nav>
+  </div>
+</main>
+
+<!-- La cortina del color de la opción elegida: cubre la pantalla un instante antes de abrir la guía -->
+<div class="cortina" id="cortina" aria-hidden="true"><span></span></div>
+<script src="resumen/selector.js"></script>
+</body>
+</html>

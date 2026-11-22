@@ -1,0 +1,42 @@
+<!-- PORTADA
+     - Título: cada palabra va en un <span class="w">; la que lleva "p" sale en rosa.
+       El retraso (animation-delay) hace que aparezcan una detrás de otra.
+     - Los tres sobres enlazan con el id de cada parte (#parte1, #parte2, #parte3). -->
+<header class="hero" id="inicio">
+  <div>
+    <h1 aria-label="Spring Boot de cero a REST">
+      <span class="w" style="animation-delay:1.00s">Spring</span>
+      <span class="w" style="animation-delay:1.13s">Boot</span>
+      <span class="w" style="animation-delay:1.26s">de</span>
+      <span class="w p" style="animation-delay:1.39s">cero</span>
+      <span class="w" style="animation-delay:1.52s">a</span>
+      <span class="w" style="animation-delay:1.65s">REST</span>
+    </h1>
+    <p class="lede">Una sola guía, paso a paso: empieza con Spring Data JPA, cruza el puente hacia REST y termina con la API completa de la biblioteca editorial. Todo el código está probado y explicado para que puedas presentarlo.</p>
+    <div class="cta">
+      <a class="btn main" href="#parte1">Abrir el sobre 1 →</a>
+      <a class="btn ghost" id="resume" href="#parte1" hidden>Seguir donde lo dejé <span class="flag" id="resume-n">000/{{TOTAL}}</span></a>
+    </div>
+  </div>
+
+  <nav class="packs" aria-label="Las tres partes de la guía">
+    <a class="pack c" href="#parte1">
+      <div class="no">{{RANGO1}} · COMÚN</div>
+      <div class="pt">Data JPA</div>
+      <p>Proyecto, MySQL, entidades, relaciones, repositorios y consultas.</p>
+    </a>
+    <a class="pack r" href="#parte2">
+      <div class="no">{{RANGO2}} · RARA</div>
+      <div class="pt">El puente</div>
+      <p>DTO, servicio, controlador y códigos HTTP sobre lo que ya sabes.</p>
+    </a>
+    <a class="pack h" href="#parte3">
+      <div class="no">{{RANGO3}} · HOLO</div>
+      <div class="pt">API REST</div>
+      <p>La biblioteca editorial: diseño, código, validación y pruebas.</p>
+    </a>
+  </nav>
+
+  <!-- Cinta decorativa (el texto se repite dos veces para que el bucle no se note) -->
+  <div class="marquee" aria-hidden="true"><span>@Entity · @OneToOne · @OneToMany · @ManyToMany · JpaRepository · @Query · record DTO · @Service · @RestController · ResponseEntity · 201 CREATED · 404 NOT FOUND · 409 CONFLICT · @Valid · @Entity · @OneToOne · @OneToMany · @ManyToMany · JpaRepository · @Query · record DTO · @Service · @RestController · ResponseEntity · 201 CREATED · 404 NOT FOUND · 409 CONFLICT · @Valid · </span></div>
+</header>

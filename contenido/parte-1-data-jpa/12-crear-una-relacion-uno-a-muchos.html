@@ -1,0 +1,116 @@
+<section id="paso-12">
+<h2>12 Crear una relación uno a muchos</h2>
+<p>Una relación <b>uno a muchos</b> significa que un objeto puede tener varios del otro tipo. En este ejercicio un equipo puede tener varios estadios, pero cada estadio pertenece a un solo equipo.</p>
+<p>Primero veremos la relación en una dirección y después la convertiremos en dos direcciones. Son dos versiones de la misma relación; al final conservaremos la bidireccional.</p>
+
+<h3>Crear Estadio</h3>
+<p class="paso">1. Clic derecho en <code>entity</code> → <b>New Java File → Class</b>. Escribe <code>Estadio</code> y pega el archivo completo:</p>
+<pre data-f="entity/Estadio.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "estadios")
+public class Estadio {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_estadio")
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+    @Column(nullable = false)
+    private int capacidad;
+
+    public Estadio() {}
+
+    public Estadio(String nombre, int capacidad) {
+        this.nombre = nombre;
+        this.capacidad = capacidad;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public int getCapacidad() { return capacidad; }
+}</pre>
+
+<h3>Crear Equipo con una lista de estadios</h3>
+<p class="paso">2. Crea <code>Equipo.java</code> de la misma manera y pega este código completo:</p>
+<pre data-f="entity/Equipo.java">package leo.astray.examen.entity;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "equipos")
+public class Equipo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_equipo")
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nombre;
+    @Column(nullable = false, length = 100)
+    private String ciudad;
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal presupuesto;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "id_equipo")
+    private List&lt;Estadio&gt; estadios = new ArrayList&lt;&gt;();
+
+    public Equipo() {}
+
+    public Equipo(String nombre, String ciudad,
+            BigDecimal presupuesto) {
+        this.nombre = nombre;
+        this.ciudad = ciudad;
+        this.presupuesto = presupuesto;
+    }
+
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getCiudad() { return ciudad; }
+    public BigDecimal getPresupuesto() { return presupuesto; }
+    public List&lt;Estadio&gt; getEstadios() { return estadios; }
+
+    public void addEstadio(Estadio estadio) {
+        estadios.add(estadio);
+    }
+}</pre>
+<p><code>List&lt;Estadio&gt;</code> es la lista de estadios de ese equipo. Aquí necesitamos una colección porque puede haber varios. <code>new ArrayList&lt;&gt;()</code> prepara una lista vacía donde poder añadirlos; si no la creas, podrías tener <code>null</code> y no podrías usar <code>add</code>.</p>
+<p><code>BigDecimal</code> sirve para representar importes decimales exactos. Para dinero escribe, por ejemplo, <code>new BigDecimal("100000.00")</code>. <code>precision = 14, scale = 2</code> permite 14 cifras en total, 2 de ellas decimales.</p>
+<div class="why">En esta primera versión puedes ir de <code>Equipo</code> a sus estadios, pero <code>Estadio</code> no tiene un campo para volver al equipo. Por eso se llama <b>unidireccional</b>. Aunque <code>@JoinColumn</code> esté escrito en <code>Equipo</code>, en este mapeo la columna <code>id_equipo</code> está en la tabla <code>estadios</code>.</div>
+
+<h3>Convertirla en bidireccional</h3>
+<p class="paso">3. Abre <code>Estadio.java</code>. Añade este atributo dentro de la clase, después de los otros campos, y los métodos junto a sus getters:</p>
+<pre data-f="entity/Estadio.java (nuevo campo y métodos)">@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "id_equipo", nullable = false)
+private Equipo equipo;
+
+public Equipo getEquipo() {
+    return equipo;
+}
+
+public void setEquipo(Equipo equipo) {
+    this.equipo = equipo;
+}</pre>
+<p>Desde el punto de vista de un estadio, muchos estadios pueden apuntar al mismo equipo: por eso aquí escribimos <code>@ManyToOne</code>.</p>
+<p class="paso">4. Vuelve a <code>Equipo.java</code>. <b>Sustituye las dos anotaciones de la lista <code>estadios</code></b> por esta. Conserva una sola lista y elimina la antigua <code>@JoinColumn</code> de ese campo:</p>
+<pre data-f="entity/Equipo.java (lista estadios)">@OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL,
+    orphanRemoval = true)
+private List&lt;Estadio&gt; estadios = new ArrayList&lt;&gt;();</pre>
+<p>Ahora puedes ir de equipo a estadios y de estadio a equipo: es <b>bidireccional</b>. En la base sigue habiendo una sola columna <code>estadios.id_equipo</code>. <code>mappedBy = "equipo"</code> señala el campo Java <code>equipo</code> de <code>Estadio</code>; no se escribe <code>id_equipo</code> porque ese es el nombre SQL.</p>
+<p><code>orphanRemoval = true</code> significa que quitar un estadio de esta relación puede borrar su fila al sincronizar los cambios con la base. Úsalo cuando el hijo deba desaparecer al separarlo del padre. <code>cascade = ALL</code> incluye borrar los estadios al borrar su equipo; no es lo mismo que quitar un elemento de la lista.</p>
+<p>Un ejemplo de creación, para usar dentro de <code>run</code> si el ejercicio lo pide, sería:</p>
+<pre data-f="ExamenApplication.java (ejemplo)">Equipo equipo = new Equipo(
+    "Estrellas", "Madrid", new BigDecimal("100000.00"));
+Estadio estadio = new Estadio("Campo Norte", 5000);
+
+equipo.addEstadio(estadio);
+equipoRepository.save(equipo);</pre>
+<p>Este ejemplo explica la operación; no lo copies además de los datos iniciales del paso 14. Allí se crearán ya esos registros con SQL. Para usarlo necesitarías importar <code>java.math.BigDecimal</code> en la clase principal y tener el repositorio de equipos que crearemos en ese paso.</p>
+</section>

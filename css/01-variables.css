@@ -1,0 +1,49 @@
+/* =========================================================
+   VARIABLES: colores, tipografías y curva de animación.
+   Cambia aquí un color y se cambia en toda la guía.
+   ========================================================= */
+:root {
+  /* Fondos (de más oscuro a más claro) */
+  --void:   #0d0a1f;   /* fondo de la página */
+  --void-2: #151030;   /* tarjetas, índice, tablas */
+  --void-3: #211a47;   /* cabeceras de tabla, código en línea */
+  --void-4: #2c2360;   /* barra de scroll */
+  --line:   #3a2f6b;   /* bordes y separadores */
+
+  /* Texto */
+  --ink:   #ece8ff;    /* texto principal */
+  --ink-2: #bdb4ea;    /* texto secundario */
+  --ink-3: #958bc9;    /* notas al pie, leyendas */
+
+  /* Acentos */
+  --lime:   #c6ff3d;   /* acción principal y "estás aquí" */
+  --pink:   #ff4fa3;   /* Parte 2 (rara) y avisos "Ojo" */
+  --cyan:   #3de0ff;   /* Parte 1 (común) y "Por qué" */
+  --violet: #8b5bff;
+  --gold:   #ffd23d;   /* Parte 3 (holo) y "Para un niño de 5 años" */
+  --green:  #5ef0a0;   /* "Comprobación" */
+  --red:    #ff6b6b;
+  --plum:   #2a1450;   /* fondo del sobre de la Parte 2 */
+  --plum-2: #1c1440;   /* fondo del sobre de la Parte 3 */
+  --code-bg:#07051a;   /* fondo de los bloques de código */
+
+  /* Foil holográfico (gira con la variable --ang) */
+  --holo: conic-gradient(from var(--ang, 200deg) at var(--mx, 50%) var(--my, 50%),
+          #c6ff3d, #3de0ff, #8b5bff, #ff4fa3, #ffd23d, #c6ff3d);
+  --rar: var(--cyan);  /* color de rareza de la carta actual */
+
+  /* Tipografías */
+  --pix:  "Silkscreen", ui-monospace, monospace;                 /* etiquetas píxel */
+  --disp: "Unbounded", "Segoe UI Black", sans-serif;             /* títulos */
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif; /* lectura */
+  --mono: "Cascadia Code", "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace; /* código */
+
+  /* Altura de la barra superior (la que lleva el enlace «Elegir otra guía») */
+  --bar: 3rem;
+
+  /* Curva de todas las animaciones */
+  --out: cubic-bezier(.16, 1, .3, 1);
+}
+
+@property --ang { syntax: "<angle>"; inherits: true; initial-value: 200deg; }
+@keyframes spin { to { --ang: 560deg; } }

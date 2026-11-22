@@ -1,0 +1,50 @@
+/* =========================================================
+   DIAGRAMAS (figuras SVG) Y CAPTURAS
+   Para un diagrama nuevo usa estos colores directamente:
+   cajas fill="#211a47", bordes stroke="#3de0ff" / "#c6ff3d" / "#ff4fa3",
+   texto sin fill (sale claro). Los colores antiguos de abajo se
+   traducen solos para no tener que reescribir las figuras viejas.
+   ========================================================= */
+.fig {
+  overflow-x: auto; margin: 2rem 0; padding: 1.2rem;
+  background: var(--void-2); color: var(--ink); border: 1px solid var(--line); border-radius: 18px;
+}
+.fig svg { display: block; width: 100%; min-width: 40rem; height: auto; }
+.fig figcaption { margin-top: .6rem; color: var(--ink-3); font-size: .9rem; }
+.fig svg text { fill: var(--ink); font-family: var(--body); }
+.fig svg .ic { color: var(--cyan); }     /* iconos de contenido/_iconos.html */
+.fig svg .ic.g { color: var(--gold); }
+
+/* Líneas que se dibujan al entrar en pantalla (class="ld" pathLength="1") */
+.fig .ld { stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 1.3s var(--out); }
+.js .fig:not(.in) .ld { stroke-dashoffset: 1; }
+
+/* Traducción de la paleta antigua de las figuras a la del mundo de cartas */
+.fig svg [fill="#e8edf1"], .fig svg [fill="#e1ebf5"], .fig svg [fill="#dcefee"],
+.fig svg [fill="#fff"], .fig svg [fill="#ffffff"] { fill: var(--void-3); }
+.fig svg [fill="#e0f1e7"] { fill: #123a2e; }
+.fig svg [fill="#fbeccf"] { fill: #3a2e10; }
+.fig svg [fill="#f8e2de"] { fill: #3d1430; }
+.fig svg [stroke="#536171"], .fig svg [stroke="#4f5d68"], .fig svg [stroke="#14212b"] { stroke: var(--ink-3); }
+.fig svg [stroke="#2c5f8f"] { stroke: var(--cyan); }
+.fig svg [stroke="#0b6b6b"] { stroke: var(--lime); }
+.fig svg [stroke="#2e7d4f"], .fig svg [stroke="#1f6a40"] { stroke: var(--green); }
+.fig svg [stroke="#a35b00"] { stroke: var(--gold); }
+.fig svg [stroke="#b23a2b"] { stroke: var(--pink); }
+.fig svg text[fill="#4f5d68"], .fig svg text[fill="#536171"] { fill: var(--ink-2); }
+.fig svg text[fill="#14212b"] { fill: var(--ink); }
+.fig svg text[fill="#2c5f8f"] { fill: var(--cyan); }
+.fig svg text[fill="#0b6b6b"] { fill: var(--lime); }
+.fig svg text[fill="#2e7d4f"], .fig svg text[fill="#1f6a40"] { fill: var(--green); }
+.fig svg text[fill="#a35b00"] { fill: var(--gold); }
+.fig svg text[fill="#b23a2b"] { fill: var(--pink); }
+.fig svg path[fill="#14212b"], .fig svg path[fill="#4f5d68"] { fill: var(--ink-2); }
+.fig svg path[fill="#2e7d4f"] { fill: var(--green); }
+.fig svg path[fill="#b23a2b"] { fill: var(--pink); }
+.fig svg path[fill="#0b6b6b"] { fill: var(--lime); }
+.fig svg path[fill="#2c5f8f"] { fill: var(--cyan); }
+#ar path, #arg path, #arr path { fill: var(--ink-2); }
+
+/* Capturas de pantalla */
+.fig.shot { padding: .8rem; }
+.fig.shot img { display: block; width: 100%; max-width: 58rem; border-radius: 10px; }
