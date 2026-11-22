@@ -1,15 +1,15 @@
 """
 Construye las guías a partir de los archivos de contenido/, resumen/, css/ y js/.
 
-Dentro de guia-animada/ (usan las carpetas css/, js/, resumen/ e img/, para trabajar):
+En esta misma carpeta (usan las carpetas css/, js/, resumen/ e img/, para trabajar):
   - index.html           -> el SELECTOR: elige entre la guía completa, la resumida y los ejercicios
   - guia-completa.html   -> la guía principal (todas las explicaciones)
   - guia-resumida.html   -> los mismos pasos, muy resumidos, cada uno con un enlace a la completa
   - ejercicios.html      -> la lista de ejercicios, con su enunciado y su solucionario
 
-En la carpeta de arriba, para compartir: UN solo archivo con todo lo anterior dentro (el selector y
+También en esta carpeta, para compartir: UN solo archivo con todo lo anterior dentro (el selector y
 las tres secciones, que se eligen igual que en la carpeta):
-  - ../Guia_Animada_SpringBoot_DataJPA_y_REST.html
+  - Guia_Animada_SpringBoot_DataJPA_y_REST.html
 
 Uso: doble clic en "Construir guia.bat"  o  python construir.py
 """
@@ -18,7 +18,6 @@ import base64, html, io, json, os, re
 AQUI = os.path.dirname(os.path.abspath(__file__))
 CONTENIDO = os.path.join(AQUI, 'contenido')
 RESUMEN = os.path.join(AQUI, 'resumen')
-ARRIBA = os.path.dirname(AQUI)
 ARCHIVO_UNICO = 'Guia_Animada_SpringBoot_DataJPA_y_REST.html'
 RAREZA = {1: 'COMÚN', 2: 'RARA', 3: 'HOLO', 4: 'RETO'}
 LINEAS_PARA_PLEGAR = 60   # los bloques de código más largos van dentro de un desplegable
@@ -343,11 +342,11 @@ def main():
 
     # El texto va dentro de un <script>: se protegen las secuencias que podrían cerrarlo o abrir un comentario
     paginas_json = json.dumps(montar(destinos['unico'])).replace('</', '<\\/').replace('<!--', '<\\!--')
-    escribir(os.path.join(ARRIBA, ARCHIVO_UNICO), rellenar(leer(RESUMEN, 'plantilla-todo.html'), paginas=paginas_json))
+    escribir(os.path.join(AQUI, ARCHIVO_UNICO), rellenar(leer(RESUMEN, 'plantilla-todo.html'), paginas=paginas_json))
 
     print('Guías construidas: %d cartas, %d entradas en el índice, %d CSS, %d JS.' % (cartas, entradas, len(css), len(js)))
-    print('  -> guia-animada/: index.html (selector), guia-completa.html, guia-resumida.html, ejercicios.html')
-    print('  -> carpeta de arriba (todo en un solo archivo): %s' % ARCHIVO_UNICO)
+    print('  -> index.html (selector), guia-completa.html, guia-resumida.html, ejercicios.html')
+    print('  -> todo en un solo archivo: %s' % ARCHIVO_UNICO)
 
 
 if __name__ == '__main__':
