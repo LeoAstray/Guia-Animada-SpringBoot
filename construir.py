@@ -220,9 +220,17 @@ def panel(id_, etiqueta, titulo, cuerpo, enlaces):
 
 # ---------------------------------------------------------------- piezas comunes
 
+def incrustar_fuentes(css):
+    """En el archivo único no hay carpeta fuentes/: cada url(../fuentes/X.woff2) pasa a ir dentro del CSS."""
+    def incrustar(m):
+        datos = open(os.path.join(RECURSOS, 'fuentes', m.group(1)), 'rb').read()
+        return 'url(data:font/woff2;base64,%s)' % base64.b64encode(datos).decode()
+    return re.sub(r'url\(\.\./fuentes/([^)]+)\)', incrustar, css)
+
+
 def estilos(rutas, unico):
     if unico:
-        return '<style>\n%s\n</style>' % '\n'.join(leer(RECURSOS, r) for r in rutas)
+        return '<style>\n%s\n</style>' % incrustar_fuentes('\n'.join(leer(RECURSOS, r) for r in rutas))
     return '\n'.join('<link rel="stylesheet" href="../recursos/%s">' % r for r in rutas)
 
 
