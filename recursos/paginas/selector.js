@@ -1,6 +1,6 @@
 /* Selector de guías: un gesto de scroll = una opción. La rueda, el dedo y el teclado llevan a la opción
    siguiente con un deslizamiento suave (no hace falta recorrer la página); las tarjetas giran siguiendo ese
-   scroll y, al elegir, una cortina de color abre la guía (la página de destino la recoge: resumen/entrada.js).
+   scroll y, al elegir, una cortina de color abre la guía (la página de destino la recoge: recursos/paginas/entrada.js).
    Sin este script la página sigue siendo usable: las tres opciones salen una debajo de otra (ver <noscript>). */
 (function () {
   var pista = document.getElementById('pista');

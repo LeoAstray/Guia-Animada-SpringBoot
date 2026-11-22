@@ -1,7 +1,7 @@
 /* =========================================================
    GUÍA RESUMIDA y EJERCICIOS
-   Usa los colores y tipografías de css/01-variables.css y las reglas
-   generales de css/02-base.css (construir.py las junta antes que este archivo).
+   Usa los colores y tipografías de recursos/css/01-variables.css y las reglas
+   generales de recursos/css/02-base.css (construir.py las junta antes que este archivo).
    ========================================================= */
 body.resumida, body.ejercicios {
   background:
@@ -17,7 +17,7 @@ code {
 }
 
 /* ---------- GUÍA RESUMIDA ---------- */
-/* (la barra superior, header.bar, es común a todas las páginas y está en css/02-base.css) */
+/* (la barra superior, header.bar, es común a todas las páginas y está en recursos/css/02-base.css) */
 .wrap { max-width: 56rem; margin: 0 auto; padding: 2.6rem 1.25rem 4rem; }
 html { scroll-padding-top: 4.5rem; }
 .intro h1 {

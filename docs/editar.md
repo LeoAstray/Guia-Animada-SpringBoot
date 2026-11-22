@@ -1,11 +1,10 @@
-# Guía animada: cómo editarla
+# Cómo editar la guía
 
 La guía está partida en archivos pequeños. **Editas el contenido y luego construyes.**
 
 ## 1. Editar
 
 ```
-guia-animada/
 ├── contenido/                  ← AQUÍ están los textos
 │   ├── _portada.html           portada: título, frase de entrada y los 3 sobres
 │   ├── _cabecera.html          metas y tipografías del <head>, compartidas por las tres páginas
@@ -14,21 +13,24 @@ guia-animada/
 │   ├── parte-1-data-jpa/
 │   │   ├── 00-sobre.html       cabecera de la Parte 1 (título, subtítulo, nombre en el índice)
 │   │   ├── 01-crear-el-proyecto-en-spring-initializr.html
-│   │   ├── 02-...
-│   │   └── 15-...
+│   │   └── 02-... a 17-...
 │   ├── parte-2-el-puente/      pasos 18 y 19
 │   ├── parte-3-api-rest/       pasos 20 a 32
 │   ├── parte-4-ejercicios/     el paso 33: solo un enlace a la sección de ejercicios
-│   └── ejercicios/             los ejercicios: un enunciado y su solucionario por ejercicio (ver más abajo)
-├── css/                        ← AQUÍ están los estilos (cada archivo comentado)
-│   ├── 00-fuentes.css          las tipografías (Silkscreen, Unbounded, Atkinson), guardadas en fuentes/: la guía no necesita internet
-│   ├── 01-variables.css        colores y tipografías: cambia un color aquí y cambia en toda la guía
-│   ├── 02-base.css ... 12-impresion.css
-├── resumen/                    ← AQUÍ está la guía resumida y el selector (ver más abajo)
-├── js/                         ← animaciones y botones (se cargan en orden por el número)
-├── img/                        ← imágenes (spring-initializr.png)
-├── fuentes/                    ← archivos de las tipografías (.woff2, solo el juego latino, que cubre el español)
-├── plantilla.html              esqueleto de la página (cargador, índice, barra inferior)
+│   ├── ejercicios/             los ejercicios: un enunciado y su solucionario por ejercicio (ver más abajo)
+│   └── resumen/                los resúmenes de cada paso para la guía resumida (ver más abajo)
+├── recursos/                   ← estilos, scripts e imágenes
+│   ├── css/                    estilos de la guía completa (cada archivo comentado)
+│   │   ├── 00-fuentes.css      las tipografías (Silkscreen, Unbounded, Atkinson), guardadas en fuentes/: la guía no necesita internet
+│   │   ├── 01-variables.css    colores y tipografías: cambia un color aquí y cambia en toda la guía
+│   │   └── 02-base.css ... 12-impresion.css
+│   ├── js/                     animaciones y botones (se cargan en orden por el número)
+│   ├── paginas/                CSS y JS del selector, la guía resumida y los ejercicios
+│   ├── fuentes/                archivos de las tipografías (.woff2, solo el juego latino, que cubre el español)
+│   └── img/                    imágenes (spring-initializr.png)
+├── plantillas/                 esqueletos de página (cargador, índice, barra inferior, selector…)
+├── guia/                       ← GENERADO: las cuatro páginas para trabajar en carpeta
+├── docs/                       documentación (este archivo)
 ├── construir.py                junta todo
 └── Construir guia.bat          doble clic para construir
 ```
@@ -79,19 +81,26 @@ El solucionario es un `<article>` sin atributos; en él puedes usar `<pre data-f
 
 ### La guía resumida
 
-Vive en la carpeta `resumen/`:
+Sus resúmenes viven en `contenido/resumen/` y sus plantillas en `plantillas/`:
 
 ```
-resumen/
+contenido/resumen/
 ├── pasos-parte-1.html     resumen de los pasos 1 a 17
 ├── pasos-parte-2.html     pasos 18 y 19
 ├── pasos-parte-3.html     pasos 20 a 32
-├── plantilla-selector.html   la página que elige entre la completa, la resumida y los ejercicios
-├── plantilla-todo.html       la página contenedora del archivo único (enlaza las cuatro páginas)
+└── pasos-parte-4.html     paso 33
+
+plantillas/
+├── plantilla-completa.html   esqueleto de la guía completa
 ├── plantilla-resumida.html   esqueleto de la guía resumida
+├── plantilla-ejercicios.html esqueleto de la página de ejercicios
+├── plantilla-selector.html   la página que elige entre la completa, la resumida y los ejercicios
+└── plantilla-todo.html       la página contenedora del archivo único (enlaza las cuatro páginas)
+
+recursos/paginas/
 ├── selector.css / selector.js   el selector animado: un gesto de scroll = una opción, tarjetas que giran y cortina de color
-├── entrada.js                  la cortina que se recoge al llegar a la guía elegida (va en el <head> de las tres páginas)
-└── resumen.css            estilos de la resumida y de los ejercicios
+├── entrada.js                   la cortina que se recoge al llegar a la guía elegida (va en el <head> de las tres páginas)
+└── resumen.css                  estilos de la resumida y de los ejercicios
 ```
 
 Cada paso es un bloque así. **El título del paso y el enlace a la guía completa se ponen solos**, a partir del `<h2>` del paso:
@@ -116,13 +125,13 @@ Doble clic en **`Construir guia.bat`** (necesita Python). Crea:
 
 | Archivo | Para qué |
 |---|---|
-| `guia-animada/index.html` | El **selector**: elige entre la guía completa, la resumida y los ejercicios. Empieza por aquí. |
-| `guia-animada/guia-completa.html` | La guía principal, usando las carpetas `css/`, `js/` e `img/`. |
-| `guia-animada/guia-resumida.html` | La guía resumida. Cada paso enlaza al mismo paso de la completa. |
-| `guia-animada/ejercicios.html` | La sección de ejercicios: la lista y, al abrir uno, su enunciado o su solucionario. |
-| `Guia_Animada_SpringBoot_DataJPA_y_REST.html` (en la carpeta de arriba) | **Todo en un solo archivo**, para compartir: el selector y las tres secciones (completa, resumida y ejercicios), con sus estilos, su código y sus imágenes dentro. Funciona igual que la carpeta. |
+| `guia/index.html` | El **selector**: elige entre la guía completa, la resumida y los ejercicios. Empieza por aquí. |
+| `guia/guia-completa.html` | La guía principal, usando las carpetas de `recursos/`. |
+| `guia/guia-resumida.html` | La guía resumida. Cada paso enlaza al mismo paso de la completa. |
+| `guia/ejercicios.html` | La sección de ejercicios: la lista y, al abrir uno, su enunciado o su solucionario. |
+| `Guia_Animada_SpringBoot_DataJPA_y_REST.html` (en la raíz del proyecto) | **Todo en un solo archivo**, para compartir: el selector y las tres secciones (completa, resumida y ejercicios), con sus estilos, su código y sus imágenes dentro. Funciona igual que la carpeta. |
 
 > **El archivo único** se abre con doble clic y no necesita nada más. Por dentro lleva las cuatro páginas, cada una en su propio marco, y cambia de una a otra con la dirección: `#/` (selector), `#/completa`, `#/completa/paso-11`, `#/resumida`, `#/ejercicios` y `#/ejercicios/solucion-1`. Se pueden copiar esas direcciones para volver a un punto concreto, y el botón Atrás del navegador funciona.
-> Por ser marcos, **Ctrl+P no imprime la guía entera** desde el archivo único; para imprimir o sacar un PDF, abre `guia-completa.html` de la carpeta.
+> Por ser marcos, **Ctrl+P no imprime la guía entera** desde el archivo único; para imprimir o sacar un PDF, abre `guia/guia-completa.html`.
 >
-> No edites los `.html` generados (`index.html`, `guia-completa.html`, `guia-resumida.html`, `ejercicios.html` ni el archivo único): se sobrescriben cada vez que construyes.
+> No edites los `.html` generados (lo de `guia/` ni el archivo único): se sobrescriben cada vez que construyes.

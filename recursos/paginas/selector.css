@@ -2,7 +2,7 @@
    SELECTOR DE GUÍAS
    Un escenario fijo a pantalla completa: las tres opciones son tarjetas de un carrusel que gira con el
    scroll. La que queda en el centro se agranda, el fondo toma su color y debajo aparece su descripción.
-   Usa los colores y tipografías de css/01-variables.css y la base de css/02-base.css.
+   Usa los colores y tipografías de recursos/css/01-variables.css y la base de recursos/css/02-base.css.
    ========================================================= */
 html { scroll-behavior: auto; }   /* el selector.js desliza el scroll a mano; sin él, la página sigue siendo normal */
 body { background: var(--void); }

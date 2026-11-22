@@ -34,14 +34,14 @@ pre[data-f]::before {
   .copy { padding: .3rem .7rem; font-size: .7rem; }
 }
 
-/* Colores del resaltado de Java (los pone js/codigo.js) */
+/* Colores del resaltado de Java (los pone recursos/js/2-codigo.js) */
 .t-c { color: #8e86b8; font-style: italic; } /* comentarios */
 .t-s { color: var(--gold); }                 /* textos "entre comillas" */
 .t-a { color: var(--lime); }                 /* @Anotaciones */
 .t-k { color: var(--pink); }                 /* palabras clave */
 .t-n { color: var(--cyan); }                 /* números */
 
-/* Tablas (js/codigo.js las envuelve en .tw para el scroll en móvil) */
+/* Tablas (recursos/js/2-codigo.js las envuelve en .tw para el scroll en móvil) */
 .tw { overflow-x: auto; margin: 1.5rem 0; background: var(--void-2); border: 1px solid var(--line); border-radius: 14px; }
 table { width: 100%; border-collapse: collapse; font-size: .95rem; font-variant-numeric: tabular-nums; }
 th {

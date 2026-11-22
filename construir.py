@@ -1,7 +1,7 @@
 """
-Construye las guías a partir de los archivos de contenido/, resumen/, css/ y js/.
+Construye las guías a partir de los archivos de contenido/, plantillas/ y recursos/.
 
-En esta misma carpeta (usan las carpetas css/, js/, resumen/ e img/, para trabajar):
+En guia/ (enlazan los css/, js/ e img/ de recursos/, para trabajar):
   - index.html           -> el SELECTOR: elige entre la guía completa, la resumida y los ejercicios
   - guia-completa.html   -> la guía principal (todas las explicaciones)
   - guia-resumida.html   -> los mismos pasos, muy resumidos, cada uno con un enlace a la completa
@@ -17,7 +17,10 @@ import base64, html, io, json, os, re
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 CONTENIDO = os.path.join(AQUI, 'contenido')
-RESUMEN = os.path.join(AQUI, 'resumen')
+RESUMEN = os.path.join(CONTENIDO, 'resumen')          # los resúmenes de cada paso (pasos-parte-N.html)
+PLANTILLAS = os.path.join(AQUI, 'plantillas')
+RECURSOS = os.path.join(AQUI, 'recursos')             # css/, js/, fuentes/, img/ y paginas/
+SALIDA = os.path.join(AQUI, 'guia')                   # las cuatro páginas generadas para la carpeta
 ARCHIVO_UNICO = 'Guia_Animada_SpringBoot_DataJPA_y_REST.html'
 RAREZA = {1: 'COMÚN', 2: 'RARA', 3: 'HOLO', 4: 'RETO'}
 LINEAS_PARA_PLEGAR = 60   # los bloques de código más largos van dentro de un desplegable
@@ -36,8 +39,8 @@ def sin_etiquetas(s):
 
 
 def archivos(carpeta, extension):
-    """Rutas relativas ('css/01-variables.css', ...) de una carpeta, ordenadas por nombre."""
-    return ['%s/%s' % (carpeta, f) for f in sorted(os.listdir(os.path.join(AQUI, carpeta))) if f.endswith(extension)]
+    """Rutas relativas a recursos/ ('css/01-variables.css', ...) de una carpeta, ordenadas por nombre."""
+    return ['%s/%s' % (carpeta, f) for f in sorted(os.listdir(os.path.join(RECURSOS, carpeta))) if f.endswith(extension)]
 
 
 # ---------------------------------------------------------------- guía completa
@@ -98,7 +101,7 @@ def construir_parte(n, carpeta):
 # ---------------------------------------------------------------- guía resumida
 
 def leer_resumenes():
-    """Lee resumen/pasos-parte-*.html y devuelve {nº de paso: html}."""
+    """Lee contenido/resumen/pasos-parte-*.html y devuelve {nº de paso: html}."""
     res = {}
     for f in sorted(os.listdir(RESUMEN)):
         if f.startswith('pasos-parte-') and f.endswith('.html'):
@@ -142,7 +145,7 @@ def construir_resumida(partes_datos):
         chips, tarjetas = [], []
         for p in d['pasos']:
             if p['numero'] not in resumenes:
-                print('  AVISO: el paso %d (%s) no tiene resumen en resumen/pasos-parte-*.html' % (p['numero'], p['titulo']))
+                print('  AVISO: el paso %d (%s) no tiene resumen en contenido/resumen/pasos-parte-*.html' % (p['numero'], p['titulo']))
                 continue
             num, tit = p['numero'], html.escape(p['titulo'])
             chips.append('<a href="#r-%d" title="%d. %s">%d</a>' % (num, num, tit, num))
@@ -219,19 +222,19 @@ def panel(id_, etiqueta, titulo, cuerpo, enlaces):
 
 def estilos(rutas, unico):
     if unico:
-        return '<style>\n%s\n</style>' % '\n'.join(leer(AQUI, r) for r in rutas)
-    return '\n'.join('<link rel="stylesheet" href="%s">' % r for r in rutas)
+        return '<style>\n%s\n</style>' % '\n'.join(leer(RECURSOS, r) for r in rutas)
+    return '\n'.join('<link rel="stylesheet" href="../recursos/%s">' % r for r in rutas)
 
 
 def scripts(rutas, unico):
     if unico:
-        return '<script>\n%s\n</script>' % '\n'.join(leer(AQUI, r) for r in rutas)
-    return '\n'.join('<script src="%s"></script>' % r for r in rutas)
+        return '<script>\n%s\n</script>' % '\n'.join(leer(RECURSOS, r) for r in rutas)
+    return '\n'.join('<script src="../recursos/%s"></script>' % r for r in rutas)
 
 
 def incrustar_imagenes(texto):
     def incrustar(m):
-        ruta = os.path.join(AQUI, m.group(1))
+        ruta = os.path.join(RECURSOS, m.group(1))
         ext = os.path.splitext(ruta)[1][1:].replace('jpg', 'jpeg')
         tipo = 'image/svg+xml' if ext == 'svg' else 'image/' + ext
         return 'src="data:%s;base64,%s"' % (tipo, base64.b64encode(open(ruta, 'rb').read()).decode())
@@ -247,7 +250,7 @@ def rellenar(texto, **valores):
 
 # En el archivo único, los enlaces entre páginas empiezan por "#/". Este puente (se añade al final de cada
 # página) los manda a la página contenedora con un mensaje, y recibe de ella la ancla a la que ir; el resto de
-# enlaces funcionan como siempre. Ver resumen/plantilla-todo.html.
+# enlaces funcionan como siempre. Ver plantillas/plantilla-todo.html.
 PUENTE = """<script>
 document.addEventListener('click', function (e) {
   var a = e.target.closest && e.target.closest('a[href^="#"]');
@@ -284,25 +287,25 @@ def main():
     css, js = archivos('css', '.css'), archivos('js', '.js')
     # Las páginas pequeñas solo necesitan las variables, la base y su CSS (la resumida, también el del código)
     base = ['css/00-fuentes.css', 'css/01-variables.css', 'css/02-base.css']
-    css_selector = base + ['resumen/selector.css']
-    css_resumida = base + ['css/08-codigo-y-tablas.css', 'resumen/resumen.css']
-    css_ejercicios = base + ['css/07-texto-y-notas.css', 'css/08-codigo-y-tablas.css', 'resumen/resumen.css']
+    css_selector = base + ['paginas/selector.css']
+    css_resumida = base + ['css/08-codigo-y-tablas.css', 'paginas/resumen.css']
+    css_ejercicios = base + ['css/07-texto-y-notas.css', 'css/08-codigo-y-tablas.css', 'paginas/resumen.css']
     js_resumida = ['js/2-codigo.js']
-    js_selector = ['resumen/selector.js']
-    js_entrada = ['resumen/entrada.js']
+    js_selector = ['paginas/selector.js']
+    js_entrada = ['paginas/entrada.js']
 
     cabecera = leer(CONTENIDO, '_cabecera.html').strip()
     # Primero se pega el contenido y después se rellenan los totales y rangos, que aparecen también dentro de él
-    completa = rellenar(leer(AQUI, 'plantilla.html'), cabecera=cabecera,
+    completa = rellenar(leer(PLANTILLAS, 'plantilla-completa.html'), cabecera=cabecera,
                         iconos=leer(CONTENIDO, '_iconos.html'), portada=leer(CONTENIDO, '_portada.html'),
                         pie=leer(CONTENIDO, '_pie.html'), indice='\n'.join(grupos), secciones='\n\n'.join(partes),
                         total_n=str(cartas), total='%03d' % cartas, **{'rango%d' % i: r for i, r in rangos.items()})
-    resumida = rellenar(leer(RESUMEN, 'plantilla-resumida.html'), cabecera=cabecera, total=str(cartas))
+    resumida = rellenar(leer(PLANTILLAS, 'plantilla-resumida.html'), cabecera=cabecera, total=str(cartas))
     indice_res, cuerpo_res = construir_resumida(datos_partes)
     tarjetas_ej, paneles_ej = construir_ejercicios(leer_ejercicios())
-    ejercicios = rellenar(leer(RESUMEN, 'plantilla-ejercicios.html'), cabecera=cabecera, tarjetas=tarjetas_ej, paneles=paneles_ej)
+    ejercicios = rellenar(leer(PLANTILLAS, 'plantilla-ejercicios.html'), cabecera=cabecera, tarjetas=tarjetas_ej, paneles=paneles_ej)
 
-    selector = leer(RESUMEN, 'plantilla-selector.html')
+    selector = leer(PLANTILLAS, 'plantilla-selector.html')
 
     # Las cuatro páginas se montan dos veces: para la carpeta (enlazan css/ y js/ y entre sí por archivo)
     # y para el archivo único (con todo dentro y enlaces "#/..." que resuelve la página contenedora).
@@ -332,20 +335,23 @@ def main():
         if u:
             paginas['completa'] = incrustar_imagenes(paginas['completa'])
             paginas = {k: p.replace('</body>', PUENTE + '</body>') for k, p in paginas.items()}
+        else:
+            paginas['completa'] = paginas['completa'].replace('src="img/', 'src="../recursos/img/')
         return paginas
 
     carpeta = montar(destinos['carpeta'])
-    escribir(os.path.join(AQUI, 'index.html'), carpeta['inicio'])
-    escribir(os.path.join(AQUI, 'guia-completa.html'), carpeta['completa'])
-    escribir(os.path.join(AQUI, 'guia-resumida.html'), carpeta['resumida'])
-    escribir(os.path.join(AQUI, 'ejercicios.html'), carpeta['ejercicios'])
+    os.makedirs(SALIDA, exist_ok=True)
+    escribir(os.path.join(SALIDA, 'index.html'), carpeta['inicio'])
+    escribir(os.path.join(SALIDA, 'guia-completa.html'), carpeta['completa'])
+    escribir(os.path.join(SALIDA, 'guia-resumida.html'), carpeta['resumida'])
+    escribir(os.path.join(SALIDA, 'ejercicios.html'), carpeta['ejercicios'])
 
     # El texto va dentro de un <script>: se protegen las secuencias que podrían cerrarlo o abrir un comentario
     paginas_json = json.dumps(montar(destinos['unico'])).replace('</', '<\\/').replace('<!--', '<\\!--')
-    escribir(os.path.join(AQUI, ARCHIVO_UNICO), rellenar(leer(RESUMEN, 'plantilla-todo.html'), paginas=paginas_json))
+    escribir(os.path.join(AQUI, ARCHIVO_UNICO), rellenar(leer(PLANTILLAS, 'plantilla-todo.html'), paginas=paginas_json))
 
     print('Guías construidas: %d cartas, %d entradas en el índice, %d CSS, %d JS.' % (cartas, entradas, len(css), len(js)))
-    print('  -> index.html (selector), guia-completa.html, guia-resumida.html, ejercicios.html')
+    print('  -> guia/: index.html (selector), guia-completa.html, guia-resumida.html, ejercicios.html')
     print('  -> todo en un solo archivo: %s' % ARCHIVO_UNICO)
 
 

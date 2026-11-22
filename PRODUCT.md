@@ -16,7 +16,7 @@ Enseñar a construir una API REST con Spring Boot, Spring Data JPA y MySQL, de c
 Una guía animada, en español, en la que cada paso lleva su explicación, el código para copiar y las pruebas con Postman; la resumida enlaza cada paso con su explicación completa y los ejercicios cierran el ciclo con solucionarios.
 
 ## Operating Context
-Se estudia con el editor (VS Code / IntelliJ), MySQL y Postman a mano. Se distribuye como carpeta de páginas estáticas y como un único archivo HTML que se abre con doble clic. Se genera con `construir.py` a partir de `contenido/`, `css/`, `js/` y `resumen/`.
+Se estudia con el editor (VS Code / IntelliJ), MySQL y Postman a mano. Se distribuye como carpeta de páginas estáticas y como un único archivo HTML que se abre con doble clic. Se genera con `construir.py` a partir de `contenido/`, `plantillas/` y `recursos/`.
 
 ## Capabilities and Constraints
 - Siempre HTML/CSS/JS estáticos, sin servidor ni instalación; debe funcionar desde `file://`, incluido el archivo único.
@@ -26,7 +26,7 @@ Se estudia con el editor (VS Code / IntelliJ), MySQL y Postman a mano. Se distri
 - Funcionalidad que no se puede perder: botones de copiar código, índice lateral, enlaces entre guías, «Seguir donde lo dejé», selector, ejercicios con solucionario.
 
 ## Evidence on Hand
-Contenido real en `contenido/`, `resumen/` y `contenido/ejercicios/` (2 ejercicios con solucionario verificados). No hay testimonios ni datos de uso; no inventarlos.
+Contenido real en `contenido/` (incluidos `contenido/resumen/` y `contenido/ejercicios/`) (2 ejercicios con solucionario verificados). No hay testimonios ni datos de uso; no inventarlos.
 
 ## Product Principles
 - Explicar el porqué, no solo qué pegar.

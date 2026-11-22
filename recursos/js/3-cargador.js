@@ -5,7 +5,7 @@
   var visto = false;
   try { visto = sessionStorage.getItem('guia-loaded'); sessionStorage.setItem('guia-loaded', '1'); } catch (e) {}
 
-  // Si se llega desde el selector, su cortina de color ya hace de cargador (ver resumen/entrada.js)
+  // Si se llega desde el selector, su cortina de color ya hace de cargador (ver recursos/paginas/entrada.js)
   if (document.documentElement.classList.contains('entra')) { L.remove(); return; }
 
   if (Guia.reduce || visto) {
