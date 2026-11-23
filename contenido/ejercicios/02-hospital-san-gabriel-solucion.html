@@ -582,21 +582,13 @@ public record ConsultaRequestDTO(
 <li><b>Se expone la base de datos.</b> La entidad lleva campos que el cliente no debe ver o decidir (ids internos, la lista completa de consultas, etc.), y atar la API a la entidad hace que cualquier cambio en el modelo rompa a los clientes. Además, las relaciones <code>LAZY</code> se intentarían leer fuera de la transacción (<code>LazyInitializationException</code>).</li>
 </ul>
 
-<p class="paso"><b>18.</b> <b>El servicio.</b> Para comunicar los resultados al controlador uso <b>excepciones propias</b>: <code>NoEncontradoException</code> (→ 404) y <code>ConflictoException</code> (→ 409). Un <code>@RestControllerAdvice</code> (pregunta 20) las traduce a código HTTP en un solo sitio, y el controlador queda limpio.</p>
-<pre data-f="exception/NoEncontradoException.java">package com.hospital.examen.exception;
-
-public class NoEncontradoException extends RuntimeException {
-    public NoEncontradoException(String mensaje) {
-        super(mensaje);
-    }
-}</pre>
-<pre data-f="exception/ConflictoException.java">package com.hospital.examen.exception;
-
-public class ConflictoException extends RuntimeException {
-    public ConflictoException(String mensaje) {
-        super(mensaje);
-    }
-}</pre>
+<p class="paso"><b>18.</b> <b>El servicio.</b> El servicio no lanza excepciones: <b>devuelve un valor que cuenta qué pasó</b>, y el controlador lo traduce a un código HTTP.</p>
+<table>
+<tr><th>El servicio devuelve</th><th>Significa</th><th>El controlador responde</th></tr>
+<tr><td>un DTO (o una lista)</td><td>Encontrado o hecho</td><td>200 o 201</td></tr>
+<tr><td><code>null</code></td><td>No existe (el médico, el hospital...)</td><td>404</td></tr>
+<tr><td><code>tieneConsultas(id)</code> → <code>true</code></td><td>Conflicto: el médico tiene consultas</td><td>409</td></tr>
+</table>
 <p>El contrato solo habla de DTO:</p>
 <pre data-f="service/IMedicoService.java">package com.hospital.examen.service;
 
@@ -607,11 +599,17 @@ import com.hospital.examen.dto.MedicoResponseDTO;
 
 public interface IMedicoService {
 
+    // null si el hospital no existe
     MedicoResponseDTO crear(MedicoRequestDTO dto);
 
+    // null si el médico no existe
     MedicoResponseDTO obtener(Long id);
 
+    // null si el hospital no existe; una lista vacía es válida
     List&lt;MedicoResponseDTO&gt; listarPorHospital(Long hospitalId);
+
+    // true si el médico tiene consultas (no se puede borrar)
+    boolean tieneConsultas(Long id);
 
     void eliminar(Long id);
 }</pre>
@@ -620,6 +618,7 @@ public interface IMedicoService {
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -629,8 +628,6 @@ import com.hospital.examen.dto.MedicoRequestDTO;
 import com.hospital.examen.dto.MedicoResponseDTO;
 import com.hospital.examen.entity.Hospital;
 import com.hospital.examen.entity.Medico;
-import com.hospital.examen.exception.ConflictoException;
-import com.hospital.examen.exception.NoEncontradoException;
 import com.hospital.examen.repository.IConsultaRepository;
 import com.hospital.examen.repository.IHospitalRepository;
 import com.hospital.examen.repository.IMedicoRepository;
@@ -650,23 +647,32 @@ public class MedicoService implements IMedicoService {
     @Override
     @Transactional
     public MedicoResponseDTO crear(MedicoRequestDTO dto) {
-        Hospital hospital = buscarHospital(dto.hospitalId());
+        Optional&lt;Hospital&gt; hospitalOpt = hospitalRepository.findById(dto.hospitalId());
+        if (hospitalOpt.isEmpty()) {
+            return null;   // el hospital no existe
+        }
         // DTO -&gt; Entity. Un médico nuevo empieza activo.
         Medico medico = new Medico(dto.nombre(), dto.salario(), dto.especialidad(), true);
-        hospital.addMedico(medico);
+        hospitalOpt.get().addMedico(medico);
         return mapearADTO(medicoRepository.save(medico));
     }
 
     @Override
     @Transactional(readOnly = true)
     public MedicoResponseDTO obtener(Long id) {
-        return mapearADTO(buscarMedico(id));
+        Optional&lt;Medico&gt; medicoOpt = medicoRepository.findById(id);
+        if (medicoOpt.isEmpty()) {
+            return null;   // el médico no existe
+        }
+        return mapearADTO(medicoOpt.get());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List&lt;MedicoResponseDTO&gt; listarPorHospital(Long hospitalId) {
-        buscarHospital(hospitalId);   // si no existe, lanza "no encontrado"
+        if (!hospitalRepository.existsById(hospitalId)) {
+            return null;   // el hospital no existe
+        }
         List&lt;MedicoResponseDTO&gt; lista = new ArrayList&lt;&gt;();
         for (Medico m : medicoRepository.findByHospitalId(hospitalId)) {
             lista.add(mapearADTO(m));
@@ -675,23 +681,13 @@ public class MedicoService implements IMedicoService {
     }
 
     @Override
-    @Transactional
+    public boolean tieneConsultas(Long id) {
+        return consultaRepository.countByMedicoId(id) &gt; 0;
+    }
+
+    @Override
     public void eliminar(Long id) {
-        Medico medico = buscarMedico(id);
-        if (consultaRepository.countByMedicoId(id) &gt; 0) {
-            throw new ConflictoException("El médico tiene consultas registradas");
-        }
-        medicoRepository.delete(medico);
-    }
-
-    private Hospital buscarHospital(Long id) {
-        return hospitalRepository.findById(id)
-                .orElseThrow(() -&gt; new NoEncontradoException("No existe el hospital " + id));
-    }
-
-    private Medico buscarMedico(Long id) {
-        return medicoRepository.findById(id)
-                .orElseThrow(() -&gt; new NoEncontradoException("No existe el médico " + id));
+        medicoRepository.deleteById(id);
     }
 
     // Entity -&gt; DTO (el hospital es LAZY: por eso se hace dentro de la transacción)
@@ -699,15 +695,16 @@ public class MedicoService implements IMedicoService {
         return new MedicoResponseDTO(m.getId(), m.getNombre(), m.getEspecialidad(), m.getHospital().getNombre());
     }
 }</pre>
-<p><b>Cómo comunica cada resultado:</b> un hospital o un médico que no existen lanzan <code>NoEncontradoException</code> (404); un médico con consultas lanza <code>ConflictoException</code> (409). Una lista vacía no es un error: se devuelve vacía (200).</p>
+<p><b>Cómo comunica cada resultado:</b> un hospital o un médico que no existen devuelven <code>null</code>, que el controlador convierte en 404. Un médico con consultas no se puede borrar: el controlador lo pregunta antes con <code>tieneConsultas</code> y responde 409. Una lista vacía no es un error: se devuelve vacía y es un 200.</p>
 
-<p class="paso"><b>19.</b> <b>El controlador.</b> Solo conoce el <code>IMedicoService</code> y los DTO. No tiene lógica ni <code>try/catch</code>: las excepciones las recoge el <code>@RestControllerAdvice</code>.</p>
+<p class="paso"><b>19.</b> <b>El controlador.</b> Solo conoce el <code>IMedicoService</code> y los DTO. No tiene lógica de negocio: mira lo que devuelve el servicio y elige el código HTTP.</p>
 <pre data-f="controller/MedicoController.java">package com.hospital.examen.controller;
 
 import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -736,6 +733,9 @@ public class MedicoController {
     @PostMapping
     public ResponseEntity&lt;MedicoResponseDTO&gt; crear(@Valid @RequestBody MedicoRequestDTO dto) {
         MedicoResponseDTO creado = medicoService.crear(dto);
+        if (creado == null) {
+            return ResponseEntity.notFound().build();   // 404
+        }
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(creado.id()).toUri();
         return ResponseEntity.created(location).body(creado);
@@ -744,20 +744,34 @@ public class MedicoController {
     // GET /api/medicos/{id} -&gt; 200 | 404
     @GetMapping("/{id}")
     public ResponseEntity&lt;MedicoResponseDTO&gt; obtener(@PathVariable Long id) {
-        return ResponseEntity.ok(medicoService.obtener(id));
+        MedicoResponseDTO medico = medicoService.obtener(id);
+        if (medico == null) {
+            return ResponseEntity.notFound().build();   // 404
+        }
+        return ResponseEntity.ok(medico);
     }
 
     // GET /api/medicos?hospitalId=1 -&gt; 200 (lista, puede estar vacía) | 404 (el hospital no existe) | 400 (falta hospitalId)
     @GetMapping
     public ResponseEntity&lt;List&lt;MedicoResponseDTO&gt;&gt; listarPorHospital(@RequestParam Long hospitalId) {
-        return ResponseEntity.ok(medicoService.listarPorHospital(hospitalId));
+        List&lt;MedicoResponseDTO&gt; lista = medicoService.listarPorHospital(hospitalId);
+        if (lista == null) {
+            return ResponseEntity.notFound().build();   // 404
+        }
+        return ResponseEntity.ok(lista);
     }
 
     // DELETE /api/medicos/{id} -&gt; 204 | 404 | 409 (tiene consultas)
     @DeleteMapping("/{id}")
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        if (medicoService.obtener(id) == null) {
+            return ResponseEntity.notFound().build();                    // 404
+        }
+        if (medicoService.tieneConsultas(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();   // 409
+        }
         medicoService.eliminar(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();                       // 204
     }
 }</pre>
 <table>
@@ -768,56 +782,10 @@ public class MedicoController {
 <tr><td><code>DELETE /api/medicos/{id}</code></td><td><b>204</b></td><td><b>404</b> · <b>409</b> si tiene consultas</td></tr>
 </table>
 
-<p class="paso"><b>20.</b> <b>El <code>@RestControllerAdvice</code>.</b> Recoge las dos excepciones propias y los errores de validación. Todos los errores devuelven el mismo cuerpo JSON, con <code>mensaje</code> y <code>codigo</code>. Los errores de <code>@Valid</code> llegan como <code>MethodArgumentNotValidException</code>; añado también el JSON ilegible (por ejemplo, una especialidad que no existe), que también es un 400.</p>
-<pre data-f="exception/ManejadorErrores.java">package com.hospital.examen.exception;
-
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-@RestControllerAdvice
-public class ManejadorErrores {
-
-    @ExceptionHandler(NoEncontradoException.class)
-    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; noEncontrado(NoEncontradoException e) {
-        return respuesta(HttpStatus.NOT_FOUND, e.getMessage());
-    }
-
-    @ExceptionHandler(ConflictoException.class)
-    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; conflicto(ConflictoException e) {
-        return respuesta(HttpStatus.CONFLICT, e.getMessage());
-    }
-
-    // Errores de @Valid: se juntan los mensajes de todos los campos incorrectos
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; validacion(MethodArgumentNotValidException e) {
-        String mensaje = e.getBindingResult().getFieldErrors().stream()
-                .map(f -&gt; f.getField() + ": " + f.getDefaultMessage())
-                .collect(Collectors.joining("; "));
-        return respuesta(HttpStatus.BAD_REQUEST, mensaje);
-    }
-
-    // JSON mal escrito, sin cuerpo o con un valor de enum que no existe
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; cuerpoIlegible(HttpMessageNotReadableException e) {
-        return respuesta(HttpStatus.BAD_REQUEST, "El cuerpo de la petición no es válido");
-    }
-
-    private ResponseEntity&lt;Map&lt;String, Object&gt;&gt; respuesta(HttpStatus estado, String mensaje) {
-        return ResponseEntity.status(estado).body(Map.of("mensaje", mensaje, "codigo", estado.value()));
-    }
-}</pre>
-
-<p class="paso"><b>21.</b> <b>Registrar una consulta</b> (<code>POST /api/pacientes/{id}/consultas</code>):</p>
+<p class="paso"><b>20.</b> <b>Registrar una consulta</b> (<code>POST /api/pacientes/{id}/consultas</code>):</p>
 <ul>
 <li><b>a)</b> Hay que buscar <b>dos</b> entidades antes de crear la consulta: el <code>Paciente</code> (el <code>{id}</code> de la dirección) y el <code>Medico</code> (el <code>medicoId</code> del cuerpo). La consulta apunta a las dos.</li>
-<li><b>b)</b> Si falta cualquiera de las dos, <b>404</b> (<code>NoEncontradoException</code>). Si el cuerpo es inválido (falta algún campo o el coste es negativo), <b>400</b>.</li>
+<li><b>b)</b> Si falta cualquiera de las dos, <b>404</b>. Si el cuerpo es inválido (falta algún campo o el coste es negativo), <b>400</b>.</li>
 <li><b>c)</b> Devuelvo un <code>ConsultaResumenDTO</code>, con <b>201</b>: es el recurso que se acaba de crear, y el resumen no vuelve al paciente (sin bucles).</li>
 </ul>
 <pre data-f="service/IPacienteService.java">package com.hospital.examen.service;
@@ -828,14 +796,17 @@ import com.hospital.examen.dto.PacienteResponseDTO;
 
 public interface IPacienteService {
 
+    // null si el paciente no existe
     PacienteResponseDTO obtener(Long id);
 
+    // null si no existe el paciente o el médico
     ConsultaResumenDTO registrarConsulta(Long pacienteId, ConsultaRequestDTO dto);
 }</pre>
 <pre data-f="service/PacienteService.java">package com.hospital.examen.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -847,7 +818,6 @@ import com.hospital.examen.dto.PacienteResponseDTO;
 import com.hospital.examen.entity.Consulta;
 import com.hospital.examen.entity.Medico;
 import com.hospital.examen.entity.Paciente;
-import com.hospital.examen.exception.NoEncontradoException;
 import com.hospital.examen.repository.IConsultaRepository;
 import com.hospital.examen.repository.IMedicoRepository;
 import com.hospital.examen.repository.IPacienteRepository;
@@ -867,25 +837,26 @@ public class PacienteService implements IPacienteService {
     @Override
     @Transactional(readOnly = true)
     public PacienteResponseDTO obtener(Long id) {
-        return mapearADTO(buscarPaciente(id));
+        Optional&lt;Paciente&gt; pacienteOpt = pacienteRepository.findById(id);
+        if (pacienteOpt.isEmpty()) {
+            return null;   // el paciente no existe
+        }
+        return mapearADTO(pacienteOpt.get());
     }
 
     @Override
     @Transactional
     public ConsultaResumenDTO registrarConsulta(Long pacienteId, ConsultaRequestDTO dto) {
         // Las dos entidades a las que apunta la consulta
-        Paciente paciente = buscarPaciente(pacienteId);
-        Medico medico = medicoRepository.findById(dto.medicoId())
-                .orElseThrow(() -&gt; new NoEncontradoException("No existe el médico " + dto.medicoId()));
+        Optional&lt;Paciente&gt; pacienteOpt = pacienteRepository.findById(pacienteId);
+        Optional&lt;Medico&gt; medicoOpt = medicoRepository.findById(dto.medicoId());
+        if (pacienteOpt.isEmpty() || medicoOpt.isEmpty()) {
+            return null;   // falta alguna de las dos
+        }
 
-        Consulta consulta = new Consulta(medico, dto.fecha(), dto.coste(), dto.tipo(), false);
-        paciente.addConsulta(consulta);
+        Consulta consulta = new Consulta(medicoOpt.get(), dto.fecha(), dto.coste(), dto.tipo(), false);
+        pacienteOpt.get().addConsulta(consulta);
         return mapearConsulta(consultaRepository.save(consulta));
-    }
-
-    private Paciente buscarPaciente(Long id) {
-        return pacienteRepository.findById(id)
-                .orElseThrow(() -&gt; new NoEncontradoException("No existe el paciente " + id));
     }
 
     private ConsultaResumenDTO mapearConsulta(Consulta c) {
@@ -931,34 +902,41 @@ public class PacienteController {
     // GET /api/pacientes/{id} -&gt; 200 | 404
     @GetMapping("/{id}")
     public ResponseEntity&lt;PacienteResponseDTO&gt; obtener(@PathVariable Long id) {
-        return ResponseEntity.ok(pacienteService.obtener(id));
+        PacienteResponseDTO paciente = pacienteService.obtener(id);
+        if (paciente == null) {
+            return ResponseEntity.notFound().build();   // 404
+        }
+        return ResponseEntity.ok(paciente);
     }
 
     // POST /api/pacientes/{id}/consultas -&gt; 201 | 400 | 404 (paciente o médico)
     @PostMapping("/{id}/consultas")
     public ResponseEntity&lt;ConsultaResumenDTO&gt; registrarConsulta(@PathVariable Long id,
             @Valid @RequestBody ConsultaRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(pacienteService.registrarConsulta(id, dto));
+        ConsultaResumenDTO consulta = pacienteService.registrarConsulta(id, dto);
+        if (consulta == null) {
+            return ResponseEntity.notFound().build();   // 404
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(consulta);
     }
 }</pre>
 
 <h3>Parte 5: preguntas de comprensión</h3>
 
-<p class="paso"><b>22.</b> <b>LazyInitializationException.</b> Ocurre al leer una relación <code>LAZY</code> (aquí, las consultas del paciente, o el médico de cada consulta) <b>cuando la sesión de Hibernate ya se ha cerrado</b>: por ejemplo, si el servicio devuelve la entidad y es el controlador quien intenta recorrerla. Se evita convirtiendo a DTO <b>dentro</b> del servicio y anotándolo con <code>@Transactional</code> (<code>readOnly = true</code> si solo lee), para que la sesión siga abierta mientras se recorren las relaciones.</p>
+<p class="paso"><b>21.</b> <b>LazyInitializationException.</b> Ocurre al leer una relación <code>LAZY</code> (aquí, las consultas del paciente, o el médico de cada consulta) <b>cuando la sesión de Hibernate ya se ha cerrado</b>: por ejemplo, si el servicio devuelve la entidad y es el controlador quien intenta recorrerla. Se evita convirtiendo a DTO <b>dentro</b> del servicio y anotándolo con <code>@Transactional</code> (<code>readOnly = true</code> si solo lee), para que la sesión siga abierta mientras se recorren las relaciones.</p>
 
-<p class="paso"><b>23.</b> <b>El bucle infinito.</b> La causa es que la relación es <b>bidireccional</b>: <code>Hospital</code> tiene la lista de médicos y cada <code>Medico</code> apunta a su <code>Hospital</code>. Al convertir a JSON, Jackson recorre hospital → médicos → hospital → médicos… sin fin. Dos soluciones:</p>
+<p class="paso"><b>22.</b> <b>El bucle infinito.</b> La causa es que la relación es <b>bidireccional</b>: <code>Hospital</code> tiene la lista de médicos y cada <code>Medico</code> apunta a su <code>Hospital</code>. Al convertir a JSON, Jackson recorre hospital → médicos → hospital → médicos… sin fin. Dos soluciones:</p>
 <ul>
 <li><b>Usar DTO</b> en vez de entidades (la buena): el DTO de salida no tiene referencia de vuelta, o solo un resumen (<code>nombreHospital</code>).</li>
 <li><b>Anotaciones de Jackson</b> sobre las entidades: <code>@JsonIgnore</code> en el lado que no queremos serializar, o la pareja <code>@JsonManagedReference</code> / <code>@JsonBackReference</code>. Funciona, pero ata la entidad al formato JSON, por eso no es lo recomendable.</li>
 </ul>
 
-<p class="paso"><b>24.</b> <b>Borrar un hospital con médicos.</b> El 500 viene de la base de datos (violación de clave foránea: los médicos siguen apuntando al hospital). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa en el servicio, igual que con las consultas de un médico:</p>
-<pre data-f="HospitalService.eliminar (idea)">if (medicoRepository.countByHospitalId(id) &gt; 0) {
-    throw new ConflictoException("El hospital tiene médicos");
-}
-hospitalRepository.deleteById(id);</pre>
+<p class="paso"><b>23.</b> <b>Borrar un hospital con médicos.</b> El 500 viene de la base de datos (violación de clave foránea: los médicos siguen apuntando al hospital). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa, igual que con las consultas de un médico: el servicio la ofrece y el controlador responde 409 si hay médicos:</p>
+<pre data-f="HospitalService (idea)">public boolean tieneMedicos(Long id) {
+    return medicoRepository.countByHospitalId(id) &gt; 0;
+}</pre>
 
-<p class="paso"><b>25.</b> <b>El esquema de tablas.</b> Las claves foráneas (FK) están siempre en el lado propietario:</p>
+<p class="paso"><b>24.</b> <b>El esquema de tablas.</b> Las claves foráneas (FK) están siempre en el lado propietario:</p>
 <pre data-f="esquema de tablas">hospitales   (id_hospital PK, nombre, ciudad)
 medicos      (id_medico PK, nombre, salario, especialidad, activo,
               id_hospital FK -&gt; hospitales)                    1:N
@@ -968,5 +946,5 @@ pacientes    (id_paciente PK, nombre, fecha_nacimiento,
 consultas    (id_consulta PK, fecha, coste, tipo, seguimiento,
               id_medico   FK -&gt; medicos,                       N:M con datos:
               id_paciente FK -&gt; pacientes)                     dos 1:N hacia Consulta</pre>
-<div class="why"><b>Cómo corregirte.</b> Parte 1 (3 puntos): enums, columnas y restricciones bien, la FK en <code>Medico</code>, <code>mappedBy</code> en <code>Hospital</code>, el constructor de <code>Paciente</code> con el historial y <code>Consulta</code> con sus dos <code>@ManyToOne</code>. Parte 4 (3 puntos): los DTO con sus validaciones, la conversión solo en el servicio, el controlador sin lógica, el <code>@RestControllerAdvice</code> y los códigos 201, 200, 204, 400, 404 y 409 bien elegidos. Si fallaste en lo de las relaciones, repasa los pasos 11 a 13; si fue en la API, los pasos 18 y 19.</div>
+<div class="why"><b>Cómo corregirte.</b> Parte 1 (3 puntos): enums, columnas y restricciones bien, la FK en <code>Medico</code>, <code>mappedBy</code> en <code>Hospital</code>, el constructor de <code>Paciente</code> con el historial y <code>Consulta</code> con sus dos <code>@ManyToOne</code>. Parte 4 (3 puntos): los DTO con sus validaciones, la conversión solo en el servicio, el controlador sin lógica de negocio y los códigos 201, 200, 204, 400, 404 y 409 bien elegidos. Si fallaste en lo de las relaciones, repasa los pasos 11 a 13; si fue en la API, los pasos 18 y 19.</div>
 </article>

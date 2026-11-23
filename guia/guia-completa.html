@@ -1591,7 +1591,6 @@ public class JugadorController {
 <tr><td>Un DTO tras crear</td><td>201 más <code>Location</code></td></tr>
 <tr><td>La validación falla</td><td>400, automático gracias a <code>@Valid</code></td></tr>
 </table>
-<div class="why">Otra forma, que también se usa mucho, es que el Service lance excepciones propias y un <code>@RestControllerAdvice</code> las convierta en códigos HTTP en un solo sitio. La solución del ejercicio de la biblioteca (Parte 3) usa <code>Optional</code>, <code>int</code> y <code>boolean</code>, así que esta guía hace lo mismo. Conviene conocer las dos.</div>
 
 <h3>Los códigos HTTP, como semáforos</h3>
 <div class="grid">
@@ -3328,10 +3327,9 @@ curl -i -X DELETE http://localhost:8080/api/editoriales/1</pre>
 
 <h3>Límites de esta solución (conviene conocerlos antes de que pregunten)</h3>
 <ul>
-<li><b>ISBN duplicado.</b> El ISBN es <code>unique</code>. Si se envía un ISBN que ya existe, la base lanza un <code>DataIntegrityViolationException</code> que nadie captura, y el cliente recibe un 500. Se arreglaría comprobándolo antes o con un <code>@RestControllerAdvice</code> que lo convierta en 409.</li>
-<li><b>El 404 depende de un texto.</b> <code>LibroController.crear</code> detecta «no existe» dentro del mensaje de la excepción. Funciona, pero si alguien cambia el mensaje deja de funcionar; una excepción propia sería más robusta.</li>
+<li><b>ISBN duplicado.</b> El ISBN es <code>unique</code>. Si se envía un ISBN que ya existe, la base lanza un <code>DataIntegrityViolationException</code> que nadie captura, y el cliente recibe un 500. Se arreglaría comprobándolo antes de guardar y devolviendo un 409.</li>
+<li><b>El 404 depende de un texto.</b> <code>LibroController.crear</code> detecta «no existe» dentro del mensaje de la excepción. Funciona, pero si alguien cambia el mensaje deja de funcionar.</li>
 <li><b>Listar libros por editorial</b> no usa fetch (sección 27, trampa 3).</li>
-<li><b>Las dos formas de avisar de un error</b> (devolver <code>Optional</code>, <code>int</code> o <code>boolean</code>, o lanzar excepciones propias con un <code>@RestControllerAdvice</code>) son válidas. Esta solución usa la primera.</li>
 </ul>
 
 <h3>Qué he reconstruido yo a partir de las capturas del docx</h3>

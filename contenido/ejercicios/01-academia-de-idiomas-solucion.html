@@ -644,44 +644,14 @@ public record AlumnoResponseDTO(
         List&lt;MatriculaResumenDTO&gt; matriculas) {
 }</pre>
 
-<p class="paso"><b>19.</b> <b>El servicio.</b> Para comunicar los resultados al controlador uso <b>excepciones propias</b>: <code>NoEncontradoException</code> (→ 404) y <code>ConflictoException</code> (→ 409). Un <code>@RestControllerAdvice</code> las traduce a código HTTP en un solo sitio, y el controlador queda limpio. Es la segunda forma de la guía (la otra es devolver <code>Optional</code>, <code>int</code> o <code>boolean</code>); las dos valen.</p>
-<pre data-f="exception/NoEncontradoException.java">package com.academia.babel.exception;
-
-public class NoEncontradoException extends RuntimeException {
-    public NoEncontradoException(String mensaje) {
-        super(mensaje);
-    }
-}</pre>
-<pre data-f="exception/ConflictoException.java">package com.academia.babel.exception;
-
-public class ConflictoException extends RuntimeException {
-    public ConflictoException(String mensaje) {
-        super(mensaje);
-    }
-}</pre>
-<pre data-f="exception/ManejadorErrores.java">package com.academia.babel.exception;
-
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-@RestControllerAdvice
-public class ManejadorErrores {
-
-    @ExceptionHandler(NoEncontradoException.class)
-    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; noEncontrado(NoEncontradoException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", e.getMessage()));
-    }
-
-    @ExceptionHandler(ConflictoException.class)
-    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; conflicto(ConflictoException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("mensaje", e.getMessage()));
-    }
-}</pre>
-<p>El contrato del servicio solo habla de DTO:</p>
+<p class="paso"><b>19.</b> <b>El servicio.</b> El servicio no lanza excepciones: <b>devuelve un valor que cuenta qué pasó</b>, y el controlador lo traduce a un código HTTP.</p>
+<table>
+<tr><th>El servicio devuelve</th><th>Significa</th><th>El controlador responde</th></tr>
+<tr><td>un DTO (o una lista)</td><td>Encontrado o hecho</td><td>200 o 201</td></tr>
+<tr><td><code>null</code></td><td>No existe (el alumno o el curso)</td><td>404</td></tr>
+<tr><td>un método <code>boolean</code> → <code>true</code></td><td>Conflicto: el email, la matrícula o la inscripción ya existen, o el alumno tiene matrículas activas</td><td>409</td></tr>
+</table>
+<p>El contrato del servicio solo habla de DTO (y de comprobaciones <code>boolean</code> para los conflictos):</p>
 <pre data-f="service/IAlumnoService.java">package com.academia.babel.service;
 
 import java.util.List;
@@ -693,13 +663,24 @@ import com.academia.babel.enums.Nivel;
 
 public interface IAlumnoService {
 
+    // true si ya hay un alumno con ese email o con ese número de matrícula
+    boolean existeEmailOMatricula(AlumnoRequestDTO dto);
+
     AlumnoResponseDTO crear(AlumnoRequestDTO dto);
 
+    // null si el alumno no existe
     AlumnoResponseDTO obtenerPorId(Long id);
 
     List&lt;AlumnoResponseDTO&gt; listarPorNivel(Nivel nivel);
 
+    // true si el alumno ya tiene una matrícula ACTIVA en ese curso
+    boolean tieneMatriculaActiva(Long alumnoId, Long cursoId);
+
+    // null si no existe el alumno o el curso
     AlumnoResponseDTO matricular(Long alumnoId, MatriculaRequestDTO dto);
+
+    // true si el alumno tiene alguna matrícula ACTIVA (no se puede borrar)
+    boolean tieneMatriculasActivas(Long id);
 
     void eliminar(Long id);
 }</pre>
@@ -708,6 +689,7 @@ public interface IAlumnoService {
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -723,8 +705,6 @@ import com.academia.babel.entity.Expediente;
 import com.academia.babel.entity.Matricula;
 import com.academia.babel.enums.EstadoMatricula;
 import com.academia.babel.enums.Nivel;
-import com.academia.babel.exception.ConflictoException;
-import com.academia.babel.exception.NoEncontradoException;
 import com.academia.babel.repository.IAlumnoRepository;
 import com.academia.babel.repository.ICursoRepository;
 import com.academia.babel.repository.IMatriculaRepository;
@@ -743,14 +723,14 @@ public class AlumnoServiceImpl implements IAlumnoService {
     private IMatriculaRepository matriculaRepository;
 
     @Override
+    public boolean existeEmailOMatricula(AlumnoRequestDTO dto) {
+        return alumnoRepository.existsByEmail(dto.email())
+                || alumnoRepository.existsByExpedienteNumeroMatricula(dto.numeroMatricula());
+    }
+
+    @Override
     @Transactional
     public AlumnoResponseDTO crear(AlumnoRequestDTO dto) {
-        if (alumnoRepository.existsByEmail(dto.email())) {
-            throw new ConflictoException("Ya existe un alumno con ese email");
-        }
-        if (alumnoRepository.existsByExpedienteNumeroMatricula(dto.numeroMatricula())) {
-            throw new ConflictoException("Ya existe un alumno con ese número de matrícula");
-        }
         // DTO -&gt; Entity: el expediente se crea primero porque el constructor de Alumno lo exige
         Expediente expediente = new Expediente(dto.numeroMatricula(), dto.nivelInicial(), null);
         Alumno alumno = new Alumno(dto.nombre(), dto.email(), dto.fechaNacimiento(), expediente);
@@ -760,7 +740,11 @@ public class AlumnoServiceImpl implements IAlumnoService {
     @Override
     @Transactional(readOnly = true)
     public AlumnoResponseDTO obtenerPorId(Long id) {
-        return mapearADTO(buscarAlumno(id));
+        Optional&lt;Alumno&gt; alumnoOpt = alumnoRepository.findById(id);
+        if (alumnoOpt.isEmpty()) {
+            return null;   // el alumno no existe
+        }
+        return mapearADTO(alumnoOpt.get());
     }
 
     @Override
@@ -774,33 +758,33 @@ public class AlumnoServiceImpl implements IAlumnoService {
     }
 
     @Override
+    public boolean tieneMatriculaActiva(Long alumnoId, Long cursoId) {
+        return matriculaRepository.existsByAlumnoIdAndCursoIdAndEstado(alumnoId, cursoId, EstadoMatricula.ACTIVA);
+    }
+
+    @Override
     @Transactional
     public AlumnoResponseDTO matricular(Long alumnoId, MatriculaRequestDTO dto) {
-        Alumno alumno = buscarAlumno(alumnoId);
-        Curso curso = cursoRepository.findById(dto.cursoId())
-                .orElseThrow(() -&gt; new NoEncontradoException("No existe el curso " + dto.cursoId()));
-        if (matriculaRepository.existsByAlumnoIdAndCursoIdAndEstado(alumnoId, dto.cursoId(), EstadoMatricula.ACTIVA)) {
-            throw new ConflictoException("El alumno ya tiene una matrícula activa en ese curso");
+        Optional&lt;Alumno&gt; alumnoOpt = alumnoRepository.findById(alumnoId);
+        Optional&lt;Curso&gt; cursoOpt = cursoRepository.findById(dto.cursoId());
+        if (alumnoOpt.isEmpty() || cursoOpt.isEmpty()) {
+            return null;   // falta el alumno o el curso
         }
-        Matricula matricula = new Matricula(curso, dto.fecha(), EstadoMatricula.ACTIVA, false);
+        Alumno alumno = alumnoOpt.get();
+        Matricula matricula = new Matricula(cursoOpt.get(), dto.fecha(), EstadoMatricula.ACTIVA, false);
         alumno.addMatricula(matricula);
         matriculaRepository.save(matricula);
         return mapearADTO(alumno);
     }
 
     @Override
-    @Transactional
-    public void eliminar(Long id) {
-        Alumno alumno = buscarAlumno(id);
-        if (matriculaRepository.countByAlumnoIdAndEstado(id, EstadoMatricula.ACTIVA) &gt; 0) {
-            throw new ConflictoException("El alumno tiene matrículas activas");
-        }
-        alumnoRepository.delete(alumno);   // la cascada borra su expediente y sus matrículas
+    public boolean tieneMatriculasActivas(Long id) {
+        return matriculaRepository.countByAlumnoIdAndEstado(id, EstadoMatricula.ACTIVA) &gt; 0;
     }
 
-    private Alumno buscarAlumno(Long id) {
-        return alumnoRepository.findById(id)
-                .orElseThrow(() -&gt; new NoEncontradoException("No existe el alumno " + id));
+    @Override
+    public void eliminar(Long id) {
+        alumnoRepository.deleteById(id);   // la cascada borra su expediente y sus matrículas
     }
 
     // Entity -&gt; DTO (recorre las matrículas, que son LAZY: por eso se hace dentro de la transacción)
@@ -813,9 +797,9 @@ public class AlumnoServiceImpl implements IAlumnoService {
                 a.getExpediente().getNumeroMatricula(), a.getExpediente().getNivelInicial(), matriculas);
     }
 }</pre>
-<p><b>Cómo comunica cada resultado:</b> el email repetido y la matrícula activa repetida lanzan <code>ConflictoException</code> (409); el alumno o el curso que no existen lanzan <code>NoEncontradoException</code> (404); borrar con matrículas activas lanza <code>ConflictoException</code> (409). Una lista vacía no es error: se devuelve vacía (200).</p>
+<p><b>Cómo comunica cada resultado:</b> el alumno o el curso que no existen devuelven <code>null</code>, que el controlador convierte en 404. Los conflictos (email o número de matrícula repetidos, matrícula activa repetida, alumno con matrículas activas) se preguntan antes con un método <code>boolean</code>, y el controlador responde 409. Una lista vacía no es error: se devuelve vacía (200).</p>
 
-<p class="paso"><b>20.</b> <b>El controlador.</b> Solo conoce el <code>IAlumnoService</code> y los DTO. No tiene lógica ni <code>try/catch</code>: las excepciones las recoge el <code>@RestControllerAdvice</code>.</p>
+<p class="paso"><b>20.</b> <b>El controlador.</b> Solo conoce el <code>IAlumnoService</code> y los DTO. No tiene lógica de negocio: mira lo que le dice el servicio y elige el código HTTP.</p>
 <pre data-f="controller/AlumnoController.java">package com.academia.babel.controller;
 
 import java.net.URI;
@@ -852,6 +836,9 @@ public class AlumnoController {
     // POST /api/alumnos -&gt; 201 + Location | 400 (@Valid) | 409 (email o matrícula repetidos)
     @PostMapping
     public ResponseEntity&lt;AlumnoResponseDTO&gt; crear(@Valid @RequestBody AlumnoRequestDTO dto) {
+        if (alumnoService.existeEmailOMatricula(dto)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();   // 409
+        }
         AlumnoResponseDTO creado = alumnoService.crear(dto);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(creado.id()).toUri();
@@ -861,7 +848,11 @@ public class AlumnoController {
     // GET /api/alumnos/{id} -&gt; 200 | 404
     @GetMapping("/{id}")
     public ResponseEntity&lt;AlumnoResponseDTO&gt; obtener(@PathVariable Long id) {
-        return ResponseEntity.ok(alumnoService.obtenerPorId(id));
+        AlumnoResponseDTO alumno = alumnoService.obtenerPorId(id);
+        if (alumno == null) {
+            return ResponseEntity.notFound().build();   // 404
+        }
+        return ResponseEntity.ok(alumno);
     }
 
     // GET /api/alumnos?nivel=B1 -&gt; 200 (lista, puede estar vacía) | 400 si falta o no es un nivel válido
@@ -874,14 +865,27 @@ public class AlumnoController {
     @PostMapping("/{id}/matriculas")
     public ResponseEntity&lt;AlumnoResponseDTO&gt; matricular(@PathVariable Long id,
             @Valid @RequestBody MatriculaRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(alumnoService.matricular(id, dto));
+        if (alumnoService.tieneMatriculaActiva(id, dto.cursoId())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();   // 409
+        }
+        AlumnoResponseDTO alumno = alumnoService.matricular(id, dto);
+        if (alumno == null) {
+            return ResponseEntity.notFound().build();                    // 404
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(alumno);
     }
 
     // DELETE /api/alumnos/{id} -&gt; 204 | 404 | 409 (matrículas activas)
     @DeleteMapping("/{id}")
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+        if (alumnoService.obtenerPorId(id) == null) {
+            return ResponseEntity.notFound().build();                    // 404
+        }
+        if (alumnoService.tieneMatriculasActivas(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();   // 409
+        }
         alumnoService.eliminar(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();                       // 204
     }
 }</pre>
 <table>
@@ -941,11 +945,10 @@ List&lt;Alumno&gt; findByExpedienteNivelInicial(Nivel nivel);</pre>
 
 <p class="paso"><b>24.</b> <b>El constructor de <code>Alumno</code> exige el expediente.</b> La relación es obligatoria: un alumno sin expediente no puede guardarse. Si se asignara después con un <i>setter</i>, nada impediría olvidarlo, y el fallo solo aparecería al ejecutar y guardar (con un error de base de datos). Con el constructor, el compilador no deja crear un alumno incompleto: el error sale antes, y en rojo, en el editor. El constructor vacío existe solo porque JPA lo necesita al leer filas.</p>
 
-<p class="paso"><b>25.</b> <b>Borrar una academia con profesores.</b> El 500 viene de la base de datos (violación de clave foránea: los profesores siguen apuntando a ella). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa en el servicio, igual que con las matrículas activas:</p>
-<pre data-f="AcademiaServiceImpl.eliminar (idea)">if (profesorRepository.countByAcademiaId(id) &gt; 0) {
-    throw new ConflictoException("La academia tiene profesores");
-}
-academiaRepository.deleteById(id);</pre>
+<p class="paso"><b>25.</b> <b>Borrar una academia con profesores.</b> El 500 viene de la base de datos (violación de clave foránea: los profesores siguen apuntando a ella). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa, igual que con las matrículas activas: el servicio la ofrece y el controlador responde 409 si hay profesores:</p>
+<pre data-f="AcademiaServiceImpl (idea)">public boolean tieneProfesores(Long id) {
+    return profesorRepository.countByAcademiaId(id) &gt; 0;
+}</pre>
 
 <p class="paso"><b>26.</b> <b>El esquema de tablas.</b> Las claves foráneas (FK) están siempre en el lado propietario:</p>
 <pre data-f="esquema de tablas">academias    (id_academia PK, nombre, ciudad)
@@ -958,5 +961,5 @@ cursos       (id_curso PK, titulo, idioma, nivel, precio)
 matriculas   (id_matricula PK, fecha, nota, estado, pagada,
               id_alumno FK -&gt; alumnos,                         N:M con datos:
               id_curso  FK -&gt; cursos)                          dos 1:N hacia Matricula</pre>
-<div class="why"><b>Cómo corregirte.</b> Parte 1 (3 puntos): enums, columnas y restricciones bien, la FK en <code>Profesor</code>, <code>mappedBy</code> en <code>Academia</code>, el constructor de <code>Alumno</code> con el expediente y <code>Matricula</code> con sus dos <code>@ManyToOne</code>. Parte 4 (3 puntos): los DTO con sus validaciones, la conversión solo en el servicio, el controlador sin lógica y los códigos 201, 200, 204, 400, 404 y 409 bien elegidos. Si fallaste en lo de las relaciones, repasa los pasos 11 a 13; si fue en la API, los pasos 18 y 19.</div>
+<div class="why"><b>Cómo corregirte.</b> Parte 1 (3 puntos): enums, columnas y restricciones bien, la FK en <code>Profesor</code>, <code>mappedBy</code> en <code>Academia</code>, el constructor de <code>Alumno</code> con el expediente y <code>Matricula</code> con sus dos <code>@ManyToOne</code>. Parte 4 (3 puntos): los DTO con sus validaciones, la conversión solo en el servicio, el controlador sin lógica de negocio y los códigos 201, 200, 204, 400, 404 y 409 bien elegidos. Si fallaste en lo de las relaciones, repasa los pasos 11 a 13; si fue en la API, los pasos 18 y 19.</div>
 </article>

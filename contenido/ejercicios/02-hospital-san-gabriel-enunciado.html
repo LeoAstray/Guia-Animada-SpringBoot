@@ -109,12 +109,13 @@
 <p class="paso"><b>17.</b> Justifica por qué no devuelves directamente las entidades en el controlador. Da dos motivos (por ejemplo, la recursión infinita en las relaciones bidireccionales).</p>
 <p class="paso"><b>18.</b> <b>Servicio.</b> Crea la interfaz <code>IMedicoService</code> y su implementación <code>MedicoService</code>, con <code>@Autowired</code> en los repositorios necesarios. Implementa:</p>
 <ul>
-<li><code>crear(MedicoRequestDTO)</code>. Si no existe el hospital, lanza la excepción de «no encontrado».</li>
-<li><code>obtener(Long id)</code>.</li>
-<li><code>listarPorHospital(Long hospitalId)</code>. Si el hospital no existe, lanza «no encontrado». Una lista vacía es válida.</li>
-<li><code>eliminar(Long id)</code>. Si el médico tiene consultas, lanza una excepción de conflicto.</li>
+<li><code>crear(MedicoRequestDTO)</code>. Si no existe el hospital, el controlador tiene que poder responder 404.</li>
+<li><code>obtener(Long id)</code>. Si no existe el médico, 404.</li>
+<li><code>listarPorHospital(Long hospitalId)</code>. Si el hospital no existe, 404. Una lista vacía es válida.</li>
+<li><code>eliminar(Long id)</code>. Si el médico no existe, 404; si tiene consultas, 409 (comprueba antes de borrar).</li>
 <li>Un método privado de conversión <code>Medico → MedicoResponseDTO</code>.</li>
 </ul>
+<p>Explica cómo comunica tu servicio cada uno de esos resultados al controlador.</p>
 <p class="paso"><b>19.</b> <b>Controlador.</b> Crea <code>MedicoController</code> con estos endpoints. Indica el código HTTP de éxito y los de error.</p>
 <table>
 <tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
@@ -124,8 +125,7 @@
 <tr><td><code>DELETE /api/medicos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
 </table>
 <p>El <code>POST</code> debe devolver la cabecera <code>Location</code> con la URI del recurso creado.</p>
-<p class="paso"><b>20.</b> Crea un <code>@RestControllerAdvice</code> que transforme <code>NoEncontradoException</code> en 404, <code>ConflictoException</code> en 409 y los errores de validación en 400. Devuelve un cuerpo JSON con <code>mensaje</code> y <code>codigo</code>.</p>
-<p class="paso"><b>21.</b> Añade el endpoint <code>POST /api/pacientes/{id}/consultas</code>, que registra una consulta recibiendo <code>medicoId</code>, <code>fecha</code>, <code>coste</code> y <code>tipo</code>. Indica:</p>
+<p class="paso"><b>20.</b> Añade el endpoint <code>POST /api/pacientes/{id}/consultas</code>, que registra una consulta recibiendo <code>medicoId</code>, <code>fecha</code>, <code>coste</code> y <code>tipo</code>. Indica:</p>
 <ul>
 <li>a) qué entidades hay que buscar antes de crear la consulta,</li>
 <li>b) qué códigos devuelves si falta alguna,</li>
@@ -133,10 +133,10 @@
 </ul>
 
 <h3>Parte 5: preguntas de comprensión (1,5 puntos)</h3>
-<p class="paso"><b>22.</b> Una petición <code>GET /api/pacientes/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo lo evitarías.</p>
-<p class="paso"><b>23.</b> Al serializar un <code>Hospital</code> con su lista de médicos, el JSON entra en un bucle infinito. Explica la causa y da dos soluciones.</p>
-<p class="paso"><b>24.</b> <code>DELETE /api/hospitales/1</code> devuelve 500 por una violación de clave foránea. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
-<p class="paso"><b>25.</b> Dibuja el esquema de tablas (con claves primarias y foráneas) que genera todo el modelo y marca dónde está cada clave foránea.</p>
+<p class="paso"><b>21.</b> Una petición <code>GET /api/pacientes/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo lo evitarías.</p>
+<p class="paso"><b>22.</b> Al serializar un <code>Hospital</code> con su lista de médicos, el JSON entra en un bucle infinito. Explica la causa y da dos soluciones.</p>
+<p class="paso"><b>23.</b> <code>DELETE /api/hospitales/1</code> devuelve 500 por una violación de clave foránea. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
+<p class="paso"><b>24.</b> Dibuja el esquema de tablas (con claves primarias y foráneas) que genera todo el modelo y marca dónde está cada clave foránea.</p>
 
 <div class="why">Intenta hacerlo tú primero y no abras el solucionario hasta terminar: lo que más enseña es comparar tus fallos con la solución.</div>
 </article>
