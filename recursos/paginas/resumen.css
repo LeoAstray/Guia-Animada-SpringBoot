@@ -9,6 +9,11 @@ body.resumida, body.ejercicios, body.faq {
     radial-gradient(35% 35% at 5% 100%, rgba(61, 224, 255, .10), transparent 70%),
     var(--void);
   background-attachment: fixed;
+  /* el mismo fondo, en una variable: lo reutiliza el buscador fijo de la FAQ para fundirse con la página */
+  --fondo-pagina:
+    radial-gradient(45% 40% at 85% 0%, rgba(139, 91, 255, .22), transparent 70%),
+    radial-gradient(35% 35% at 5% 100%, rgba(61, 224, 255, .10), transparent 70%),
+    var(--void);
   min-height: 100vh;
 }
 code {
