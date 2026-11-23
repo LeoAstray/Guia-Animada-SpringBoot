@@ -18,6 +18,7 @@ La guía está partida en archivos pequeños. **Editas el contenido y luego cons
 │   ├── parte-3-api-rest/       pasos 20 a 32
 │   ├── parte-4-ejercicios/     el paso 33: solo un enlace a la sección de ejercicios
 │   ├── ejercicios/             los ejercicios: un enunciado y su solucionario por ejercicio (ver más abajo)
+│   ├── faq/preguntas.html      las preguntas frecuentes (ver más abajo)
 │   └── resumen/                los resúmenes de cada paso para la guía resumida (ver más abajo)
 ├── recursos/                   ← estilos, scripts e imágenes
 │   ├── css/                    estilos de la guía completa (cada archivo comentado)
@@ -25,7 +26,7 @@ La guía está partida en archivos pequeños. **Editas el contenido y luego cons
 │   │   ├── 01-variables.css    colores y tipografías: cambia un color aquí y cambia en toda la guía
 │   │   └── 02-base.css ... 12-impresion.css
 │   ├── js/                     animaciones y botones (se cargan en orden por el número)
-│   ├── paginas/                CSS y JS del selector, la guía resumida y los ejercicios
+│   ├── paginas/                CSS y JS del selector, la guía resumida, los ejercicios y las preguntas frecuentes
 │   ├── fuentes/                archivos de las tipografías (.woff2, solo el juego latino, que cubre el español)
 │   └── img/                    imágenes (spring-initializr.png)
 ├── plantillas/                 esqueletos de página (cargador, índice, barra inferior, selector…)
@@ -79,6 +80,25 @@ Cada archivo va dentro de un `<article>`. En el del enunciado, los atributos `da
 
 El solucionario es un `<article>` sin atributos; en él puedes usar `<pre data-f="...">` para el código. No hay que tocar nada más: el orden de los ejercicios lo marca el número del nombre del archivo.
 
+### Añadir una pregunta frecuente
+
+Todas las preguntas están en `contenido/faq/preguntas.html`, agrupadas por temas. Cada tema es un `<section class="tema">` con su `<h2>` (es el nombre que sale en los filtros) y cada pregunta, un `<details>`:
+
+```html
+<details class="faq" id="lazy" data-claves="fetch eager proxy">
+<summary>¿Qué hace <code>fetch = FetchType.LAZY</code>?</summary>
+<div class="resp">
+<p>La respuesta completa: texto, listas, tablas, <code>&lt;pre data-f="..."&gt;</code> y notas como en la guía.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-12-lazy">Paso 12 · ¿Qué hace fetch = LAZY?</a></p>
+</div>
+</details>
+```
+
+- **`id`**: único y sin espacios. Sirve para enlazar directamente una respuesta (`faq.html#lazy`, o `#/faq/lazy` en el archivo único).
+- **`data-claves`** (opcional): palabras que no salen en el texto pero que alguien podría buscar (sinónimos, nombres en inglés…).
+- **Enlaces**: `{{COMPLETA}}paso-12` lleva a ese paso (o a cualquier `id` de la guía completa) y `{{EJ}}solucion-2` a los ejercicios. `construir.py` los completa para la carpeta y para el archivo único.
+- **Un tema nuevo** es otro `<section class="tema" id="tema-...">` con su `<h2>`: su filtro y su número de preguntas se crean solos.
+
 ### La guía resumida
 
 Sus resúmenes viven en `contenido/resumen/` y sus plantillas en `plantillas/`:
@@ -94,13 +114,16 @@ plantillas/
 ├── plantilla-completa.html   esqueleto de la guía completa
 ├── plantilla-resumida.html   esqueleto de la guía resumida
 ├── plantilla-ejercicios.html esqueleto de la página de ejercicios
-├── plantilla-selector.html   la página que elige entre la completa, la resumida y los ejercicios
-└── plantilla-todo.html       la página contenedora del archivo único (enlaza las cuatro páginas)
+├── plantilla-faq.html        esqueleto de las preguntas frecuentes (buscador y temas)
+├── plantilla-selector.html   la página que elige entre la completa, la resumida, los ejercicios y las preguntas frecuentes
+└── plantilla-todo.html       la página contenedora del archivo único (enlaza las cinco páginas)
 
 recursos/paginas/
 ├── selector.css / selector.js   el selector animado: un gesto de scroll = una opción, tarjetas que giran y cortina de color
 ├── entrada.js                   la cortina que se recoge al llegar a la guía elegida (va en el <head> de las tres páginas)
-└── resumen.css                  estilos de la resumida y de los ejercicios
+├── resumen.css                  estilos de la resumida y de los ejercicios
+├── ejercicios.js                la casilla de cada paso de los enunciados (se guarda en el navegador)
+└── faq.css / faq.js             las preguntas frecuentes: estilos, buscador y filtros por tema
 ```
 
 Cada paso es un bloque así. **El título del paso y el enlace a la guía completa se ponen solos**, a partir del `<h2>` del paso:
@@ -129,9 +152,10 @@ Doble clic en **`Construir guia.bat`** (necesita Python). Crea:
 | `guia/guia-completa.html` | La guía principal, usando las carpetas de `recursos/`. |
 | `guia/guia-resumida.html` | La guía resumida. Cada paso enlaza al mismo paso de la completa. |
 | `guia/ejercicios.html` | La sección de ejercicios: la lista y, al abrir uno, su enunciado o su solucionario. |
-| `Guia_Animada_SpringBoot_DataJPA_y_REST.html` (en la raíz del proyecto) | **Todo en un solo archivo**, para compartir: el selector y las tres secciones (completa, resumida y ejercicios), con sus estilos, su código y sus imágenes dentro. Funciona igual que la carpeta. |
+| `guia/faq.html` | Las preguntas frecuentes, con buscador y filtros por tema. |
+| `Guia_Animada_SpringBoot_DataJPA_y_REST.html` (en la raíz del proyecto) | **Todo en un solo archivo**, para compartir: el selector y las cuatro secciones (completa, resumida, ejercicios y preguntas frecuentes), con sus estilos, su código y sus imágenes dentro. Funciona igual que la carpeta. |
 
-> **El archivo único** se abre con doble clic y no necesita nada más. Por dentro lleva las cuatro páginas, cada una en su propio marco, y cambia de una a otra con la dirección: `#/` (selector), `#/completa`, `#/completa/paso-11`, `#/resumida`, `#/ejercicios` y `#/ejercicios/solucion-1`. Se pueden copiar esas direcciones para volver a un punto concreto, y el botón Atrás del navegador funciona.
+> **El archivo único** se abre con doble clic y no necesita nada más. Por dentro lleva las cinco páginas, cada una en su propio marco, y cambia de una a otra con la dirección: `#/` (selector), `#/completa`, `#/completa/paso-11`, `#/resumida`, `#/ejercicios`, `#/ejercicios/solucion-1`, `#/faq` y `#/faq/lazy`. Se pueden copiar esas direcciones para volver a un punto concreto, y el botón Atrás del navegador funciona.
 > Por ser marcos, **Ctrl+P no imprime la guía entera** desde el archivo único; para imprimir o sacar un PDF, abre `guia/guia-completa.html`.
 >
 > No edites los `.html` generados (lo de `guia/` ni el archivo único): se sobrescriben cada vez que construyes.

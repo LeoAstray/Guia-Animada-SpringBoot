@@ -1,0 +1,224 @@
+/* =========================================================
+   PREGUNTAS FRECUENTES
+   Va después de resumen.css (de él toma el fondo, .wrap, .intro y .end). El buscador se queda pegado
+   arriba al bajar; las preguntas son filas que se abren (<details>), agrupadas por temas.
+   Su color propio es el rosa, igual que su tarjeta en el selector.
+   ========================================================= */
+body.faq { --acc: var(--pink); }
+body.faq ::selection { background: var(--pink); color: var(--void); }
+body.faq header.bar .tag { color: var(--pink); }
+body.faq .intro h1 { color: var(--pink); }
+body.faq .intro .sub { margin-bottom: 1.6rem; }
+/* scroll-padding-top lo pone faq.js con la altura real del buscador fijo, para que una respuesta abierta no quede debajo */
+body.faq header.bar .tag .t-corto { display: none; }
+.oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- El buscador (solo el campo y el recuento se quedan fijos arriba) ---------- */
+.buscador {
+  position: sticky; top: var(--bar); z-index: 20;
+  margin: 0 -1.25rem; padding: .9rem 1.25rem .55rem;
+  background: var(--void); border-bottom: 1px solid var(--line);
+}
+.campo {
+  display: flex; align-items: center; gap: .7rem; padding: 0 .9rem 0 1.1rem; height: 3.6rem;
+  border: 2px solid var(--line); border-radius: 16px; background: var(--void-2); cursor: text;
+  transition: border-color .2s, box-shadow .2s;
+}
+.campo:hover { border-color: var(--ink-3); }
+.campo:focus-within { border-color: var(--pink); box-shadow: 0 12px 26px -16px rgba(255, 79, 163, .55); }
+.lupa { flex: none; width: 1.35rem; height: 1.35rem; fill: none; stroke: var(--ink-2); stroke-width: 2.2; stroke-linecap: round; }
+.campo:focus-within .lupa { stroke: var(--pink); }
+.campo input {
+  flex: 1; min-width: 0; height: 100%; border: 0; background: none; outline: none;
+  color: var(--ink); caret-color: var(--pink); font: 400 1.12rem var(--body);
+}
+.campo input::placeholder { color: var(--ink-3); opacity: 1; }
+.campo input::-webkit-search-cancel-button { display: none; }
+.atajo {
+  flex: none; display: grid; place-items: center; min-width: 1.7rem; height: 1.7rem; padding: 0 .4rem;
+  border: 1px solid var(--line); border-radius: 6px; color: var(--ink-3); font: 700 .75rem var(--pix);
+}
+.campo:focus-within .atajo { display: none; }
+.borrar {
+  flex: none; display: grid; place-items: center; width: 2.2rem; height: 2.2rem; padding: 0;
+  border: 0; border-radius: 50%; background: var(--void-3); color: var(--ink-2); cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.borrar svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+.borrar:hover { background: var(--pink); color: var(--void); }
+.borrar:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+
+/* Los temas: filtros con su número de preguntas (sin JavaScript son enlaces a cada tema) */
+.temas { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1rem; }
+.chip {
+  display: inline-flex; align-items: center; gap: .45rem; padding: .38rem .5rem .38rem .8rem; border-radius: 999px;
+  border: 1.5px solid var(--line); color: var(--ink); text-decoration: none; white-space: nowrap;
+  font: 700 .72rem var(--pix); letter-spacing: .02em; transition: border-color .2s, background .2s, color .2s, opacity .2s;
+}
+.chip[data-parte]::before {
+  content: ""; flex: none; width: .5rem; height: .5rem; margin-right: -.1rem; border-radius: 50%; background: var(--tc);
+}
+.chip[aria-current="true"][data-parte]::before { box-shadow: 0 0 0 2px var(--void); }
+.chip span {
+  min-width: 1.5rem; padding: .1rem .35rem; border-radius: 999px; background: var(--void-3); color: var(--ink-2);
+  text-align: center; font-variant-numeric: tabular-nums;
+}
+.chip:hover { border-color: var(--pink); color: var(--pink); }
+.chip[aria-current="true"] { background: var(--pink); border-color: var(--pink); color: var(--void); }
+.chip[aria-current="true"] span { background: rgba(13, 10, 31, .22); color: var(--void); }
+.chip.cero:not([aria-current="true"]) { opacity: .62; }
+.chip:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+.estado { min-height: 1.2em; margin: .55rem 0 0; color: var(--ink-3); font: 700 .7rem var(--pix); letter-spacing: .04em; }
+.estado b { color: var(--pink); font-weight: 700; }
+
+/* ---------- Temas y preguntas ---------- */
+/* Cada tema lleva el color de la parte de la guía de la que sale (data-parte), el mismo que usa la guía:
+   Parte 1 cian, Parte 2 rosa, Parte 3 dorado. Los temas que mezclan partes, en rojo. */
+[data-parte="1"] { --tc: var(--cyan); }
+[data-parte="2"] { --tc: var(--pink); }
+[data-parte="3"] { --tc: var(--gold); }
+[data-parte="varias"] { --tc: var(--red); }
+
+.tema { margin-top: 3rem; }
+/* El título es texto normal (no flex): el cuadradito y las dos etiquetas van en la misma línea y bajan juntas si no caben */
+.tema > h2 {
+  margin: 0 0 .7rem; color: #fff; font: 900 clamp(1.25rem, 3.6vw, 1.6rem)/1.5 var(--disp); letter-spacing: -.03em;
+}
+.tema > h2::before {
+  content: ""; display: inline-block; width: .8rem; height: .8rem; margin-right: .75rem; vertical-align: .08em;
+  border-radius: 4px; background: var(--tc, var(--pink));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tc, var(--pink)) 22%, transparent);
+}
+.tema > h2 .n, .tema > h2 .de-parte { display: inline-block; vertical-align: .3em; margin-left: .6rem; white-space: nowrap; letter-spacing: .04em; }
+.tema > h2 .n { color: var(--ink-2); font: 700 .72rem/1 var(--pix); }
+.tema > h2 .de-parte {
+  padding: .22rem .55rem; border: 1.5px solid color-mix(in srgb, var(--tc) 70%, transparent); border-radius: 999px;
+  color: var(--tc); font: 700 .64rem/1 var(--pix);
+}
+/* la primera línea del tema, del color de su parte */
+.tema > h2 + details.faq { border-top: 2px solid color-mix(in srgb, var(--tc, var(--line)) 75%, transparent); }
+.tema[hidden], details.faq[hidden], .borrar[hidden] { display: none; }
+
+details.faq { border-top: 1px solid var(--line); }
+.tema details.faq:last-child { border-bottom: 1px solid var(--line); }
+/* La pregunta es un bloque de texto normal (los <code> fluyen dentro de la línea); la flecha va a la derecha */
+details.faq > summary {
+  position: relative; display: block; padding: 1.05rem 2.6rem 1.05rem .2rem; cursor: pointer; list-style: none;
+  color: var(--ink); font: 700 1.08rem/1.45 var(--body); text-wrap: pretty; transition: color .2s;
+}
+details.faq > summary::-webkit-details-marker { display: none; }
+details.faq > summary::after {
+  content: ""; position: absolute; right: .55rem; top: 1.45rem; width: .6rem; height: .6rem;
+  border-right: 2.5px solid var(--ink-3); border-bottom: 2.5px solid var(--ink-3);
+  transform: rotate(45deg); transition: transform .25s var(--out), border-color .2s;
+}
+details.faq > summary:hover { color: var(--pink); }
+details.faq > summary:hover::after { border-color: var(--pink); }
+details.faq > summary:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; border-radius: 6px; }
+details.faq[open] > summary { color: var(--pink); }
+details.faq > summary b { color: inherit; }
+details.faq[open] > summary::after { transform: rotate(-135deg); top: 1.75rem; border-color: var(--pink); }
+details.faq > summary code { font-size: .86em; overflow-wrap: normal; word-break: normal; }
+
+.resp { max-width: 70ch; padding: 0 .2rem 1.6rem; color: var(--ink); font-size: 1.02rem; line-height: 1.65; }
+.resp > :first-child { margin-top: 0; }
+.resp p, .resp ul, .resp ol { margin: 0 0 .9rem; }
+.resp li { margin-bottom: .35rem; }
+.resp table { max-width: 100%; }
+.resp pre { max-width: 100%; font-size: .82rem; }
+.resp kbd { padding: .05rem .4rem; border: 1px solid var(--line); border-radius: 5px; background: var(--void-3); font: .85em var(--mono); }
+details.faq[open] .resp { animation: abre .3s var(--out); }
+@keyframes abre { from { opacity: 0; transform: translateY(-4px); } }
+
+/* El enlace al paso de la guía donde se amplía */
+.resp .ver { margin: 1.3rem 0 0; }
+.resp .ver a {
+  display: inline-flex; align-items: center; gap: .55rem; padding: .55rem 1rem; border-radius: 999px;
+  border: 1.5px solid var(--pink); color: var(--pink); text-decoration: none; font: 700 .72rem/1.3 var(--pix);
+  transition: background .2s, color .2s;
+}
+.resp .ver a::before { content: "Ampliar:"; flex: none; white-space: nowrap; color: var(--ink-2); transition: color .2s; }
+.resp .ver a::after { content: "→"; flex: none; transition: transform .25s var(--out); }
+.resp .ver a:hover { background: var(--pink); color: var(--void); }
+.resp .ver a:hover::before { color: var(--void); }
+.resp .ver a:hover::after { transform: translateX(3px); }
+
+/* Al filtrar: lo que vuelve a aparecer entra con un fundido corto, y los números que cambian hacen un «tic» */
+.entra { animation: faq-entra .32s var(--out) both; }
+@keyframes faq-entra { from { opacity: 0; transform: translateY(6px); } }
+.tic { display: inline-block; animation: faq-tic .35s var(--out); }
+@keyframes faq-tic { 0% { transform: scale(1); } 35% { transform: scale(1.28); color: var(--pink); } 100% { transform: scale(1); } }
+.chip[aria-current="true"] .tic { animation-name: faq-tic-activo; }
+@keyframes faq-tic-activo { 35% { transform: scale(1.28); } }
+
+/* Lo que coincide con la búsqueda */
+mark.hl { padding: 0 .08em; border-radius: 3px; background: rgba(255, 79, 163, .24); color: inherit; box-shadow: inset 0 -2px 0 var(--pink); }
+
+/* Sin resultados */
+/* Sin resultados: el brillo rosa del selector y una lupa dibujada que se traza al aparecer */
+.vacio {
+  margin-top: 2.6rem; padding: 2.2rem 1.5rem 2.4rem; border: 1.5px solid color-mix(in srgb, var(--pink) 38%, transparent);
+  border-radius: 22px; text-align: center;
+  background:
+    radial-gradient(70% 90% at 50% 0%, color-mix(in oklab, var(--pink) 20%, transparent), transparent 70%),
+    var(--void-2);
+  box-shadow: 0 26px 40px -30px rgba(0, 0, 0, .9);
+}
+.vacio[hidden] { display: none; }
+.vacio-dibujo { display: block; width: 7.5rem; height: 6rem; margin: 0 auto 1rem; overflow: visible; }
+.vacio-dibujo * { fill: none; stroke: var(--pink); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
+.vacio-dibujo circle:first-child { fill: var(--void-3); }
+.vacio-dibujo .punto { fill: var(--pink); }
+.vacio-dibujo .chispa { stroke: var(--gold); stroke-width: 2.5; }
+.vacio.dibuja .vacio-dibujo * { animation: faq-traza .9s var(--out) both; }
+.vacio.dibuja .vacio-dibujo path:nth-of-type(1) { animation-delay: .25s; }
+.vacio.dibuja .vacio-dibujo path:nth-of-type(2) { animation-delay: .45s; }
+.vacio.dibuja .vacio-dibujo .punto { animation-delay: .7s; }
+.vacio.dibuja .vacio-dibujo .chispa { animation-delay: .8s; }
+@keyframes faq-traza { from { stroke-dashoffset: 1; opacity: 0; } 15% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
+.vacio-t { margin: 0 0 .5rem; color: #fff; font: 800 clamp(1.05rem, 3vw, 1.3rem)/1.3 var(--disp); letter-spacing: -.02em; text-wrap: balance; }
+.vacio-t b { color: var(--pink); font-weight: 800; }
+.vacio-s { margin: 0 0 1.1rem; color: var(--ink-2); }
+.vacio-otros { margin: .2rem 0 1.2rem; }
+.vacio-otros[hidden] { display: none; }
+#ver-todos {
+  padding: .6rem 1.1rem; border: 0; border-radius: 999px; background: var(--pink); color: var(--void); cursor: pointer;
+  font: 700 .74rem var(--pix); transition: filter .2s;
+}
+#ver-todos b { font-weight: 700; }
+#ver-todos:hover { filter: brightness(1.1); }
+#ver-todos:focus-visible { outline: 2px solid var(--pink); outline-offset: 3px; }
+.sugerencias { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.sugerencias button {
+  padding: .45rem .9rem; border: 1.5px solid var(--line); border-radius: 999px; background: none; cursor: pointer;
+  color: var(--ink); font: 700 .74rem var(--pix); transition: border-color .2s, color .2s;
+}
+.sugerencias button:hover { border-color: var(--pink); color: var(--pink); }
+.sugerencias button:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+
+/* ---------- MÓVIL ---------- */
+@media (max-width: 40rem) {
+  .buscador { margin: 0 -1rem; padding: .7rem 1rem .6rem; }
+  .campo { height: 3.2rem; padding: 0 .6rem 0 .9rem; }
+  .campo input { font-size: 1rem; }
+  .atajo { display: none; }
+  /* los temas en una fila que se desliza de lado, para no tapar media pantalla */
+  .temas { flex-wrap: nowrap; overflow-x: auto; margin: .8rem -1rem 0; padding: 0 1rem .2rem; scrollbar-width: none; }
+  .temas::-webkit-scrollbar { display: none; }
+  details.faq > summary { font-size: 1rem; padding: .95rem 2.2rem .95rem 0; }
+  /* el título arriba y, en su propia fila, el número y la parte */
+  .tema > h2 { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem .6rem; line-height: 1.2; }
+  .tema > h2::before { margin-right: .15rem; }
+  .tema > h2::after { content: ""; flex-basis: 100%; height: 0; order: 1; }
+  .tema > h2 .n, .tema > h2 .de-parte { order: 2; margin-left: 0; vertical-align: baseline; }
+  details.faq > summary::after { right: .35rem; top: 1.3rem; }
+  details.faq[open] > summary::after { top: 1.6rem; }
+  /* en móvil se ve «FAQ», pero el lector de pantalla sigue leyendo el nombre completo */
+  body.faq header.bar .tag .t-largo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  body.faq header.bar .tag .t-corto { display: inline; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details.faq[open] .resp { animation: none; }
+  .entra, .tic, .vacio.dibuja .vacio-dibujo * { animation: none; }
+}

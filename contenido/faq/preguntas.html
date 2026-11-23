@@ -1,0 +1,793 @@
+<!-- PREGUNTAS FRECUENTES (página faq.html y #/faq en el archivo único).
+     Cada <section class="tema"> es un tema: su <h2> es el nombre que sale en los filtros.
+     data-parte dice de qué parte de la guía sale el tema (1, 2, 3 o «varias») y le da su color: el de esa parte en la guía.
+     Cada pregunta es un <details class="faq" id="...">: el <summary> es la pregunta y el <div class="resp">, la respuesta.
+     data-claves (opcional) añade palabras para el buscador que no salen en el texto (sinónimos, nombres en inglés...).
+     Enlaces: {{COMPLETA}}paso-12 lleva a la guía completa y {{EJ}}solucion-2 a los ejercicios (construir.py los completa). -->
+
+<section class="tema" id="tema-proyecto" data-parte="1">
+<h2>Proyecto y configuración</h2>
+
+<details class="faq" id="dependencias" data-claves="initializr pom maven starter">
+<summary>¿Qué dependencias marco al crear el proyecto en Spring Initializr?</summary>
+<div class="resp">
+<p>Cinco: <b>Spring Data JPA</b>, <b>MySQL Driver</b>, <b>Spring Boot DevTools</b>, <b>Spring Web</b> y <b>Validation</b>.</p>
+<ul>
+<li><b>Spring Data JPA</b> trae JPA (relacionar clases con tablas), Hibernate (quien hace el trabajo) y los repositorios.</li>
+<li><b>MySQL Driver</b> es el «traductor» que permite a Java hablar con MySQL.</li>
+<li><b>DevTools</b> reinicia la aplicación sola cuando guardas cambios.</li>
+<li><b>Spring Web</b> y <b>Validation</b> no se usan hasta la API REST (Parte 2), pero si las marcas desde el principio no tendrás que tocar el <code>pom.xml</code> después. Spring Web es lo que permite recibir peticiones HTTP; Validation, usar <code>@Valid</code> y <code>@NotBlank</code>.</li>
+</ul>
+<p>Si se te olvidó alguna, se puede añadir después en el bloque <code>&lt;dependencies&gt;</code> del <code>pom.xml</code>.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-1">Paso 1 · Crear el proyecto en Spring Initializr</a></p>
+</div>
+</details>
+
+<details class="faq" id="ddl-auto" data-claves="application.properties create-drop update none tablas borrar">
+<summary>¿Qué hace <code>spring.jpa.hibernate.ddl-auto</code> y qué valor pongo?</summary>
+<div class="resp">
+<p>Le dice a Hibernate qué hacer con las tablas al arrancar, a partir de tus entidades:</p>
+<table>
+<tr><th>Valor</th><th>Qué hace</th><th>Cuándo usarlo</th></tr>
+<tr><td><code>update</code></td><td>Crea las tablas que faltan y añade columnas nuevas. <b>Conserva los datos</b>.</td><td>Mientras desarrollas y quieres que los datos sigan ahí al reiniciar.</td></tr>
+<tr><td><code>create-drop</code></td><td>Crea las tablas al arrancar y <b>las borra al cerrar</b>.</td><td>Con un <code>data.sql</code>: cada arranque empieza limpio con los mismos datos.</td></tr>
+<tr><td><code>create</code></td><td>Borra y crea las tablas al arrancar (no al cerrar).</td><td>Poco habitual en los ejercicios.</td></tr>
+<tr><td><code>none</code></td><td>No toca las tablas.</td><td>Cuando la base ya está hecha y no quieres que Hibernate la cambie.</td></tr>
+</table>
+<div class="warn">Pasar a <code>update</code> no recupera tablas que un cierre anterior con <code>create-drop</code> ya ha borrado. Usa siempre una base de práctica para las opciones que recrean tablas.</div>
+<p class="ver"><a href="{{COMPLETA}}paso-14">Paso 14 · Cargar los datos iniciales</a></p>
+</div>
+</details>
+
+<details class="faq" id="data-sql" data-claves="datos iniciales insert script sql init mode defer">
+<summary>¿Cómo hago que se ejecute el <code>data.sql</code> al arrancar?</summary>
+<div class="resp">
+<p>El archivo va en <code>src/main/resources/data.sql</code> y necesita estas tres líneas en <code>application.properties</code>:</p>
+<pre data-f="src/main/resources/application.properties">spring.jpa.hibernate.ddl-auto=create-drop
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true</pre>
+<ul>
+<li><code>create-drop</code> crea las tablas desde las entidades al arrancar (y las borra al cerrar), así el <code>data.sql</code> no choca con datos de la vez anterior.</li>
+<li><code>spring.sql.init.mode=always</code> activa el <code>data.sql</code> también con MySQL (por defecto solo lo hace con bases en memoria).</li>
+<li><code>defer-datasource-initialization=true</code> espera a que Hibernate cree las tablas antes de lanzar los <code>INSERT</code>. Sin ella, los <code>INSERT</code> fallarían porque las tablas aún no existen.</li>
+</ul>
+<p class="ver"><a href="{{COMPLETA}}paso-14">Paso 14 · Cargar los datos iniciales</a></p>
+</div>
+</details>
+
+<details class="faq" id="orden-inserts" data-claves="foreign key clave foranea constraint fails insert falla">
+<summary>¿Por qué falla un <code>INSERT</code> del <code>data.sql</code>? ¿Importa el orden?</summary>
+<div class="resp">
+<p>Sí, el orden importa: <b>primero la fila a la que se apunta y después la que apunta</b>. No puedes insertar un médico con <code>id_hospital = 1</code> si el hospital 1 todavía no existe: MySQL lo rechaza por la clave foránea.</p>
+<p>En el hospital, el orden correcto es: hospitales e historiales → médicos y pacientes → consultas. Si aun así falla, mira en la terminal la causa concreta: tabla inexistente, columna mal escrita, dato obligatorio que falta, clave repetida o una clave foránea que apunta a una fila que no existe.</p>
+<div class="why">Los nombres del <code>data.sql</code> son los de <b>MySQL</b> (<code>id_hospital</code>, <code>fecha_nacimiento</code>), no los de Java (<code>hospital</code>, <code>fechaNacimiento</code>). Y los enums se escriben con el texto exacto de la constante: <code>'CARDIOLOGIA'</code>, no <code>'cardiología'</code>.</div>
+<p class="ver"><a href="{{COMPLETA}}paso-16">Paso 16 · Corregir errores y terminar el proyecto</a></p>
+</div>
+</details>
+
+<details class="faq" id="commandlinerunner" data-claves="run main pruebas consola application">
+<summary>¿Qué es <code>CommandLineRunner</code> y para qué sirve el método <code>run</code>?</summary>
+<div class="resp">
+<p><code>CommandLineRunner</code> es una interfaz de Spring. Si tu clase principal la implementa, tiene que escribir un método <code>run</code>, y Spring lo ejecuta <b>solo, al terminar de arrancar</b>: cuando ya están listos la conexión con la base y los repositorios.</p>
+<p>Por eso es el sitio para hacer pruebas en la Parte 1: dentro de <code>run</code> puedes crear objetos, guardarlos con <code>save</code>, buscarlos y mostrarlos por consola. No hay que llamarlo desde <code>main</code>: lo llama Spring.</p>
+<pre data-f="ExamenApplication.java (resumen)">@SpringBootApplication
+public class ExamenApplication implements CommandLineRunner {
+
+    @Autowired
+    private IJugadorRepository jugadorRepository;
+
+    public static void main(String[] args) {
+        SpringApplication.run(ExamenApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) {
+        // aquí van las pruebas
+    }
+}</pre>
+<p class="ver"><a href="{{COMPLETA}}paso-8">Paso 8 · Ejecutar la primera prueba</a></p>
+</div>
+</details>
+
+<details class="faq" id="conexion-mysql" data-claves="access denied communications link failure puerto 3306 3308 contraseña">
+<summary>La aplicación no conecta con MySQL. ¿Qué reviso?</summary>
+<div class="resp">
+<p>Revisa, en este orden:</p>
+<ol>
+<li>Que <b>MySQL está arrancado</b> (en XAMPP, el botón Start de MySQL).</li>
+<li>El <b>puerto</b> de <code>spring.datasource.url</code>. En la guía es <code>3308</code>; muchas instalaciones usan <code>3306</code>. En phpMyAdmin, <code>SELECT @@port;</code> te dice cuál es.</li>
+<li>El <b>nombre de la base</b>, el <b>usuario</b> y la <b>contraseña</b>.</li>
+</ol>
+<p>El mensaje de error da la pista: <b>Access denied</b> suele ser usuario o contraseña; <b>Communications link failure</b> significa que no se llega al servidor (está parado o el puerto es otro).</p>
+<p class="ver"><a href="{{COMPLETA}}paso-16">Paso 16 · Corregir errores y terminar el proyecto</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-entidades" data-parte="1">
+<h2>Entidades</h2>
+
+<details class="faq" id="que-es-entidad" data-claves="entity table id column generatedvalue identity anotaciones">
+<summary>¿Qué es una entidad y qué hace cada anotación?</summary>
+<div class="resp">
+<p>Una <b>entidad</b> es una clase Java que JPA sabe guardar en una tabla: cada objeto es una fila y cada campo, una columna.</p>
+<table>
+<tr><th>Anotación</th><th>Qué hace</th></tr>
+<tr><td><code>@Entity</code></td><td>Marca la clase como entidad.</td></tr>
+<tr><td><code>@Table(name = "medicos")</code></td><td>Nombre de la tabla en MySQL.</td></tr>
+<tr><td><code>@Id</code></td><td>El campo que es la clave primaria.</td></tr>
+<tr><td><code>@GeneratedValue(strategy = GenerationType.IDENTITY)</code></td><td>MySQL genera el id solo al insertar (autoincremento).</td></tr>
+<tr><td><code>@Column(name = "id_medico", nullable = false, length = 80, unique = true)</code></td><td>Nombre de la columna, si admite vacíos, longitud máxima y si se puede repetir.</td></tr>
+<tr><td><code>@Enumerated(EnumType.STRING)</code></td><td>Guarda un enum como texto.</td></tr>
+</table>
+<p>Los imports son de <code>jakarta.persistence</code>. Si VS Code te ofrece <code>javax.persistence</code>, es el nombre antiguo: no lo aceptes.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-6">Paso 6 · Crear la entidad Jugador</a></p>
+</div>
+</details>
+
+<details class="faq" id="constructor-vacio" data-claves="default constructor jpa hibernate no-args">
+<summary>¿Por qué hace falta el constructor vacío si no lo uso?</summary>
+<div class="resp">
+<p>Porque lo usa <b>JPA</b>. Cuando lee una fila de la base, primero crea un objeto vacío con <code>new Medico()</code> y después le rellena los campos con los datos de la fila. Sin ese constructor, JPA no puede leer tus entidades y la aplicación falla al arrancar.</p>
+<p>Tú, para crear objetos, usa el constructor con parámetros. El vacío se queda para JPA.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-11">Paso 11 · Añadir una relación uno a uno</a></p>
+</div>
+</details>
+
+<details class="faq" id="id-constructor" data-claves="identity autoincremento null save">
+<summary>¿Por qué no pongo el <code>id</code> en el constructor?</summary>
+<div class="resp">
+<p>Porque el id lo pone <b>MySQL</b> al insertar la fila (<code>GenerationType.IDENTITY</code>). Un objeto recién creado con <code>new</code> tiene <code>id = null</code>; después de <code>save</code>, ya tiene el número que le ha dado la base.</p>
+<p>Si generas el constructor con VS Code (<b>Source Action → Generate Constructors</b>), no marques <code>id</code>, ni tampoco las listas de relaciones (<code>medicos</code>, <code>consultas</code>): las listas nacen vacías y se llenan con los métodos <code>add…</code>.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-6">Paso 6 · Crear la entidad Jugador</a></p>
+</div>
+</details>
+
+<details class="faq" id="enumerated" data-claves="enum enumtype ordinal string texto">
+<summary>¿Qué hace <code>@Enumerated(EnumType.STRING)</code>?</summary>
+<div class="resp">
+<p>Guarda el enum en la base <b>como texto</b>: en la columna aparece <code>CARDIOLOGIA</code>. Sin esa anotación, JPA guardaría su posición en la lista (0, 1, 2…), y si un día cambias el orden de los valores del enum, todos los datos guardados pasarían a significar otra cosa.</p>
+<div class="warn">En el <code>data.sql</code> y en el JSON de Postman hay que escribir exactamente el nombre de la constante: <code>"PEDIATRIA"</code>, no <code>"pediatría"</code>. Un valor que no existe da error (en la API, un 400).</div>
+<p class="ver"><a href="{{COMPLETA}}paso-13">Paso 13 · Representar una relación muchos a muchos</a></p>
+</div>
+</details>
+
+<details class="faq" id="bigdecimal" data-claves="dinero salario precio coste double precision scale decimales">
+<summary>¿Por qué se usa <code>BigDecimal</code> para el dinero y no <code>double</code>?</summary>
+<div class="resp">
+<p>Porque <code>double</code> no guarda los decimales de forma exacta: <code>0.1 + 0.2</code> da <code>0.30000000000000004</code>. Con dinero eso es un error. <code>BigDecimal</code> guarda el número exacto.</p>
+<p>Se crea desde un texto: <code>new BigDecimal("4200.00")</code>. En la columna se indica el tamaño con <code>precision</code> (cifras en total) y <code>scale</code> (cuántas son decimales): <code>@Column(precision = 10, scale = 2)</code> admite hasta 99.999.999,99.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-12">Paso 12 · Crear una relación uno a muchos</a></p>
+</div>
+</details>
+
+<details class="faq" id="optional-nullable-unique" data-claves="optional false nullable unique uno a uno obligatoria">
+<summary>¿Qué diferencia hay entre <code>optional = false</code>, <code>nullable = false</code> y <code>unique = true</code>?</summary>
+<div class="resp">
+<ul>
+<li><b><code>optional = false</code></b> (en <code>@OneToOne</code> o <code>@ManyToOne</code>) es una regla del <b>modelo Java</b>: la relación es obligatoria. JPA no deja guardar el objeto sin ella.</li>
+<li><b><code>nullable = false</code></b> (en <code>@Column</code> o <code>@JoinColumn</code>) es una regla de la <b>base de datos</b>: la columna no admite <code>NULL</code>.</li>
+<li><b><code>unique = true</code></b> también es de la <b>base de datos</b>: no puede haber dos filas con el mismo valor en esa columna.</li>
+</ul>
+<p>En un uno a uno obligatorio, como paciente e historial, se ponen los tres: <code>optional = false</code> en la relación, y <code>nullable = false, unique = true</code> en su <code>@JoinColumn</code>. Sin <code>unique</code>, dos pacientes podrían compartir el mismo historial y la relación sería en realidad de uno a muchos.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-11">Paso 11 · Añadir una relación uno a uno</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-relaciones" data-parte="1">
+<h2>Relaciones</h2>
+
+<details class="faq" id="propietario" data-claves="owner owning side lado propietario inverso joincolumn mappedby">
+<summary>¿Quién es el propietario de la relación, y por qué uno sí y el otro no?</summary>
+<div class="resp">
+<p>En la base de datos una relación es <b>una sola columna</b> (por ejemplo, <code>medicos.id_hospital</code>). En Java, en cambio, la escribes dos veces: la lista <code>medicos</code> de <code>Hospital</code> y el campo <code>hospital</code> de <code>Medico</code>. Si los dos lados mandaran sobre la columna, JPA no sabría qué hacer cuando no coinciden. Por eso uno manda y el otro no.</p>
+<ul>
+<li><b>El propietario</b> es el que lleva <code>@JoinColumn</code>. Al guardar, JPA mira su campo para rellenar la columna. En el hospital es <code>Medico</code>.</li>
+<li><b>El lado inverso</b> es el que lleva <code>mappedBy</code>. No tiene columna: JPA lo usa para leer (rellenar la lista), pero no lo mira al guardar.</li>
+</ul>
+<p>El propietario tiene que ser el lado cuya tabla guarda la columna, y en un uno a muchos la columna solo cabe en la tabla del lado «muchos». Por eso <b>en un uno a muchos el propietario es siempre el lado del <code>@ManyToOne</code></b>.</p>
+<div class="warn">Consecuencia práctica: si solo añades el médico a la lista del hospital y no haces <code>medico.setHospital(hospital)</code>, la columna queda vacía, porque JPA solo mira al propietario. Por eso <code>addMedico</code> rellena los dos lados.</div>
+<p class="ver"><a href="{{COMPLETA}}paso-12-propietario">Paso 12 · ¿Quién es el propietario?</a></p>
+</div>
+</details>
+
+<details class="faq" id="manytoone-donde" data-claves="muchos a uno many to one clave foranea fk medico hospital">
+<summary>¿Por qué el <code>@ManyToOne</code> va en <code>Medico</code> y no en <code>Hospital</code>?</summary>
+<div class="resp">
+<p>Porque una columna de una fila solo puede guardar <b>un</b> valor. Cada médico trabaja en un solo hospital, así que en su fila cabe <code>id_hospital = 1</code>. Al revés no se puede: un hospital tiene muchos médicos, y no hay forma de meter «2, 5 y 7» en una sola columna de la fila del hospital.</p>
+<pre data-f="cómo queda en MySQL">hospitales (id_hospital PK, nombre, ciudad)
+medicos    (id_medico PK, nombre, salario, especialidad, activo, id_hospital FK)   &lt;- aquí</pre>
+<p>El nombre se lee desde la clase donde está escrito: en <code>Medico</code>, «muchos médicos → un hospital», <code>@ManyToOne</code>; en <code>Hospital</code>, «un hospital → muchos médicos», <code>@OneToMany(mappedBy = "hospital")</code>.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-12-manytoone">Paso 12 · ¿Por qué el @ManyToOne va ahí?</a></p>
+</div>
+</details>
+
+<details class="faq" id="lazy" data-claves="fetch fetchtype lazy eager perezoso proxy carga">
+<summary>¿Qué hace <code>fetch = FetchType.LAZY</code>?</summary>
+<div class="resp">
+<p>Decide <b>cuándo</b> se carga el objeto relacionado. Con <code>LAZY</code> (perezoso), al leer un médico JPA no trae su hospital: deja un «sustituto» (un <i>proxy</i>) que sabe su id, y solo lanza la consulta del hospital <b>si de verdad lo usas</b>, por ejemplo con <code>medico.getHospital().getNombre()</code>.</p>
+<p>Con <code>EAGER</code> (ansioso) trae el hospital siempre, lo uses o no. Si no escribes nada, <code>@ManyToOne</code> y <code>@OneToOne</code> son <code>EAGER</code>; <code>@OneToMany</code> y <code>@ManyToMany</code> son <code>LAZY</code>. Por eso se escribe <code>LAZY</code> a mano en el <code>@ManyToOne</code>: si listas 100 médicos, no quieres 100 consultas extra.</p>
+<div class="warn">El sustituto solo se puede usar mientras la conexión con la base sigue abierta. Si lo usas después, salta <code>LazyInitializationException</code> (ver «Errores frecuentes»).</div>
+<p class="ver"><a href="{{COMPLETA}}paso-12-lazy">Paso 12 · ¿Qué hace fetch = LAZY?</a></p>
+</div>
+</details>
+
+<details class="faq" id="joincolumn" data-claves="join column nombre columna obligatoria">
+<summary>¿El <code>@ManyToOne</code> lleva siempre <code>@JoinColumn</code>?</summary>
+<div class="resp">
+<p>No es obligatorio, pero <b>conviene ponerlo siempre</b>. Sin él, JPA inventa el nombre de la columna juntando el nombre del campo y el de la clave a la que apunta: para <code>hospital</code> sería <code>hospital_id_hospital</code>. Funcionaría, pero no coincide con el nombre que pide el enunciado ni con el del <code>data.sql</code>, y los <code>INSERT</code> fallarían.</p>
+<p>Con <code>@JoinColumn(name = "id_hospital", nullable = false)</code> eliges el nombre y haces la columna obligatoria. Lo que <b>nunca</b> lleva <code>@JoinColumn</code> es el lado inverso (el del <code>mappedBy</code>): ese lado no tiene columna.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-12-joincolumn">Paso 12 · ¿Lleva siempre @JoinColumn?</a></p>
+</div>
+</details>
+
+<details class="faq" id="mappedby" data-claves="mapped by lado inverso bidireccional">
+<summary>¿Qué es <code>mappedBy</code> y qué nombre se escribe dentro?</summary>
+<div class="resp">
+<p><code>mappedBy</code> marca el <b>lado inverso</b> de una relación bidireccional. Significa: «esta relación ya está descrita en un campo de la otra clase; no crees otra columna».</p>
+<p>Dentro va el <b>nombre del campo Java</b> del otro lado, no el de la columna SQL. En <code>Hospital</code> se escribe <code>@OneToMany(mappedBy = "hospital")</code> porque en <code>Medico</code> el campo se llama <code>hospital</code>. Escribir <code>"id_hospital"</code> sería un error: ese es el nombre de MySQL.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-12">Paso 12 · Crear una relación uno a muchos</a></p>
+</div>
+</details>
+
+<details class="faq" id="orphanremoval" data-claves="orphan removal huerfano borrar hijo lista">
+<summary>¿Qué es <code>orphanRemoval</code> y qué hace?</summary>
+<div class="resp">
+<p><code>orphanRemoval = true</code> significa: <b>el hijo que se queda sin padre se borra</b>. Si quitas una consulta de la lista del paciente (<code>paciente.getConsultas().remove(consulta)</code>), esa consulta se queda «huérfana» y JPA borra su fila al guardar los cambios. Sin <code>orphanRemoval</code>, quitarla de la lista no borraría nada en la base.</p>
+<p>Se usa cuando el hijo <b>no tiene sentido sin su padre</b>: una consulta sin paciente, un estadio sin equipo.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-12-cascade">Paso 12 · cascade y orphanRemoval</a></p>
+</div>
+</details>
+
+<details class="faq" id="cascade-vs-orphan" data-claves="cascade cascadetype all diferencia orphanremoval borrar guardar">
+<summary>¿Qué diferencia hay entre <code>cascade</code> y <code>orphanRemoval</code>?</summary>
+<div class="resp">
+<p><b><code>cascade = CascadeType.ALL</code></b>: lo que le hagas al <b>padre</b>, házselo también a sus hijos. Si guardas el paciente, se guardan sus consultas nuevas; si lo borras, se borran.</p>
+<p><b><code>orphanRemoval = true</code></b>: si un hijo <b>sale de la lista</b>, se borra.</p>
+<table>
+<tr><th>Lo que haces</th><th>Solo <code>cascade = ALL</code></th><th>Solo <code>orphanRemoval = true</code></th></tr>
+<tr><td>Guardar un padre nuevo con hijos nuevos</td><td>Se guardan también los hijos</td><td>Los hijos hay que guardarlos aparte</td></tr>
+<tr><td>Borrar el padre</td><td>Se borran sus hijos</td><td>Se borran sus hijos</td></tr>
+<tr><td>Quitar un hijo de la lista</td><td>No se borra nada</td><td>Se borra ese hijo</td></tr>
+</table>
+<p>En resumen: cascade mira lo que le pasa al padre; orphanRemoval mira si el hijo sale de la lista. Se ponen juntos cuando el hijo no existe sin el padre.</p>
+<div class="kid"><b>cascade:</b> si tiras la caja de juguetes, los juguetes van dentro. <b>orphanRemoval:</b> si sacas un juguete de la caja, ese juguete se tira.</div>
+<p class="ver"><a href="{{COMPLETA}}paso-12-cascade">Paso 12 · cascade y orphanRemoval</a></p>
+</div>
+</details>
+
+<details class="faq" id="sin-cascade" data-claves="cascade borrar hospital medicos perder datos">
+<summary>¿Cuándo <b>no</b> hay que poner <code>cascade</code>?</summary>
+<div class="resp">
+<p>Cuando el hijo <b>vive por su cuenta</b>. Borrar un hospital no debe borrar a sus médicos; borrar un médico no debe llevarse el historial de consultas de sus pacientes; borrar un jugador no debe borrar los equipos que comparte con otros. Por eso <code>Hospital</code> y <code>Medico</code> llevan su lista con <code>mappedBy</code> y sin <code>cascade</code>.</p>
+<p>En esos casos, si alguien intenta borrar un padre que tiene hijos, lo correcto es comprobarlo antes y responder <b>409 Conflict</b>, no borrar en cadena (ver «¿Por qué 409 y no 500?»).</p>
+<p class="ver"><a href="{{COMPLETA}}paso-13">Paso 13 · Representar una relación muchos a muchos</a></p>
+</div>
+</details>
+
+<details class="faq" id="constructor-consulta" data-claves="constructor consulta fichaje medico paciente muchos a muchos parametros">
+<summary>¿Por qué el constructor de <code>Consulta</code> lleva el médico y el paciente?</summary>
+<div class="resp">
+<p>Porque una consulta <b>no existe sin sus dos extremos</b>: es «este médico atiende a este paciente, en esta fecha, por este coste». Sus dos <code>@ManyToOne</code> son obligatorios, así que las columnas <code>id_medico</code> e <code>id_paciente</code> no pueden quedar vacías.</p>
+<p>Si el constructor no los pidiera, podrías crear una consulta incompleta y el error solo saldría al guardar, como un fallo de la base. Pidiéndolos, <b>el compilador no te deja olvidarlos</b>: el error sale en rojo en el editor, antes de ejecutar.</p>
+<pre data-f="Consulta.java (constructor)">public Consulta(Medico medico, Paciente paciente, LocalDateTime fecha, BigDecimal coste,
+        TipoConsulta tipo, boolean seguimiento) { ... }</pre>
+<p>Después, <code>paciente.addConsulta(consulta)</code> la añade también a la lista del paciente para que los dos lados queden sincronizados. En la guía pasa lo mismo con <code>Fichaje</code> (jugador y equipo).</p>
+<p class="ver"><a href="{{COMPLETA}}paso-13-constructor">Paso 13 · ¿Por qué el constructor lleva los dos lados?</a></p>
+</div>
+</details>
+
+<details class="faq" id="manytomany-o-entidad" data-claves="many to many tabla intermedia jointable entidad intermedia datos propios">
+<summary>¿Cuándo uso <code>@ManyToMany</code> y cuándo una entidad intermedia como <code>Consulta</code>?</summary>
+<div class="resp">
+<p>Depende de si la relación <b>tiene datos propios</b>:</p>
+<ul>
+<li><b>Solo hay que unir</b> (qué autores tiene un libro): <code>@ManyToMany</code>. JPA crea una tabla intermedia con dos ids y nada más.</li>
+<li><b>La unión tiene datos</b> (fecha, coste, tipo, precio, temporada…): una <b>entidad intermedia</b> (<code>Consulta</code>, <code>Fichaje</code>, <code>Matricula</code>). La tabla intermedia pasa a ser una entidad con sus columnas, y la relación se convierte en <b>dos <code>@ManyToOne</code></b>.</li>
+</ul>
+<p>Un <code>@ManyToMany</code> directo no puede guardar nada más que los dos ids, por eso en cuanto el enunciado pide un dato de la relación hay que crear la entidad.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-13">Paso 13 · Representar una relación muchos a muchos</a></p>
+</div>
+</details>
+
+<details class="faq" id="metodos-add" data-claves="addmedico addconsulta sincronizar dos lados helper">
+<summary>¿Para qué sirven los métodos como <code>addMedico</code> o <code>addConsulta</code>?</summary>
+<div class="resp">
+<p>Para <b>rellenar los dos lados de una relación bidireccional de una vez</b>. Añaden el hijo a la lista del padre y, además, le dicen al hijo quién es su padre:</p>
+<pre data-f="Hospital.java">public void addMedico(Medico medico) {
+    medicos.add(medico);         // lado inverso: la lista, en memoria
+    medico.setHospital(this);    // lado propietario: el que rellena la columna
+}</pre>
+<p>La segunda línea es la importante para la base: JPA solo mira al propietario. La primera mantiene la lista coherente mientras el objeto está en memoria. Así no se te olvida ninguno de los dos.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-12">Paso 12 · Crear una relación uno a muchos</a></p>
+</div>
+</details>
+
+<details class="faq" id="list-o-set" data-claves="list set hashset arraylist repetidos duplicados">
+<summary>¿Uso <code>List</code> o <code>Set</code> para las colecciones?</summary>
+<div class="resp">
+<p><code>List</code> admite repetidos y guarda el orden; <code>Set</code> no admite repetidos. En un <code>@ManyToMany</code> conviene <code>Set</code>: si añades dos veces el mismo autor a un libro, el <code>Set</code> descarta el segundo y no se intenta insertar la misma fila dos veces en la tabla intermedia.</p>
+<p>En los <code>@OneToMany</code> (médicos de un hospital, consultas de un paciente) un <code>List</code> va bien, porque cada hijo solo puede estar una vez en la base. Inicializa siempre la colección (<code>= new ArrayList&lt;&gt;()</code>): si no, vale <code>null</code> y <code>add</code> falla.</p>
+<p class="ver"><a href="{{COMPLETA}}s25">Paso 27 · Las trampas de comprensión</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-repositorios" data-parte="1">
+<h2>Repositorios y consultas</h2>
+
+<details class="faq" id="jparepository" data-claves="jpa repository save findall findbyid deletebyid count existsbyid interfaz">
+<summary>¿Qué me da <code>JpaRepository</code> sin escribir nada?</summary>
+<div class="resp">
+<p>Al escribir <code>public interface IMedicoRepository extends JpaRepository&lt;Medico, Long&gt;</code> ya tienes, sin declararlos: <code>save</code>, <code>findById</code>, <code>findAll</code>, <code>deleteById</code>, <code>delete</code>, <code>existsById</code> y <code>count</code>. Spring escribe el código por ti.</p>
+<p>Lo que va entre <code>&lt; &gt;</code> es <b>qué entidad maneja</b> (<code>Medico</code>) y <b>de qué tipo es su id</b> (<code>Long</code>). Un error típico es copiar un repositorio y dejar la entidad de otro.</p>
+<p>No declares otra vez esos métodos: solo añades al repositorio las búsquedas nuevas (<code>findByEspecialidad</code>, <code>countByMedicoId</code>…).</p>
+<p class="ver"><a href="{{COMPLETA}}paso-7">Paso 7 · Crear la interfaz del repositorio</a></p>
+</div>
+</details>
+
+<details class="faq" id="consultas-derivadas" data-claves="derived query findby countby existsby nombre del metodo and orderby greaterthan">
+<summary>¿Cómo funcionan las consultas derivadas como <code>findByEspecialidad</code>?</summary>
+<div class="resp">
+<p>Spring lee el <b>nombre del método</b> y escribe la consulta por ti. Se construye con piezas:</p>
+<table>
+<tr><th>Método</th><th>Se lee</th></tr>
+<tr><td><code>findByEspecialidad(Especialidad e)</code></td><td>Médicos con esa especialidad.</td></tr>
+<tr><td><code>findByHospitalIdAndActivoTrue(Long id)</code></td><td>Del hospital con ese id <b>y</b> activos.</td></tr>
+<tr><td><code>findBySalarioGreaterThanOrderBySalarioDesc(BigDecimal s)</code></td><td>Salario mayor que <code>s</code>, de mayor a menor.</td></tr>
+<tr><td><code>countByMedicoId(Long id)</code></td><td>Cuántas hay de ese médico.</td></tr>
+<tr><td><code>existsByEmail(String email)</code></td><td>¿Existe alguna con ese email? (<code>true</code>/<code>false</code>)</td></tr>
+</table>
+<p>Los nombres tienen que ser los de los <b>campos Java</b>, con mayúscula inicial: <code>findByNombre</code> necesita un campo <code>nombre</code>. Si escribes mal uno, la aplicación no arranca y dice que no encuentra esa propiedad.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-10">Paso 10 · Escribir consultas en la interfaz</a></p>
+</div>
+</details>
+
+<details class="faq" id="navegar-relacion" data-claves="findbyhospitalid hospital id navegar propiedad anidada">
+<summary>¿Por qué funciona <code>findByHospitalId</code> si <code>Medico</code> no tiene un campo <code>hospitalId</code>?</summary>
+<div class="resp">
+<p>Porque Spring sabe <b>navegar por las relaciones</b>. <code>HospitalId</code> se lee como «el campo <code>hospital</code> y, dentro de él, su <code>id</code>», es decir, <code>medico.hospital.id</code>. Como ese id es justo la columna <code>id_hospital</code>, la consulta ni siquiera necesita unir tablas.</p>
+<p>Funciona igual con otros campos: <code>findByHospitalNombre(String nombre)</code> buscaría por el nombre del hospital.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-10">Paso 10 · Escribir consultas en la interfaz</a></p>
+</div>
+</details>
+
+<details class="faq" id="query" data-claves="@query jpql sql nativequery param consulta personalizada">
+<summary>¿Cuándo hace falta <code>@Query</code>? ¿Qué diferencia hay entre JPQL y SQL?</summary>
+<div class="resp">
+<p>Cuando el nombre del método no basta: agrupar con <code>GROUP BY</code>, sumar, unir varias tablas con condiciones raras… Entonces escribes tú la consulta encima del método con <code>@Query</code>.</p>
+<ul>
+<li><b>JPQL</b> usa los nombres de <b>Java</b>: la clase <code>Medico</code> y el campo <code>hospital</code>.</li>
+<li><b>SQL</b> (con <code>nativeQuery = true</code>) usa los de <b>MySQL</b>: la tabla <code>medicos</code> y la columna <code>id_hospital</code>.</li>
+</ul>
+<pre data-f="IMedicoRepository.java">@Query("SELECT h.nombre, COUNT(m) FROM Medico m JOIN m.hospital h GROUP BY h.id, h.nombre")
+List&lt;Object[]&gt; contarPorHospital();</pre>
+<p>Los parámetros se escriben con dos puntos (<code>:medicoId</code>) y se enlazan con <code>@Param("medicoId")</code> en el argumento. Si una consulta derivada sirve, úsala: es más corta y más difícil de equivocarse.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-15">Paso 15 · Escribir consultas en el repositorio</a></p>
+</div>
+</details>
+
+<details class="faq" id="optional" data-claves="optional findbyid isempty ispresent get orelsethrow null">
+<summary>¿Qué es el <code>Optional</code> que devuelve <code>findById</code>?</summary>
+<div class="resp">
+<p>Es una <b>cajita que puede venir con el objeto dentro o vacía</b>. <code>findById</code> lo devuelve porque el id que buscas puede no existir, y así te obliga a pensar en ese caso en vez de recibir un <code>null</code> por sorpresa.</p>
+<pre data-f="uso típico en el servicio">Optional&lt;Medico&gt; medicoOpt = medicoRepository.findById(id);
+if (medicoOpt.isEmpty()) {
+    return null;                     // no existe
+}
+Medico medico = medicoOpt.get();     // existe: se saca de la caja</pre>
+<p><code>isEmpty()</code> pregunta si está vacía, <code>isPresent()</code> si tiene algo y <code>get()</code> saca el objeto (solo si hay algo dentro; si está vacía, falla). En pruebas rápidas de <code>run</code> se usa a veces <code>orElseThrow()</code>, que saca el objeto o lanza un error si no está.</p>
+<p class="ver"><a href="{{COMPLETA}}s24">Paso 26 · Los controladores y los códigos de estado</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-dto" data-parte="3">
+<h2>DTO</h2>
+
+<details class="faq" id="que-es-dto" data-claves="data transfer object request response resumen tipos">
+<summary>¿Qué es un DTO y qué tipos hay (Request, Response y Resumen)?</summary>
+<div class="resp">
+<p><b>DTO</b> significa <i>Data Transfer Object</i>: un objeto simple, sin anotaciones de JPA ni lógica, que solo transporta datos entre el cliente y tu API. La entidad es cómo guardas los datos; el DTO es <b>lo que enseñas y lo que pides</b> por la red.</p>
+<table>
+<tr><th>Tipo</th><th>Para qué</th><th>Ejemplo</th></tr>
+<tr><td><b>RequestDTO</b></td><td>Lo que el cliente <b>envía</b> (POST, PUT). Sin <code>id</code> y con las relaciones como ids. Lleva las validaciones.</td><td><code>MedicoRequestDTO(nombre, salario, especialidad, hospitalId)</code></td></tr>
+<tr><td><b>ResponseDTO</b></td><td>Lo que la API <b>devuelve</b>. Con <code>id</code> y los datos ya preparados (el nombre del hospital, no el objeto).</td><td><code>MedicoResponseDTO(id, nombre, especialidad, nombreHospital)</code></td></tr>
+<tr><td><b>ResumenDTO</b></td><td>Una versión reducida que va <b>dentro</b> de otra respuesta. Corta los bucles.</td><td><code>ConsultaResumenDTO</code> dentro de <code>PacienteResponseDTO</code></td></tr>
+</table>
+<p>Para decidir sus campos, pregúntate: <b>¿qué necesita el cliente en esta operación?</b></p>
+<p class="ver"><a href="{{COMPLETA}}s22-que-es">Paso 24 · ¿Qué es un DTO?</a></p>
+</div>
+</details>
+
+<details class="faq" id="no-entidades" data-claves="devolver entidad entity json recursion exponer">
+<summary>¿Por qué no devuelvo directamente las entidades en el controlador?</summary>
+<div class="resp">
+<p>Por dos motivos:</p>
+<ol>
+<li><b>Bucle infinito.</b> En una relación bidireccional, el hospital tiene sus médicos y cada médico apunta a su hospital. Al convertirlo a JSON, Jackson entra en hospital → médicos → hospital → médicos… y falla.</li>
+<li><b>Se expone la base de datos.</b> El cliente vería campos internos, y cualquier cambio en una entidad cambiaría la API sin querer. Además, las relaciones <code>LAZY</code> se intentarían leer fuera de la transacción.</li>
+</ol>
+<p>La regla de la guía: <b>el controlador nunca importa una entidad</b>. Solo DTO y la interfaz del servicio.</p>
+<p class="ver"><a href="{{COMPLETA}}s25">Paso 27 · Las trampas de comprensión</a></p>
+</div>
+</details>
+
+<details class="faq" id="dto-ids" data-claves="hospitalid editorialid ids objetos request">
+<summary>¿Por qué el RequestDTO lleva <code>hospitalId</code> y no el objeto <code>Hospital</code>?</summary>
+<div class="resp">
+<p>Porque el cliente solo conoce <b>los ids</b> de lo que ya existe; no maneja objetos de la base. Además, así el cliente no puede cambiar los datos del hospital al crear un médico. Es el <b>servicio</b> quien busca el hospital real con <code>hospitalRepository.findById(dto.hospitalId())</code> y lo asocia.</p>
+<div class="kid">En la recepción dices «quiero pedir cita en el hospital número 1», no te llevas el hospital a cuestas.</div>
+<p class="ver"><a href="{{COMPLETA}}s22">Paso 24 · Los DTO como contrato de la API</a></p>
+</div>
+</details>
+
+<details class="faq" id="record" data-claves="record clase getters java 16 inmutable">
+<summary>¿Por qué los DTO se escriben como <code>record</code>?</summary>
+<div class="resp">
+<p>Un <code>record</code> es una clase de Java pensada justo para transportar datos. En una línea declaras los campos, y Java crea solo el constructor, los métodos para leerlos y <code>equals</code>/<code>toString</code>:</p>
+<pre data-f="dto/MedicoResponseDTO.java">public record MedicoResponseDTO(Long id, String nombre, Especialidad especialidad, String nombreHospital) {
+}</pre>
+<p>Ojo con cómo se leen los campos: <b>sin <code>get</code></b>. Es <code>dto.nombre()</code>, no <code>dto.getNombre()</code>. Y no tienen <i>setters</i>: un record no se modifica después de crearlo.</p>
+<p class="ver"><a href="{{COMPLETA}}s22">Paso 24 · Los DTO como contrato de la API</a></p>
+</div>
+</details>
+
+<details class="faq" id="donde-convertir" data-claves="convertir mapear mapper entity dto servicio">
+<summary>¿Dónde se convierte el DTO en entidad y la entidad en DTO?</summary>
+<div class="resp">
+<p>Siempre en el <b>servicio</b>, que es la única capa que conoce las dos cosas:</p>
+<ul>
+<li><b>DTO → entidad</b> al crear: <code>new Medico(dto.nombre(), dto.salario(), dto.especialidad(), true)</code>.</li>
+<li><b>Entidad → DTO</b> al devolver, en un método privado como <code>mapearADTO(Medico m)</code>.</li>
+</ul>
+<p>El controlador solo ve DTO y el repositorio solo ve entidades. Además, convertir dentro del servicio (que lleva <code>@Transactional</code>) permite leer las relaciones <code>LAZY</code> sin errores.</p>
+<p class="ver"><a href="{{COMPLETA}}s23">Paso 25 · Los servicios</a></p>
+</div>
+</details>
+
+<details class="faq" id="valid" data-claves="@valid validation notblank notnull positive size pattern 400 bad request">
+<summary>¿Qué hace <code>@Valid</code> y qué validaciones pongo en el RequestDTO?</summary>
+<div class="resp">
+<p>Las anotaciones van en los campos del RequestDTO y <code>@Valid</code> las activa en el controlador, delante de <code>@RequestBody</code>. Si el JSON no las cumple, Spring responde <b>400</b> sin llegar a ejecutar tu método.</p>
+<table>
+<tr><th>Anotación</th><th>Qué exige</th></tr>
+<tr><td><code>@NotNull</code></td><td>Que venga (no <code>null</code>). Para números, fechas, enums, ids.</td></tr>
+<tr><td><code>@NotBlank</code></td><td>Texto que venga y no esté vacío ni sea solo espacios.</td></tr>
+<tr><td><code>@Email</code></td><td>Formato de correo.</td></tr>
+<tr><td><code>@Past</code></td><td>Fecha en el pasado.</td></tr>
+<tr><td><code>@Pattern(regexp = "AL-\\d{4}")</code></td><td>Que el texto siga un patrón.</td></tr>
+<tr><td><code>@PositiveOrZero</code>, <code>@Min</code>, <code>@Max</code></td><td>Límites numéricos.</td></tr>
+</table>
+<p>Pon solo las que pida el enunciado. Necesitan la dependencia <b>Validation</b>; los imports son de <code>jakarta.validation.constraints</code>.</p>
+<div class="kid">Es el portero de la discoteca: si tu entrada no es válida, ni siquiera entras. El servicio solo atiende a quien ya pasó el control.</div>
+<p class="ver"><a href="{{COMPLETA}}s26">Paso 28 · Validación declarativa con @Valid</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-servicio" data-parte="3">
+<h2>Servicio</h2>
+
+<details class="faq" id="para-que-servicio" data-claves="service capa negocio controller repository capas">
+<summary>¿Para qué sirve la capa de servicio? ¿No puede el controlador usar el repositorio?</summary>
+<div class="resp">
+<p>Cada capa tiene un trabajo, y separarlas hace el código más fácil de entender y de cambiar:</p>
+<ul>
+<li><b>Controlador:</b> recibe la petición HTTP y elige el código de respuesta.</li>
+<li><b>Servicio:</b> la lógica (comprobar que el hospital existe, que el médico no tiene consultas…), las conversiones DTO ⇄ entidad y las transacciones.</li>
+<li><b>Repositorio:</b> hablar con la base.</li>
+</ul>
+<div class="kid">Es un restaurante: el camarero (controlador) toma el pedido, la cocina (servicio) lo prepara y la nevera (repositorio) guarda los ingredientes. El camarero no entra en la nevera.</div>
+<p class="ver"><a href="{{COMPLETA}}s16">Paso 18 · Qué cambia al pasar a REST</a></p>
+</div>
+</details>
+
+<details class="faq" id="interfaz-impl" data-claves="interfaz implementacion imedicoservice impl implements override">
+<summary>¿Por qué el servicio tiene una interfaz y una implementación?</summary>
+<div class="resp">
+<p>La <b>interfaz</b> (<code>IMedicoService</code>) es el contrato: la lista de cosas que el servicio sabe hacer. La <b>implementación</b> (<code>MedicoService</code>, con <code>implements IMedicoService</code>) es cómo las hace.</p>
+<p>El controlador pide la interfaz (<code>@Autowired private IMedicoService medicoService;</code>) y Spring le da la implementación. Así el controlador no depende de los detalles: podrías cambiar la implementación sin tocarlo. En la implementación, cada método lleva <code>@Override</code> encima, para indicar que cumple uno del contrato.</p>
+<p class="ver"><a href="{{COMPLETA}}s23">Paso 25 · Los servicios</a></p>
+</div>
+</details>
+
+<details class="faq" id="firma-metodo" data-claves="metodo interfaz firma retorno parametros crear medicoresponsedto medicorequestdto">
+<summary>¿Cómo se escriben los métodos de la interfaz del servicio, como <code>MedicoResponseDTO crear(MedicoRequestDTO dto);</code>?</summary>
+<div class="resp">
+<p>Cada línea de la interfaz se escribe pensando en tres cosas:</p>
+<table>
+<tr><th>Parte</th><th>Qué es</th><th>Cómo se decide</th></tr>
+<tr><td><code>MedicoResponseDTO</code></td><td>Lo que devuelve al controlador.</td><td>¿Qué tiene que enseñar al cliente? Al crear, el médico creado con su id.</td></tr>
+<tr><td><code>crear</code></td><td>El nombre.</td><td>Un verbo que diga la acción.</td></tr>
+<tr><td><code>(MedicoRequestDTO dto)</code></td><td>Lo que necesita recibir.</td><td>Para crear, los datos del cliente; para buscar o borrar, el <code>Long id</code>.</td></tr>
+<tr><td><code>;</code></td><td>Fin, sin cuerpo.</td><td>El código va en la implementación.</td></tr>
+</table>
+<p>Firmas típicas: <code>XResponseDTO crear(XRequestDTO dto);</code> · <code>XResponseDTO obtener(Long id);</code> · <code>List&lt;XResponseDTO&gt; listarPorHospital(Long hospitalId);</code> · <code>boolean tieneConsultas(Long id);</code> · <code>void eliminar(Long id);</code>. En la interfaz solo aparecen DTO y tipos simples, <b>nunca entidades</b>.</p>
+<p class="ver"><a href="{{COMPLETA}}s23-firma">Paso 25 · Cómo se escribe un método de la interfaz</a></p>
+</div>
+</details>
+
+<details class="faq" id="void-eliminar" data-claves="void eliminar borrar 204 no content retorno">
+<summary>¿Por qué el método <code>eliminar</code> es <code>void</code>?</summary>
+<div class="resp">
+<p><code>void</code> significa que el método <b>no devuelve nada</b>. Al borrar no hay ningún dato que enseñar: el recurso ya no existe, y la respuesta correcta es <b>204 No Content</b>, que va sin cuerpo.</p>
+<p>Los errores se resuelven <b>antes</b> de llamar a <code>eliminar</code>: el controlador comprueba si existe (si no, 404) y si se puede borrar (si no, 409). Cuando llega a <code>eliminar</code> ya sabe que va a salir bien, así que no necesita ninguna respuesta.</p>
+<pre data-f="MedicoController.java">if (medicoService.obtener(id) == null) {
+    return ResponseEntity.notFound().build();                    // 404
+}
+if (medicoService.tieneConsultas(id)) {
+    return ResponseEntity.status(HttpStatus.CONFLICT).build();   // 409
+}
+medicoService.eliminar(id);
+return ResponseEntity.noContent().build();                       // 204</pre>
+<p>La solución de la biblioteca de la guía usa otra forma válida: un <code>int</code> que cuenta qué pasó (1, 0 o -1).</p>
+<p class="ver"><a href="{{COMPLETA}}s23-firma">Paso 25 · ¿Por qué eliminar puede ser void?</a></p>
+</div>
+</details>
+
+<details class="faq" id="transactional" data-claves="@transactional readonly transaccion commit rollback sesion">
+<summary>¿Qué hacen <code>@Transactional</code> y <code>readOnly = true</code>?</summary>
+<div class="resp">
+<p>Una <b>transacción</b> es un grupo de operaciones que se hacen <b>todas o ninguna</b>. Con <code>@Transactional</code> sobre un método del servicio, Spring:</p>
+<ol>
+<li>Abre la transacción al entrar y la cierra al salir.</li>
+<li>Si todo va bien, <b>guarda</b> los cambios; si se lanza una excepción, los <b>deshace</b> todos.</li>
+<li>Mantiene la conexión con la base abierta durante el método, para poder recorrer relaciones <code>LAZY</code> sin <code>LazyInitializationException</code>.</li>
+</ol>
+<p><code>readOnly = true</code> avisa de que el método <b>solo lee</b>: Hibernate no vigila cambios para guardarlos, va algo más rápido y queda claro que no modifica nada.</p>
+<table>
+<tr><th>Método</th><th>Anotación</th></tr>
+<tr><td><code>crear</code>, <code>actualizar</code></td><td><code>@Transactional</code></td></tr>
+<tr><td><code>obtener</code>, <code>listar…</code></td><td><code>@Transactional(readOnly = true)</code></td></tr>
+<tr><td>Uno que solo llama a un método del repositorio (<code>deleteById</code>, <code>countBy…</code>)</td><td>Puede no llevarla: el repositorio ya trae la suya</td></tr>
+</table>
+<div class="warn">Importa la de Spring, <code>org.springframework.transaction.annotation.Transactional</code>. La de <code>jakarta.transaction</code> no tiene <code>readOnly</code>.</div>
+<div class="kid">Es una compra en el súper: o pagas todo el carro y te lo llevas, o no pagas nada. Nunca sales con media compra.</div>
+<p class="ver"><a href="{{COMPLETA}}s23-transactional">Paso 25 · @Transactional y readOnly</a></p>
+</div>
+</details>
+
+<details class="faq" id="servicio-repositorios" data-claves="servicio usa otro servicio repositorio inyectar autowired">
+<summary>¿Por qué un servicio usa repositorios de otras entidades y no sus servicios?</summary>
+<div class="resp">
+<p>Porque necesita <b>la entidad de verdad</b> para crear la relación, y los servicios solo devuelven DTO. Para crear un médico hay que asociarle el objeto <code>Hospital</code>, no un <code>HospitalResponseDTO</code>: con un DTO no se puede rellenar un <code>@ManyToOne</code>. Por eso <code>MedicoService</code> inyecta <code>IHospitalRepository</code>.</p>
+<div class="kid">El cocinero necesita el tomate de verdad, no una foto del tomate. Va a la nevera (el repositorio), no al camarero.</div>
+<p class="ver"><a href="{{COMPLETA}}s23">Paso 25 · Los servicios</a></p>
+</div>
+</details>
+
+<details class="faq" id="metodos-servicio" data-claves="medicoservice implementacion crear obtener listar tienes consultas eliminar mapear">
+<summary>¿Qué hace cada método de la implementación del servicio (<code>MedicoService</code>)?</summary>
+<div class="resp">
+<ul>
+<li><b><code>crear</code>:</b> busca el hospital con <code>findById</code>; si no existe, devuelve <code>null</code>. Si existe, crea el <code>Medico</code> con los datos del DTO, lo añade con <code>addMedico</code>, lo guarda con <code>save</code> y devuelve su DTO. Lleva <code>@Transactional</code>.</li>
+<li><b><code>obtener</code>:</b> busca el médico; si no está, <code>null</code>; si está, lo convierte a DTO. Lleva <code>readOnly</code> porque, al convertir, lee el hospital (<code>LAZY</code>).</li>
+<li><b><code>listarPorHospital</code>:</b> si el hospital no existe, <code>null</code> (para que sea un 404 y no una lista vacía). Si existe, recorre sus médicos, convierte cada uno y devuelve la lista.</li>
+<li><b><code>tieneConsultas</code>:</b> devuelve <code>true</code> si <code>countByMedicoId</code> es mayor que cero.</li>
+<li><b><code>eliminar</code>:</b> <code>deleteById(id)</code>, nada más.</li>
+<li><b><code>mapearADTO</code>:</b> privado. Fabrica el <code>MedicoResponseDTO</code> con id, nombre, especialidad y el <b>nombre</b> del hospital. Es lo que impide que la entidad salga del servicio.</li>
+</ul>
+<p>El código completo, con cada línea explicada, está en el solucionario del hospital.</p>
+<p class="ver"><a href="{{EJ}}solucion-2">Ejercicio 2 · Solucionario del hospital</a></p>
+</div>
+</details>
+
+<details class="faq" id="avisar-controlador" data-claves="no existe null optional 404 excepcion avisar">
+<summary>¿Cómo le dice el servicio al controlador que algo no existe o que hay un conflicto?</summary>
+<div class="resp">
+<p>Devolviendo un valor que el controlador sabe interpretar, sin lanzar excepciones:</p>
+<table>
+<tr><th>El servicio devuelve</th><th>Significa</th><th>El controlador responde</th></tr>
+<tr><td>un DTO o una lista</td><td>Encontrado o hecho</td><td>200 o 201</td></tr>
+<tr><td><code>null</code></td><td>No existe</td><td>404</td></tr>
+<tr><td>un método <code>boolean</code> → <code>true</code> (<code>tieneConsultas</code>, <code>existeEmail…</code>)</td><td>Hay un conflicto</td><td>409</td></tr>
+</table>
+<p>La guía de la biblioteca usa una variante con <code>Optional</code> (vacío = 404) y un <code>int</code> en <code>eliminar</code>. Las dos son válidas; lo importante es que el servicio <b>cuente qué ha pasado</b> y el controlador lo traduzca a un código.</p>
+<p class="ver"><a href="{{COMPLETA}}s23">Paso 25 · El «idioma» entre el servicio y el controlador</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-controlador" data-parte="3">
+<h2>Controlador y HTTP</h2>
+
+<details class="faq" id="partes-controlador" data-claves="restcontroller requestmapping autowired responseentity postmapping getmapping deletemapping">
+<summary>¿Qué hace cada parte del controlador?</summary>
+<div class="resp">
+<ul>
+<li><b><code>@RestController</code></b>: la clase atiende peticiones HTTP y lo que devuelven sus métodos se convierte en JSON.</li>
+<li><b><code>@RequestMapping("/api/medicos")</code></b>: el principio de la dirección de todos sus métodos.</li>
+<li><b><code>@Autowired IMedicoService</code></b>: pide la interfaz del servicio; Spring le da la implementación.</li>
+<li><b><code>@PostMapping</code>, <code>@GetMapping</code>, <code>@PutMapping</code>, <code>@DeleteMapping</code></b>: qué método HTTP atiende cada función, con el resto de la dirección entre paréntesis (<code>"/{id}"</code>).</li>
+<li><b><code>ResponseEntity&lt;...&gt;</code></b>: la respuesta completa (código, cabeceras y cuerpo). Lo que va entre <code>&lt; &gt;</code> es el tipo del cuerpo.</li>
+</ul>
+<p>El controlador no busca en la base ni convierte entidades: pregunta al servicio y elige el código. Por eso «no tiene lógica de negocio».</p>
+<p class="ver"><a href="{{EJ}}solucion-2">Ejercicio 2 · El controlador, pieza a pieza</a></p>
+</div>
+</details>
+
+<details class="faq" id="codigos-http" data-claves="200 201 204 400 404 409 415 500 codigo estado status">
+<summary>¿Qué código HTTP devuelvo en cada caso?</summary>
+<div class="resp">
+<table>
+<tr><th>Código</th><th>Cuándo</th><th>Cómo se escribe</th></tr>
+<tr><td><b>200</b> OK</td><td>Lectura correcta (GET) o actualización con cuerpo.</td><td><code>ResponseEntity.ok(dto)</code></td></tr>
+<tr><td><b>201</b> Created</td><td>Algo nuevo creado (POST). Con la cabecera <code>Location</code>.</td><td><code>ResponseEntity.created(location).body(dto)</code></td></tr>
+<tr><td><b>204</b> No Content</td><td>Borrado correcto: no hay nada que devolver.</td><td><code>ResponseEntity.noContent().build()</code></td></tr>
+<tr><td><b>400</b> Bad Request</td><td>Los datos llegan mal (falla <code>@Valid</code>, falta un parámetro, enum inexistente).</td><td>Lo hace Spring solo</td></tr>
+<tr><td><b>404</b> Not Found</td><td>El recurso, o uno del que depende, no existe.</td><td><code>ResponseEntity.notFound().build()</code></td></tr>
+<tr><td><b>409</b> Conflict</td><td>La petición es correcta pero choca con el estado actual: borrar algo con hijos, un email repetido.</td><td><code>ResponseEntity.status(HttpStatus.CONFLICT).build()</code></td></tr>
+<tr><td><b>500</b></td><td>Error del servidor que no has controlado. En un ejercicio, casi siempre es un fallo tuyo que había que convertir en 404 o 409.</td><td>—</td></tr>
+</table>
+<p class="ver"><a href="{{COMPLETA}}s24">Paso 26 · Los controladores y los códigos de estado</a></p>
+</div>
+</details>
+
+<details class="faq" id="path-param-body" data-claves="pathvariable requestparam requestbody parametros direccion url query">
+<summary>¿Qué diferencia hay entre <code>@PathVariable</code>, <code>@RequestParam</code> y <code>@RequestBody</code>?</summary>
+<div class="resp">
+<table>
+<tr><th>Anotación</th><th>De dónde saca el dato</th><th>Ejemplo</th></tr>
+<tr><td><code>@PathVariable</code></td><td>De un trozo de la dirección.</td><td><code>/api/medicos/<b>7</b></code> con <code>@GetMapping("/{id}")</code></td></tr>
+<tr><td><code>@RequestParam</code></td><td>De lo que va tras la <code>?</code> (un filtro).</td><td><code>/api/medicos?hospitalId=<b>1</b></code></td></tr>
+<tr><td><code>@RequestBody</code></td><td>Del cuerpo de la petición (el JSON), convertido en un DTO.</td><td>El JSON de un <code>POST</code></td></tr>
+</table>
+<p>Regla práctica: el <b>id del recurso</b> va en la ruta, los <b>filtros</b> tras la <code>?</code> y los <b>datos para crear o cambiar</b> en el cuerpo. Un <code>@RequestParam</code> es obligatorio por defecto: si falta, Spring responde 400.</p>
+<p class="ver"><a href="{{COMPLETA}}s27">Paso 29 · Probar con Postman o curl</a></p>
+</div>
+</details>
+
+<details class="faq" id="location" data-claves="location cabecera header created uri servleturicomponentsbuilder 201">
+<summary>¿Qué es la cabecera <code>Location</code> y cómo se construye?</summary>
+<div class="resp">
+<p>En un <b>201 Created</b>, <code>Location</code> dice <b>dónde está el recurso nuevo</b>: si creas el médico 7, vale <code>http://localhost:8080/api/medicos/7</code>. Así el cliente sabe qué dirección pedir después.</p>
+<pre data-f="MedicoController.java">URI location = ServletUriComponentsBuilder.fromCurrentRequest()   // la dirección de esta petición: /api/medicos
+        .path("/{id}")                                            // le añade /{id}
+        .buildAndExpand(creado.id())                              // cambia {id} por el id del médico creado
+        .toUri();
+return ResponseEntity.created(location).body(creado);</pre>
+<p class="ver"><a href="{{COMPLETA}}s24">Paso 26 · Los controladores y los códigos de estado</a></p>
+</div>
+</details>
+
+<details class="faq" id="409-no-500" data-claves="409 500 conflict borrar padre hijos dataintegrityviolationexception clave foranea">
+<summary>Al borrar un hospital con médicos sale un 500. ¿Por qué debería ser 409?</summary>
+<div class="resp">
+<p>El 500 viene de MySQL: los médicos siguen apuntando al hospital y la clave foránea no deja borrarlo (<code>DataIntegrityViolationException</code>). Un 500 significa «el servidor ha fallado», y no es verdad: el problema es que la petición choca con los datos que hay. Eso es un <b>409 Conflict</b>.</p>
+<p>La solución es <b>comprobarlo antes</b> de borrar: el servicio ofrece una pregunta como <code>tieneMedicos(id)</code> (con un <code>countByHospitalId</code>), y si es <code>true</code>, el controlador responde 409 sin intentar el borrado.</p>
+<p class="ver"><a href="{{COMPLETA}}s25">Paso 27 · Las trampas de comprensión</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-errores" data-parte="varias">
+<h2>Errores frecuentes</h2>
+
+<details class="faq" id="lazyinitialization" data-claves="lazyinitializationexception could not initialize proxy no session sesion cerrada">
+<summary>Me sale <code>LazyInitializationException</code>. ¿Qué pasa?</summary>
+<div class="resp">
+<p>Estás usando una relación <code>LAZY</code> (por ejemplo <code>medico.getHospital().getNombre()</code>) <b>cuando la conexión con la base ya se ha cerrado</b>. El sustituto (<i>proxy</i>) no puede ir a buscar los datos.</p>
+<p>Suele pasar cuando el servicio devuelve la entidad y es el controlador quien intenta recorrerla. Se arregla así:</p>
+<ul>
+<li>Convierte a DTO <b>dentro</b> del servicio.</li>
+<li>Pon <code>@Transactional</code> (o <code>@Transactional(readOnly = true)</code> si solo lee) en ese método, para que la sesión siga abierta mientras recorres las relaciones.</li>
+</ul>
+<p>En la Parte 1, si te pasa dentro de <code>run</code>, anota <code>run</code> con <code>@Transactional</code>.</p>
+<p class="ver"><a href="{{COMPLETA}}s25">Paso 27 · Las trampas de comprensión</a></p>
+</div>
+</details>
+
+<details class="faq" id="bucle-json" data-claves="bucle infinito recursion stackoverflow json jackson nesting depth">
+<summary>El JSON entra en un bucle infinito (o sale <code>StackOverflowError</code>). ¿Por qué?</summary>
+<div class="resp">
+<p>Porque estás devolviendo una <b>entidad con una relación bidireccional</b>. Al convertirla a JSON, Jackson recorre hospital → médicos → hospital → médicos… sin fin, hasta que falla (<i>Document nesting depth exceeds 500</i> o <code>StackOverflowError</code>).</p>
+<p>La solución buena es <b>devolver DTO</b>: el <code>MedicoResponseDTO</code> lleva solo <code>nombreHospital</code>, no el hospital entero, y los <code>*ResumenDTO</code> no vuelven a apuntar al objeto que los contiene. También existen <code>@JsonIgnore</code> o <code>@JsonManagedReference</code>/<code>@JsonBackReference</code>, pero atan la entidad al formato JSON y no son lo recomendado.</p>
+<p class="ver"><a href="{{COMPLETA}}s25">Paso 27 · Las trampas de comprensión</a></p>
+</div>
+</details>
+
+<details class="faq" id="n-mas-1" data-claves="n+1 muchas consultas join fetch entitygraph rendimiento select">
+<summary>Al listar salen muchísimas consultas en la terminal. ¿Qué es el problema N+1?</summary>
+<div class="resp">
+<p>Una consulta trae la lista (por ejemplo, 50 pacientes) y después, al recorrer una relación <code>LAZY</code> de cada uno, Hibernate lanza <b>otra consulta por cada elemento</b>: 1 + 50. Funciona, pero es lento.</p>
+<p>Se arregla en el repositorio, trayendo la relación en la misma consulta:</p>
+<pre data-f="repositorio (dos formas)">@Query("SELECT DISTINCT p FROM Paciente p LEFT JOIN FETCH p.consultas")
+List&lt;Paciente&gt; listarConConsultas();
+
+@EntityGraph(attributePaths = {"consultas"})
+List&lt;Paciente&gt; findAll();</pre>
+<p>Lo ves con <code>spring.jpa.show-sql=true</code>: cuenta los <code>select</code> que salen.</p>
+<p class="ver"><a href="{{COMPLETA}}s25">Paso 27 · Las trampas de comprensión</a></p>
+</div>
+</details>
+
+<details class="faq" id="no-property" data-claves="no property found for type propertyreferenceexception consulta derivada nombre">
+<summary>Al arrancar dice <i>No property … found for type</i>. ¿Qué he hecho mal?</summary>
+<div class="resp">
+<p>Una consulta derivada del repositorio usa un nombre que <b>no es un campo Java</b> de la entidad. <code>findByNombre</code> necesita un campo <code>nombre</code>; <code>findByFechaNacimiento</code>, un campo <code>fechaNacimiento</code>. Suele pasar al escribir el nombre de la columna SQL (<code>fecha_nacimiento</code>) o con una errata.</p>
+<p>Compara letra a letra el nombre del método con el del campo, y recuerda que tras <code>findBy</code> va con mayúscula inicial.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-16">Paso 16 · Corregir errores y terminar el proyecto</a></p>
+</div>
+</details>
+
+<details class="faq" id="error-415" data-claves="415 unsupported media type content-type text json postman">
+<summary>Postman me devuelve <b>415 Unsupported Media Type</b>. ¿Por qué?</summary>
+<div class="resp">
+<p>Porque el cuerpo no va marcado como JSON. En Postman, en la pestaña <b>Body</b>, hay que elegir <b>raw</b> y, en el desplegable de la derecha, <b>JSON</b>. Así Postman añade la cabecera <code>Content-Type: application/json</code>. Si lo dejas en <i>Text</i>, el servidor no sabe leerlo y responde 415.</p>
+<p class="ver"><a href="{{COMPLETA}}s27">Paso 29 · Probar con Postman o curl</a></p>
+</div>
+</details>
+
+<details class="faq" id="problems-vscode" data-claves="vs code errores rojos problems import package jdk 21 maven clean workspace">
+<summary>VS Code me marca errores en rojo y no sé por dónde empezar.</summary>
+<div class="resp">
+<p>Abre la vista <b>Problems</b> con <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> y corrige primero los errores de Java: nombre del archivo distinto al de la clase, imports que faltan, <code>package</code> incorrecto o llaves mal cerradas.</p>
+<p>Si sigue fallando: comprueba que el proyecto usa <b>JDK 21</b> (<b>Java: Configure Java Runtime</b>), que Maven ha terminado de descargar las dependencias del <code>pom.xml</code> y, si el editor sigue confundido, ejecuta <b>Java: Clean Java Language Server Workspace</b>.</p>
+<p class="ver"><a href="{{COMPLETA}}paso-16">Paso 16 · Corregir errores y terminar el proyecto</a></p>
+</div>
+</details>
+</section>
+
+
+<section class="tema" id="tema-postman" data-parte="3">
+<h2>Probar con Postman</h2>
+
+<details class="faq" id="peticion-post" data-claves="postman post body raw json enviar peticion">
+<summary>¿Cómo hago una petición <code>POST</code> con un JSON en Postman?</summary>
+<div class="resp">
+<ol>
+<li>Elige el método <b>POST</b> en el desplegable y escribe la dirección: <code>http://localhost:8080/api/medicos</code>.</li>
+<li>En la pestaña <b>Body</b>, marca <b>raw</b> y elige <b>JSON</b> en el desplegable.</li>
+<li>Escribe el cuerpo y pulsa <b>Send</b>.</li>
+</ol>
+<pre data-f="Body de POST /api/medicos">{
+    "nombre": "Dra. Sara Gil",
+    "salario": 3900.00,
+    "especialidad": "PEDIATRIA",
+    "hospitalId": 1
+}</pre>
+<p>Abajo verás el código (201 si ha ido bien) y, en <b>Headers</b>, la cabecera <code>Location</code>. Las peticiones <code>GET</code> y <code>DELETE</code> no llevan cuerpo.</p>
+<p class="ver"><a href="{{COMPLETA}}s17">Paso 19 · El puente paso a paso</a></p>
+</div>
+</details>
+
+<details class="faq" id="json-desde-dto" data-claves="json claves campos record comillas numeros fechas enum lista objeto anidado">
+<summary>¿Cómo sé qué escribir en el JSON?</summary>
+<div class="resp">
+<p>Cada clave del JSON es <b>un campo del RequestDTO, con el mismo nombre</b>. Y cada tipo se escribe de una forma:</p>
+<table>
+<tr><th>Tipo en el record</th><th>En el JSON</th></tr>
+<tr><td><code>String</code></td><td>Entre comillas: <code>"Dra. Sara Gil"</code></td></tr>
+<tr><td><code>Long</code>, <code>BigDecimal</code>, <code>int</code></td><td>Número sin comillas: <code>1</code>, <code>3900.00</code></td></tr>
+<tr><td>Un enum</td><td>El nombre exacto de la constante, entre comillas: <code>"PEDIATRIA"</code></td></tr>
+<tr><td><code>LocalDate</code> / <code>LocalDateTime</code></td><td>Texto: <code>"2002-07-21"</code> / <code>"2026-10-01T09:30:00"</code></td></tr>
+<tr><td>Una lista (<code>Set&lt;Long&gt;</code>)</td><td>Entre corchetes: <code>[1, 2]</code></td></tr>
+<tr><td>Otro record dentro</td><td>Un objeto entre llaves: <code>"ficha": { ... }</code></td></tr>
+</table>
+<p>No se envía el <code>id</code> (lo pone MySQL) y las relaciones van como ids (<code>"hospitalId": 1</code>), que tienen que existir ya.</p>
+<p class="ver"><a href="{{COMPLETA}}s27">Paso 29 · Probar con Postman o curl</a></p>
+</div>
+</details>
+
+<details class="faq" id="provocar-errores" data-claves="probar errores 400 404 409 provocar">
+<summary>¿Cómo pruebo que mis errores 400, 404 y 409 funcionan?</summary>
+<div class="resp">
+<ul>
+<li><b>400:</b> rompe el cuerpo. Envía <code>{}</code>, deja el nombre vacío (<code>""</code>) o pon una especialidad que no existe.</li>
+<li><b>404:</b> apunta a un id que no existe: <code>GET /api/medicos/99999</code>, o un <code>POST</code> con <code>"hospitalId": 99999</code>.</li>
+<li><b>409:</b> provoca el conflicto: borra un médico que tenga consultas (<code>DELETE /api/medicos/1</code> con los datos del <code>data.sql</code>).</li>
+</ul>
+<p>Comprueba el código de cada respuesta, no solo que «no da error»: un 200 donde esperabas un 404 también es un fallo.</p>
+<p class="ver"><a href="{{COMPLETA}}s27">Paso 29 · Probar con Postman o curl</a></p>
+</div>
+</details>
+</section>

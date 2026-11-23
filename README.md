@@ -8,9 +8,10 @@ Guía en español para aprender a construir una API REST con **Spring Boot, Spri
 |---|---|
 | **Guía completa** | 33 pasos (cartas) en cuatro partes: Data JPA, el puente a REST, la API REST y los ejercicios. Cada paso lleva explicación, código para copiar y pruebas con Postman. |
 | **Guía resumida** | Los mismos pasos muy resumidos, con el código, y un enlace a la explicación completa de cada uno. |
-| **Ejercicios** | Ejercicios tipo examen con enunciado y solucionario (Academia de idiomas, Hospital San Gabriel). |
+| **Ejercicios** | Ejercicios tipo examen con enunciado y solucionario (Academia de idiomas, Hospital San Gabriel), con una casilla para marcar cada paso hecho. |
+| **Preguntas frecuentes** | Las dudas que salen al seguir la guía, agrupadas por temas y con buscador. Cada respuesta es completa y enlaza al paso donde se explica. |
 
-Un **selector** inicial permite elegir entre los tres.
+Un **selector** inicial permite elegir entre los cuatro.
 
 ## Cómo leerla
 
@@ -33,9 +34,10 @@ También vale hacer doble clic en `Construir guia.bat`.
 ├── contenido/        textos de la guía (HTML por pasos, agrupados por partes)
 │   ├── parte-1-… a parte-4-…
 │   ├── ejercicios/   enunciados y solucionarios
+│   ├── faq/          las preguntas frecuentes (preguntas.html)
 │   └── resumen/      resúmenes de cada paso para la guía resumida
 ├── plantillas/       esqueletos de página
-├── recursos/         css/, js/, fuentes/, img/ y paginas/ (selector, resumida y ejercicios)
+├── recursos/         css/, js/, fuentes/, img/ y paginas/ (selector, resumida, ejercicios y preguntas frecuentes)
 ├── guia/             GENERADO: las cuatro páginas para trabajar en carpeta
 ├── docs/editar.md    cómo añadir, quitar y reordenar pasos y ejercicios
 ├── construir.py      script que lo junta todo

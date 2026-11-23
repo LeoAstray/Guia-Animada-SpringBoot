@@ -6,9 +6,10 @@ En guia/ (enlazan los css/, js/ e img/ de recursos/, para trabajar):
   - guia-completa.html   -> la guía principal (todas las explicaciones)
   - guia-resumida.html   -> los mismos pasos, muy resumidos, cada uno con un enlace a la completa
   - ejercicios.html      -> la lista de ejercicios, con su enunciado y su solucionario
+  - faq.html             -> las preguntas frecuentes, con buscador (contenido/faq/preguntas.html)
 
 También en esta carpeta, para compartir: UN solo archivo con todo lo anterior dentro (el selector y
-las tres secciones, que se eligen igual que en la carpeta):
+las cuatro secciones, que se eligen igual que en la carpeta):
   - Guia_Animada_SpringBoot_DataJPA_y_REST.html
 
 Uso: doble clic en "Construir guia.bat"  o  python construir.py
@@ -283,6 +284,39 @@ if (window.ANCLA_INICIAL) location.hash = window.ANCLA_INICIAL;
 """
 
 
+# ---------------------------------------------------------------- preguntas frecuentes
+
+PARTES_FAQ = {'1': 'Parte 1 · Data JPA', '2': 'Parte 2 · El puente', '3': 'Parte 3 · API REST', 'varias': 'Toda la guía'}
+
+
+def construir_faq():
+    """Lee contenido/faq/preguntas.html y devuelve (preguntas, filtros de temas, nº de preguntas).
+    A cada <h2> de tema le añade su número de preguntas y la parte de la guía de la que sale (data-parte,
+    que también le da su color); los filtros son enlaces a cada tema."""
+    texto = re.sub(r'<!--.*?-->\s*', '', leer(CONTENIDO, 'faq', 'preguntas.html'), flags=re.S).strip()
+    tema_re = r'<section class="tema" id="([^"]+)"(?: data-parte="([^"]*)")?>\s*<h2>(.*?)</h2>(.*?)</section>'
+    chips, ids = [], set()
+    for m in re.finditer(tema_re, texto, re.S):
+        n = m.group(4).count('<details class="faq"')
+        parte = m.group(2) or ''
+        chips.append('      <a class="chip" href="#%s" data-parte="%s" aria-current="false">%s <span>%d</span></a>'
+                     % (m.group(1), parte, m.group(3), n))
+        if parte and parte not in PARTES_FAQ:
+            print('  AVISO: el tema %s tiene data-parte="%s"; usa 1, 2, 3 o varias' % (m.group(1), parte))
+    for m in re.finditer(r'<details class="faq" id="([^"]+)"', texto):
+        if m.group(1) in ids:
+            print('  AVISO: dos preguntas de la FAQ tienen el mismo id: %s' % m.group(1))
+        ids.add(m.group(1))
+
+    def cabecera(m):
+        n, parte = m.group(4).count('<details class="faq"'), m.group(2) or ''
+        etiqueta = '<span class="de-parte">%s</span>' % PARTES_FAQ[parte] if parte in PARTES_FAQ else ''
+        return ('<section class="tema" id="%s" data-parte="%s">\n<h2>%s <span class="n">%d preguntas</span>%s</h2>%s</section>'
+                % (m.group(1), parte, m.group(3), n, etiqueta, m.group(4)))
+    texto = re.sub(tema_re, cabecera, texto, flags=re.S)
+    return texto, '\n'.join(chips), texto.count('<details class="faq"')
+
+
 def main():
     partes, grupos, datos_partes, todos, rangos, entradas = [], [], [], [], {}, 0
     for i, carpeta in enumerate(sorted(d for d in os.listdir(CONTENIDO)
@@ -300,6 +334,8 @@ def main():
     css_ejercicios = base + ['css/07-texto-y-notas.css', 'css/08-codigo-y-tablas.css', 'paginas/resumen.css']
     js_resumida = ['js/2-codigo.js']
     js_ejercicios = js_resumida + ['paginas/ejercicios.js']   # + la checklist de los enunciados
+    css_faq = css_ejercicios + ['paginas/faq.css']
+    js_faq = js_resumida + ['paginas/faq.js']                # + el buscador
     js_selector = ['paginas/selector.js']
     js_entrada = ['paginas/entrada.js']
 
@@ -314,16 +350,20 @@ def main():
     tarjetas_ej, paneles_ej = construir_ejercicios(leer_ejercicios())
     ejercicios = rellenar(leer(PLANTILLAS, 'plantilla-ejercicios.html'), cabecera=cabecera, tarjetas=tarjetas_ej, paneles=paneles_ej)
 
+    preguntas_faq, temas_faq, n_faq = construir_faq()
+    faq = rellenar(leer(PLANTILLAS, 'plantilla-faq.html'), cabecera=cabecera, preguntas=preguntas_faq, temas=temas_faq,
+                   n_preguntas=str(n_faq))
+
     selector = leer(PLANTILLAS, 'plantilla-selector.html')
 
-    # Las cuatro páginas se montan dos veces: para la carpeta (enlazan css/ y js/ y entre sí por archivo)
+    # Las cinco páginas se montan dos veces: para la carpeta (enlazan css/ y js/ y entre sí por archivo)
     # y para el archivo único (con todo dentro y enlaces "#/..." que resuelve la página contenedora).
     destinos = {
-        'carpeta': dict(unico=False, inicio=('guia-completa.html', 'guia-resumida.html', 'ejercicios.html'),
-                        pasos='guia-completa.html#', ejercicios='ejercicios.html',
+        'carpeta': dict(unico=False, inicio=('guia-completa.html', 'guia-resumida.html', 'ejercicios.html', 'faq.html'),
+                        pasos='guia-completa.html#', ejercicios='ejercicios.html', ej='ejercicios.html#',
                         otra=('index.html', '← Elegir otra guía'), atras=('index.html', 'Elegir otra guía')),
-        'unico': dict(unico=True, inicio=('#/completa', '#/resumida', '#/ejercicios'),
-                      pasos='#/completa/', ejercicios='#/ejercicios',
+        'unico': dict(unico=True, inicio=('#/completa', '#/resumida', '#/ejercicios', '#/faq'),
+                      pasos='#/completa/', ejercicios='#/ejercicios', ej='#/ejercicios/',
                       otra=('#/', '← Elegir otra guía'), atras=('#/', 'Elegir otra guía')),
     }
 
@@ -331,8 +371,9 @@ def main():
         u = v['unico']
         paginas = {
             'inicio': rellenar(selector, cabecera=cabecera, total=str(cartas), css=estilos(css_selector, u), js=scripts(js_selector, u),
-                               n_ejercicios=str(len(leer_ejercicios())),
-                               href_completa=v['inicio'][0], href_resumida=v['inicio'][1], href_ejercicios=v['inicio'][2]),
+                               n_ejercicios=str(len(leer_ejercicios())), n_preguntas=str(n_faq),
+                               href_completa=v['inicio'][0], href_resumida=v['inicio'][1], href_ejercicios=v['inicio'][2],
+                               href_faq=v['inicio'][3]),
             'completa': rellenar(completa, entrada=scripts(js_entrada, u), css=estilos(css, u), js=scripts(js, u), enlace_otra=v['otra'][0],
                                  texto_otra=v['otra'][1], enlace_ejercicios=v['ejercicios']),
             'resumida': rellenar(resumida, entrada=scripts(js_entrada, u), indice=indice_res, partes=cuerpo_res, css=estilos(css_resumida, u),
@@ -340,6 +381,9 @@ def main():
                                  enlace_ejercicios=v['ejercicios']).replace('{{COMPLETA}}', v['pasos']),
             'ejercicios': rellenar(ejercicios, entrada=scripts(js_entrada, u), css=estilos(css_ejercicios, u), js=scripts(js_ejercicios, u),
                                    enlace_atras=v['atras'][0], texto_atras=v['atras'][1]),
+            'faq': rellenar(faq, entrada=scripts(js_entrada, u), css=estilos(css_faq, u), js=scripts(js_faq, u),
+                            enlace_atras=v['atras'][0], texto_atras=v['atras'][1]
+                            ).replace('{{COMPLETA}}', v['pasos']).replace('{{EJ}}', v['ej']),
         }
         if u:
             paginas['completa'] = incrustar_imagenes(paginas['completa'])
@@ -354,13 +398,14 @@ def main():
     escribir(os.path.join(SALIDA, 'guia-completa.html'), carpeta['completa'])
     escribir(os.path.join(SALIDA, 'guia-resumida.html'), carpeta['resumida'])
     escribir(os.path.join(SALIDA, 'ejercicios.html'), carpeta['ejercicios'])
+    escribir(os.path.join(SALIDA, 'faq.html'), carpeta['faq'])
 
     # El texto va dentro de un <script>: se protegen las secuencias que podrían cerrarlo o abrir un comentario
     paginas_json = json.dumps(montar(destinos['unico'])).replace('</', '<\\/').replace('<!--', '<\\!--')
     escribir(os.path.join(AQUI, ARCHIVO_UNICO), rellenar(leer(PLANTILLAS, 'plantilla-todo.html'), paginas=paginas_json))
 
     print('Guías construidas: %d cartas, %d entradas en el índice, %d CSS, %d JS.' % (cartas, entradas, len(css), len(js)))
-    print('  -> guia/: index.html (selector), guia-completa.html, guia-resumida.html, ejercicios.html')
+    print('  -> guia/: index.html (selector), guia-completa.html, guia-resumida.html, ejercicios.html, faq.html (%d preguntas)' % n_faq)
     print('  -> todo en un solo archivo: %s' % ARCHIVO_UNICO)
 
 

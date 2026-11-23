@@ -3,7 +3,7 @@
    Usa los colores y tipografías de recursos/css/01-variables.css y las reglas
    generales de recursos/css/02-base.css (construir.py las junta antes que este archivo).
    ========================================================= */
-body.resumida, body.ejercicios {
+body.resumida, body.ejercicios, body.faq {
   background:
     radial-gradient(45% 40% at 85% 0%, rgba(139, 91, 255, .22), transparent 70%),
     radial-gradient(35% 35% at 5% 100%, rgba(61, 224, 255, .10), transparent 70%),

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+{{CABECERA}}
+{{ENTRADA}}
+<title>Spring Boot de cero a REST · preguntas frecuentes</title>
+{{CSS}}
+</head>
+<body class="faq" id="inicio">
+<header class="bar">
+  <a class="back" href="{{ENLACE_ATRAS}}">← {{TEXTO_ATRAS}}</a>
+  <span class="tag"><span class="t-largo">PREGUNTAS FRECUENTES</span><span class="t-corto" aria-hidden="true">FAQ</span></span>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <h1>Preguntas frecuentes</h1>
+    <p class="sub">{{N_PREGUNTAS}} dudas que salen al seguir la guía, cada una con su respuesta entera y un enlace al paso donde se explica. Escribe lo que no entiendes o elige un tema.</p>
+  </section>
+
+  <!-- Solo el campo (y el recuento) se queda pegado arriba al bajar; los temas se van con el scroll para dejar
+       sitio a las respuestas. Sin JavaScript el buscador no hace nada, pero los temas siguen siendo enlaces. -->
+  <div class="buscador" role="search">
+    <label class="campo">
+      <span class="oculto">Buscar en las preguntas</span>
+      <svg class="lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      <input id="q" type="search" placeholder="Busca: propietario, LAZY, 409, @Transactional…" autocomplete="off" spellcheck="false" enterkeyhint="search">
+      <kbd class="atajo" aria-hidden="true">/</kbd>
+      <button class="borrar" type="button" aria-label="Borrar la búsqueda" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </label>
+    <p class="estado" id="estado" aria-live="polite"></p>
+  </div>
+  <nav class="temas" aria-label="Temas">
+    <a class="chip todos" href="#inicio" aria-current="true">Todos <span>{{N_PREGUNTAS}}</span></a>
+{{TEMAS}}
+  </nav>
+
+  <div class="lista">
+{{PREGUNTAS}}
+  </div>
+
+  <div class="vacio" id="vacio" hidden>
+    <!-- Una lupa que no encuentra nada: se traza sola al aparecer (como los dibujos de las cartas del selector) -->
+    <svg class="vacio-dibujo" viewBox="0 0 120 96" aria-hidden="true">
+      <circle cx="50" cy="42" r="28" pathLength="1"/>
+      <path d="M71 63l26 26" pathLength="1"/>
+      <path d="M41 33a9 9 0 1 1 13 8c-3 1.8-4 3.4-4 7" pathLength="1"/>
+      <circle class="punto" cx="50" cy="56" r="1.4" pathLength="1"/>
+      <path class="chispa" d="M96 14v10M91 19h10M14 70v8M10 74h8" pathLength="1"/>
+    </svg>
+    <p class="vacio-t">No hay ninguna pregunta con <b id="vacio-q"></b><span id="vacio-tema"></span>.</p>
+    <p class="vacio-otros" id="vacio-otros" hidden><button type="button" id="ver-todos">Ver las <b id="vacio-n"></b> de todos los temas</button></p>
+    <p class="vacio-s">Prueba con menos palabras o con otra forma de decirlo. Por ejemplo:</p>
+    <div class="sugerencias">
+      <button type="button" data-q="propietario">propietario</button>
+      <button type="button" data-q="lazy">LAZY</button>
+      <button type="button" data-q="cascade">cascade</button>
+      <button type="button" data-q="dto">DTO</button>
+      <button type="button" data-q="409">409</button>
+      <button type="button" data-q="postman">Postman</button>
+    </div>
+  </div>
+
+  <footer class="end">
+    <a href="#inicio">↑ Volver arriba</a>
+    <a href="{{ENLACE_ATRAS}}">← {{TEXTO_ATRAS}}</a>
+  </footer>
+</main>
+{{JS}}
+</body>
+</html>
