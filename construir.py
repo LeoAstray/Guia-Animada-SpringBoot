@@ -299,6 +299,7 @@ def main():
     css_resumida = base + ['css/08-codigo-y-tablas.css', 'paginas/resumen.css']
     css_ejercicios = base + ['css/07-texto-y-notas.css', 'css/08-codigo-y-tablas.css', 'paginas/resumen.css']
     js_resumida = ['js/2-codigo.js']
+    js_ejercicios = js_resumida + ['paginas/ejercicios.js']   # + la checklist de los enunciados
     js_selector = ['paginas/selector.js']
     js_entrada = ['paginas/entrada.js']
 
@@ -337,7 +338,7 @@ def main():
             'resumida': rellenar(resumida, entrada=scripts(js_entrada, u), indice=indice_res, partes=cuerpo_res, css=estilos(css_resumida, u),
                                  js=scripts(js_resumida, u), enlace_atras=v['atras'][0], texto_atras=v['atras'][1],
                                  enlace_ejercicios=v['ejercicios']).replace('{{COMPLETA}}', v['pasos']),
-            'ejercicios': rellenar(ejercicios, entrada=scripts(js_entrada, u), css=estilos(css_ejercicios, u), js=scripts(js_resumida, u),
+            'ejercicios': rellenar(ejercicios, entrada=scripts(js_entrada, u), css=estilos(css_ejercicios, u), js=scripts(js_ejercicios, u),
                                    enlace_atras=v['atras'][0], texto_atras=v['atras'][1]),
         }
         if u:

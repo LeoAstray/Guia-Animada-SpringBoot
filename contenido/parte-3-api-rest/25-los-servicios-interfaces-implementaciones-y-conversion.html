@@ -46,6 +46,31 @@
 <p><code>LibroServiceImpl</code> necesita transformar claves foráneas (<code>editorialId</code>, <code>autoresIds</code>) en <b>instancias de entidades persistentes</b> (<code>Editorial</code>, <code>Autor</code>) para establecer las relaciones en la base de datos. Si llamáramos a <code>IEditorialService</code>, solo nos entregaría un <code>EditorialResponseDTO</code> (por la regla que prohíbe exponer entidades en los contratos de servicio), y <b>un DTO no puede asociarse a una relación JPA de Libro</b>. Por eso el servicio accede directamente a los repositorios.</p>
 <div class="kid">El cocinero necesita el tomate de verdad, no una foto del tomate. Va a la nevera (el repositorio), no al camarero.</div>
 
+<h3 id="s23-firma" data-indice="Cómo se escribe un método de la interfaz">Cómo se escribe un método de la interfaz del servicio</h3>
+<p>La interfaz (<code>IMedicoService</code>, <code>ILibroService</code>…) es el <b>contrato</b>: la lista de cosas que el servicio sabe hacer, sin decir cómo. Cada línea es un método sin cuerpo, que termina en <code>;</code>. El cuerpo lo escribe después la clase que la implementa (<code>MedicoService</code>, <code>LibroServiceImpl</code>), con <code>@Override</code> encima de cada método. El controlador solo conoce la interfaz.</p>
+<p>Tomemos un método del ejercicio del hospital y leámoslo por partes:</p>
+<pre data-f="IMedicoService.java (un método)">MedicoResponseDTO crear(MedicoRequestDTO dto);</pre>
+<table>
+<tr><th>Parte</th><th>Qué es</th><th>Cómo se decide</th></tr>
+<tr><td><code>MedicoResponseDTO</code></td><td>El <b>tipo de retorno</b>: lo que el servicio le devuelve al controlador.</td><td>¿Qué tiene que enseñar el controlador al cliente? Al crear, el médico recién creado (con su id), así que su <b>ResponseDTO</b>.</td></tr>
+<tr><td><code>crear</code></td><td>El <b>nombre</b> del método.</td><td>Un verbo que diga la acción: <code>crear</code>, <code>obtener</code>, <code>listarPorHospital</code>, <code>eliminar</code>.</td></tr>
+<tr><td><code>(MedicoRequestDTO dto)</code></td><td>Los <b>parámetros</b>: lo que el servicio necesita recibir para hacer su trabajo.</td><td>Para crear, los datos que manda el cliente: su <b>RequestDTO</b>. Para buscar o borrar, basta el <code>Long id</code>.</td></tr>
+<tr><td><code>;</code></td><td>Fin del método, sin llaves ni cuerpo.</td><td>En una interfaz solo se declara. El código va en la implementación.</td></tr>
+</table>
+<p>La regla de oro: <b>en la interfaz solo aparecen DTO y tipos simples</b> (<code>Long</code>, <code>boolean</code>, <code>List</code>…), <b>nunca entidades</b>. Así el controlador no llega a tocar JPA. Casi todos los servicios siguen este patrón:</p>
+<table>
+<tr><th>Operación</th><th>Firma típica</th><th>Por qué así</th></tr>
+<tr><td>Crear</td><td><code>XResponseDTO crear(XRequestDTO dto);</code></td><td>Entra lo que manda el cliente, sale lo creado con su id.</td></tr>
+<tr><td>Buscar uno</td><td><code>XResponseDTO obtener(Long id);</code></td><td>Basta el id. Si no existe, el servicio lo indica (por ejemplo, devolviendo <code>null</code> u <code>Optional.empty()</code>).</td></tr>
+<tr><td>Listar</td><td><code>List&lt;XResponseDTO&gt; listarPorHospital(Long hospitalId);</code></td><td>Varios resultados: una lista, que puede estar vacía.</td></tr>
+<tr><td>Comprobar algo</td><td><code>boolean tieneConsultas(Long id);</code></td><td>Una pregunta de sí o no, que el controlador usa para decidir el código (por ejemplo, 409).</td></tr>
+<tr><td>Borrar</td><td><code>void eliminar(Long id);</code></td><td>No hay nada que devolver (ver más abajo).</td></tr>
+</table>
+
+<h4>¿Por qué <code>eliminar</code> puede ser <code>void</code>?</h4>
+<p><code>void</code> significa que el método <b>no devuelve nada</b>. Al borrar no hay ningún dato que enseñar: el recurso ya no existe, y la respuesta HTTP correcta es <b>204 No Content</b>, que va sin cuerpo. Así que el servicio no necesita devolver un DTO.</p>
+<p>¿Y cómo sabe entonces el controlador si había que responder 404 o 409? Preguntándolo <b>antes</b> de borrar: primero comprueba si existe (si no, 404), después si se puede borrar (si no, 409), y solo entonces llama a <code>eliminar</code>. Es lo que hace el ejercicio del hospital. La solución de la biblioteca de este paso elige otra forma: su <code>eliminar</code> devuelve un <code>int</code> que cuenta qué pasó (1, 0 o -1). Las dos valen; la de <code>void</code> es la más sencilla de leer.</p>
+
 <h3>El «idioma» entre el servicio y el controlador</h3>
 <p>En esta solución los servicios no lanzan excepciones para los casos normales: <b>devuelven un valor que cuenta qué pasó</b>, y el controlador lo traduce a un código HTTP.</p>
 <table>
@@ -430,6 +455,24 @@ public class AutorServiceImpl implements IAutorService {
         return Optional.of(resumenes);
     }
 }</pre></details>
+
+<h3 id="s23-transactional" data-indice="@Transactional y readOnly">Qué hacen <code>@Transactional</code> y <code>readOnly = true</code></h3>
+<p>Una <b>transacción</b> es un grupo de operaciones con la base de datos que se hacen <b>todas o ninguna</b>. Al crear un libro se guardan el libro, su ficha y sus relaciones con los autores; si algo falla a mitad, no queremos un libro a medias en la base. Con una transacción, o se confirma todo al final (<i>commit</i>) o se deshace todo (<i>rollback</i>).</p>
+<p>Al poner <code>@Transactional</code> encima de un método del servicio, Spring hace tres cosas por ti:</p>
+<ol>
+<li><b>Abre la transacción al entrar</b> en el método y la cierra al salir.</li>
+<li>Si el método termina bien, <b>confirma</b> los cambios. Si lanza una excepción, los <b>deshace</b> todos.</li>
+<li><b>Mantiene abierta la conexión con la base</b> (la sesión de Hibernate) mientras dura el método. Por eso, dentro, puedes recorrer las relaciones <code>LAZY</code> del paso 12 (<code>medico.getHospital().getNombre()</code>) sin que salte <code>LazyInitializationException</code>. Y por eso la conversión a DTO se hace <b>dentro</b> del servicio: fuera, la sesión ya está cerrada.</li>
+</ol>
+<div class="kid">Es como una compra en el súper: o pagas todo el carro y te lo llevas, o no pagas nada y lo dejas todo. Nunca sales con media compra.</div>
+<p><code>@Transactional(readOnly = true)</code> es la misma transacción, pero avisando de que el método <b>solo lee</b>. Hibernate no tiene que vigilar si cambias algo para guardarlo al final, así que va algo más rápido, y quien lea el código sabe de un vistazo que ese método no modifica nada. Se pone en los métodos que solo consultan (<code>obtener</code>, <code>listar…</code>); los que guardan, cambian o borran llevan <code>@Transactional</code> normal.</p>
+<table>
+<tr><th>Método</th><th>Anotación</th><th>Por qué</th></tr>
+<tr><td><code>crear</code>, <code>actualizar</code></td><td><code>@Transactional</code></td><td>Escriben en la base: si algo falla, que se deshaga todo.</td></tr>
+<tr><td><code>obtener</code>, <code>listar…</code></td><td><code>@Transactional(readOnly = true)</code></td><td>Solo leen, pero recorren relaciones LAZY al convertir a DTO: necesitan la sesión abierta.</td></tr>
+<tr><td>Uno que solo llama a <b>un</b> método del repositorio (<code>deleteById</code>, <code>countBy…</code>, <code>existsBy…</code>)</td><td>Puede no llevarla</td><td>Los métodos del repositorio ya traen su propia transacción, y no hay relaciones LAZY que recorrer.</td></tr>
+</table>
+<div class="warn">Importa <code>org.springframework.transaction.annotation.Transactional</code>, la de Spring. Existe otra con el mismo nombre en <code>jakarta.transaction</code>, y esa <b>no</b> tiene <code>readOnly</code>: si VS Code te ofrece las dos, elige la de Spring.</div>
 
 <h3>Decisiones que conviene saber justificar</h3>
 <table>

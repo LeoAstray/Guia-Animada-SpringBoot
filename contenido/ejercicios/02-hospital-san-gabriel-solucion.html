@@ -140,6 +140,13 @@ public class Medico {
     public void setHospital(Hospital hospital) { this.hospital = hospital; }
     public List&lt;Consulta&gt; getConsultas() { return consultas; }
 }</pre>
+<ul>
+<li><b>¿Quién es el propietario y por qué?</b> <code>Medico</code>, porque es el que lleva <code>@JoinColumn</code>: su tabla guarda la columna <code>id_hospital</code>. En la base la relación es una sola columna, así que solo uno de los dos lados puede mandar sobre ella. <code>Hospital</code> es el lado inverso: su <code>mappedBy = "hospital"</code> dice «la relación ya está descrita en el campo <code>hospital</code> de <code>Medico</code>», y JPA no lo mira al guardar.</li>
+<li><b>¿Por qué el <code>@ManyToOne</code> va en <code>Medico</code>?</b> Porque cada médico trabaja en <b>un</b> hospital, y eso cabe en una columna de su fila (<code>id_hospital = 1</code>). Al revés no cabría: un hospital tiene muchos médicos y no se pueden guardar varios ids en una sola columna. Se lee desde la clase: «muchos médicos → un hospital».</li>
+<li><b>¿Qué hace <code>fetch = FetchType.LAZY</code>?</b> Al leer un médico no trae su hospital: deja un sustituto y solo lanza la consulta si de verdad usas el hospital (<code>medico.getHospital().getNombre()</code>). Sin escribirlo, el <code>@ManyToOne</code> sería <code>EAGER</code> y traería el hospital siempre.</li>
+<li><b>¿Lleva siempre <code>@JoinColumn</code>?</b> No es obligatorio, pero sin él JPA llamaría a la columna <code>hospital_id_hospital</code>, que no es la que pide el enunciado ni la del <code>data.sql</code>. Con <code>@JoinColumn(name = "id_hospital", nullable = false)</code> eliges el nombre y la haces obligatoria.</li>
+</ul>
+<p>Todo esto está explicado con más calma en el paso 12 de la guía.</p>
 
 <p class="paso"><b>5.</b> <code>HistorialClinico</code>. Las alergias pueden ser nulas, así que ese campo no lleva <code>nullable = false</code>.</p>
 <pre data-f="entity/HistorialClinico.java">package com.hospital.examen.entity;
@@ -246,6 +253,7 @@ public class Paciente {
     public HistorialClinico getHistorial() { return historial; }
     public List&lt;Consulta&gt; getConsultas() { return consultas; }
 }</pre>
+<p><b>¿Qué es <code>orphanRemoval</code> y en qué se diferencia de <code>cascade</code>?</b> <code>cascade = CascadeType.ALL</code> repite en las consultas lo que le hagas al paciente: si guardas el paciente, se guardan sus consultas nuevas; si lo borras, se borran. <code>orphanRemoval = true</code> va un paso más allá: si <b>quitas</b> una consulta de la lista (<code>paciente.getConsultas().remove(c)</code>), esa consulta se queda huérfana y se borra de la base. Es decir, cascade mira lo que le pasa al <b>padre</b>; orphanRemoval mira si el hijo <b>sale de la lista</b>. Aquí tienen sentido los dos porque una consulta no existe sin su paciente. En <code>Medico</code> no ponemos ninguno: borrar un médico no debe llevarse el historial de consultas de los pacientes. Lo tienes con una tabla comparativa en el paso 12 de la guía.</p>
 
 <p class="paso"><b>7 (pregunta).</b> <code>optional = false</code> es una regla del <b>modelo Java</b>: dice que la relación es obligatoria, así que JPA no permite guardar un paciente sin historial (y puede optimizar sabiendo que nunca es nulo). <code>unique = true</code> (en el <code>@JoinColumn</code>) es una regla de la <b>base de datos</b>: crea una restricción de unicidad en <code>id_historial</code>, de modo que dos pacientes no pueden compartir el mismo historial. Sin ella la relación sería en realidad de uno a muchos. Junto con <code>nullable = false</code> (la columna no admite <code>NULL</code>), dejan la relación como «uno a uno obligatoria» tanto en Java como en MySQL.</p>
 
@@ -300,9 +308,11 @@ public class Consulta {
 
     public Consulta() {}
 
-    // El paciente no va aquí: se asigna con paciente.addConsulta(...)
-    public Consulta(Medico medico, LocalDateTime fecha, BigDecimal coste, TipoConsulta tipo, boolean seguimiento) {
+    // Recibe los dos extremos: una consulta sin médico o sin paciente no tiene sentido
+    public Consulta(Medico medico, Paciente paciente, LocalDateTime fecha, BigDecimal coste,
+            TipoConsulta tipo, boolean seguimiento) {
         this.medico = medico;
+        this.paciente = paciente;
         this.fecha = fecha;
         this.coste = coste;
         this.tipo = tipo;
@@ -318,6 +328,7 @@ public class Consulta {
     public TipoConsulta getTipo() { return tipo; }
     public boolean isSeguimiento() { return seguimiento; }
 }</pre>
+<p><b>¿Por qué el constructor de <code>Consulta</code> lleva el médico y el paciente?</b> Porque una consulta <b>no existe sin sus dos extremos</b>: es «este médico atiende a este paciente, en esta fecha, por este coste». Sus dos <code>@ManyToOne</code> son obligatorios, así que las columnas <code>id_medico</code> e <code>id_paciente</code> no pueden quedar vacías. Si el constructor no los pidiera, podrías crear una consulta incompleta y el error solo saldría al guardar. Pidiéndolos, el compilador no te deja olvidarlos. Después, <code>paciente.addConsulta(consulta)</code> la añade también a la lista del paciente para que los dos lados queden sincronizados. Es lo mismo que hace <code>Fichaje</code> en el paso 13 de la guía.</p>
 
 <p class="paso"><b>9.</b> Respuestas:</p>
 <ul>
@@ -344,6 +355,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.hospital.examen.entity.HistorialClinico;
 
 public interface IHistorialClinicoRepository extends JpaRepository&lt;HistorialClinico, Long&gt; {
+}</pre>
+<pre data-f="repository/IPacienteRepository.java">package com.hospital.examen.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.hospital.examen.entity.Paciente;
+
+public interface IPacienteRepository extends JpaRepository&lt;Paciente, Long&gt; {
 }</pre>
 
 <p class="paso"><b>11.</b> Médicos:</p>
@@ -382,12 +401,9 @@ public interface IMedicoRepository extends JpaRepository&lt;Medico, Long&gt; {
 <p class="paso"><b>12.</b> Consultas:</p>
 <pre data-f="repository/IConsultaRepository.java">package com.hospital.examen.repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.hospital.examen.entity.Consulta;
 import com.hospital.examen.enums.TipoConsulta;
@@ -397,42 +413,20 @@ public interface IConsultaRepository extends JpaRepository&lt;Consulta, Long&gt;
     // a) De un paciente, de la más reciente a la más antigua
     List&lt;Consulta&gt; findByPacienteIdOrderByFechaDesc(Long pacienteId);
 
-    // b) Suma del coste de las consultas de un médico (SUM devuelve null si no tiene ninguna)
-    @Query("SELECT SUM(c.coste) FROM Consulta c WHERE c.medico.id = :medicoId")
-    BigDecimal sumaCostePorMedico(@Param("medicoId") Long medicoId);
-
-    // c) Urgencias con seguimiento activo: findByTipoAndSeguimientoTrue(TipoConsulta.URGENCIA)
+    // b) Urgencias con seguimiento activo: findByTipoAndSeguimientoTrue(TipoConsulta.URGENCIA)
     List&lt;Consulta&gt; findByTipoAndSeguimientoTrue(TipoConsulta tipo);
 
     // Lo usa el servicio para impedir borrar un médico con consultas
     long countByMedicoId(Long medicoId);
 }</pre>
 
-<p class="paso"><b>13.</b> Pacientes. La consulta necesita <code>JOIN</code> (hay que pasar por <code>consultas</code>) y <code>DISTINCT</code> (un paciente atendido varias veces por el mismo médico saldría repetido).</p>
-<pre data-f="repository/IPacienteRepository.java">package com.hospital.examen.repository;
-
-import java.util.List;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
-import com.hospital.examen.entity.Paciente;
-
-public interface IPacienteRepository extends JpaRepository&lt;Paciente, Long&gt; {
-
-    // Pacientes atendidos por un médico, sin repetidos
-    @Query("SELECT DISTINCT p FROM Paciente p JOIN p.consultas c WHERE c.medico.id = :medicoId")
-    List&lt;Paciente&gt; buscarAtendidosPor(@Param("medicoId") Long medicoId);
-}</pre>
-
 <h3>Parte 3: datos iniciales</h3>
 
-<p class="paso"><b>14.</b> En <code>application.properties</code> (además de la conexión a MySQL de siempre):</p>
+<p class="paso"><b>13.</b> El <code>data.sql</code> ya viene dado en el enunciado: se copia tal cual en <code>src/main/resources</code>. Para que Spring lo ejecute al arrancar hace falta esto en <code>application.properties</code> (además de la conexión a MySQL de siempre):</p>
 <pre data-f="src/main/resources/application.properties (añadir)">spring.jpa.hibernate.ddl-auto=create-drop
 spring.sql.init.mode=always
 spring.jpa.defer-datasource-initialization=true</pre>
-<p>Y el <code>data.sql</code>. <b>El orden importa:</b> primero lo que otros van a apuntar (hospitales e historiales) y después lo que apunta (médicos, pacientes, consultas).</p>
+<p>El <code>data.sql</code> (el mismo del enunciado). <b>Fíjate en el orden:</b> primero lo que otros van a apuntar (hospitales e historiales) y después lo que apunta (médicos, pacientes, consultas).</p>
 <pre data-f="src/main/resources/data.sql">INSERT INTO hospitales (id_hospital, nombre, ciudad)
 VALUES (1, 'San Gabriel Centro', 'Madrid'),
        (2, 'San Gabriel Norte', 'Bilbao');
@@ -459,9 +453,9 @@ VALUES (1, 1, 1, '2026-10-01 09:30:00', 120.00, 'PRESENCIAL', true),
        (3, 2, 2, '2026-10-05 16:15:00', 80.00, 'PRESENCIAL', false),
        (4, 4, 1, '2026-10-08 18:40:00', 200.00, 'URGENCIA', true),
        (5, 3, 3, '2026-10-10 08:00:00', 150.00, 'URGENCIA', false);</pre>
-<div class="ok">Se cumple lo que pedía el enunciado: la <b>Dra. Lozano</b> atiende a dos pacientes (consultas 1 y 2) y <b>Carmen</b> es atendida por dos médicos (la Dra. Lozano y el Dr. Vega, consultas 1 y 4).</div>
+<div class="ok">Fíjate en los datos: la <b>Dra. Lozano</b> atiende a dos pacientes (consultas 1 y 2) y <b>Carmen</b> es atendida por dos médicos (la Dra. Lozano y el Dr. Vega, consultas 1 y 4).</div>
 
-<p class="paso"><b>15.</b> La clase principal, con el <code>run()</code> que crea un paciente nuevo con su historial y una consulta:</p>
+<p class="paso"><b>14.</b> La clase principal, con el <code>run()</code> que crea un paciente nuevo con su historial y una consulta:</p>
 <pre data-f="HospitalApplication.java">package com.hospital.examen;
 
 import java.math.BigDecimal;
@@ -504,7 +498,7 @@ public class HospitalApplication implements CommandLineRunner {
         Paciente paciente = new Paciente("Lucas Prieto", LocalDate.of(2001, 6, 18), historial);
 
         // 3) La consulta se cuelga del paciente
-        paciente.addConsulta(new Consulta(medico, LocalDateTime.now(), new BigDecimal("90.00"),
+        paciente.addConsulta(new Consulta(medico, paciente, LocalDateTime.now(), new BigDecimal("90.00"),
                 TipoConsulta.PRESENCIAL, false));
 
         // 4) Un solo save: la cascada guarda el historial y la consulta
@@ -516,7 +510,7 @@ public class HospitalApplication implements CommandLineRunner {
 
 <h3>Parte 4: API REST por capas</h3>
 
-<p class="paso"><b>16.</b> Los DTO, como <code>record</code>. Los de entrada llevan validaciones; los de salida, no. <code>ConsultaResumenDTO</code> es la pieza anidada de <code>PacienteResponseDTO</code>: solo lleva lo necesario de una consulta, sin volver al paciente (así no hay bucles). Para el endpoint de la pregunta 21 añado <code>ConsultaRequestDTO</code>.</p>
+<p class="paso"><b>15.</b> Los DTO, como <code>record</code>. Los de entrada llevan validaciones; los de salida, no. <code>ConsultaResumenDTO</code> es la pieza anidada de <code>PacienteResponseDTO</code>: solo lleva lo necesario de una consulta, sin volver al paciente (así no hay bucles). Para el endpoint de la pregunta 19 añado <code>ConsultaRequestDTO</code>.</p>
 <pre data-f="dto/MedicoRequestDTO.java">package com.hospital.examen.dto;
 
 import java.math.BigDecimal;
@@ -525,11 +519,10 @@ import com.hospital.examen.enums.Especialidad;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 public record MedicoRequestDTO(
         @NotBlank(message = "El nombre es obligatorio") String nombre,
-        @NotNull(message = "El salario es obligatorio") @Positive(message = "El salario debe ser positivo") BigDecimal salario,
+        @NotNull(message = "El salario es obligatorio") BigDecimal salario,
         @NotNull(message = "La especialidad es obligatoria") Especialidad especialidad,
         @NotNull(message = "El hospital es obligatorio") Long hospitalId) {
 }</pre>
@@ -576,13 +569,13 @@ public record ConsultaRequestDTO(
         @NotNull(message = "El tipo es obligatorio") TipoConsulta tipo) {
 }</pre>
 
-<p class="paso"><b>17.</b> Dos motivos para no devolver las entidades:</p>
+<p class="paso"><b>16.</b> Dos motivos para no devolver las entidades:</p>
 <ul>
 <li><b>Recursión infinita.</b> <code>Hospital</code> tiene una lista de <code>Medico</code> y cada <code>Medico</code> apunta a su <code>Hospital</code>: al serializar a JSON, Jackson entra en un bucle (hospital → médicos → hospital → …) y falla con un <code>StackOverflowError</code> o similar. Los DTO, con sus «resúmenes», cortan el bucle.</li>
 <li><b>Se expone la base de datos.</b> La entidad lleva campos que el cliente no debe ver o decidir (ids internos, la lista completa de consultas, etc.), y atar la API a la entidad hace que cualquier cambio en el modelo rompa a los clientes. Además, las relaciones <code>LAZY</code> se intentarían leer fuera de la transacción (<code>LazyInitializationException</code>).</li>
 </ul>
 
-<p class="paso"><b>18.</b> <b>El servicio.</b> El servicio no lanza excepciones: <b>devuelve un valor que cuenta qué pasó</b>, y el controlador lo traduce a un código HTTP.</p>
+<p class="paso"><b>17.</b> <b>El servicio.</b> El servicio no lanza excepciones: <b>devuelve un valor que cuenta qué pasó</b>, y el controlador lo traduce a un código HTTP.</p>
 <table>
 <tr><th>El servicio devuelve</th><th>Significa</th><th>El controlador responde</th></tr>
 <tr><td>un DTO (o una lista)</td><td>Encontrado o hecho</td><td>200 o 201</td></tr>
@@ -697,7 +690,25 @@ public class MedicoService implements IMedicoService {
 }</pre>
 <p><b>Cómo comunica cada resultado:</b> un hospital o un médico que no existen devuelven <code>null</code>, que el controlador convierte en 404. Un médico con consultas no se puede borrar: el controlador lo pregunta antes con <code>tieneConsultas</code> y responde 409. Una lista vacía no es un error: se devuelve vacía y es un 200.</p>
 
-<p class="paso"><b>19.</b> <b>El controlador.</b> Solo conoce el <code>IMedicoService</code> y los DTO. No tiene lógica de negocio: mira lo que devuelve el servicio y elige el código HTTP.</p>
+<h4>La interfaz, método a método</h4>
+<p>Cada línea de <code>IMedicoService</code> se escribe pensando en tres cosas: <b>qué devuelve</b> al controlador, <b>cómo se llama</b> la acción y <b>qué necesita recibir</b>. Por ejemplo, <code>MedicoResponseDTO crear(MedicoRequestDTO dto);</code> se lee «crear recibe los datos que manda el cliente (el RequestDTO) y devuelve el médico creado, con su id (el ResponseDTO)». <code>obtener</code> solo necesita el <code>id</code>; <code>listarPorHospital</code> devuelve una <code>List</code> porque puede haber varios; <code>tieneConsultas</code> es una pregunta de sí o no, así que devuelve <code>boolean</code>. La explicación completa de cómo se escribe una firma está en el paso 25 de la guía.</p>
+
+<h4>¿Por qué <code>eliminar</code> es <code>void</code>?</h4>
+<p><code>void</code> significa que el método <b>no devuelve nada</b>. Al borrar un médico no hay ningún dato que enseñar al cliente: la respuesta correcta es <b>204 No Content</b>, que va sin cuerpo. Los dos casos de error ya se han resuelto <b>antes</b> de llamar a <code>eliminar</code>: el controlador comprueba con <code>obtener</code> si el médico existe (si no, 404) y con <code>tieneConsultas</code> si se puede borrar (si no, 409). Cuando llega a <code>eliminar</code>, ya sabe que el borrado va a salir bien, así que no necesita ninguna respuesta del servicio.</p>
+
+<h4>La implementación, método a método</h4>
+<ul>
+<li><b><code>@Service</code> y los <code>@Autowired</code>.</b> <code>@Service</code> le dice a Spring que cree un objeto de esta clase y lo tenga disponible para quien lo pida (el controlador). Los tres <code>@Autowired</code> son los repositorios que necesita: médicos para guardar y buscar, hospitales para comprobar que el hospital existe, y consultas para contar las de un médico. El servicio habla con los repositorios; el controlador no.</li>
+<li><b><code>crear</code>.</b> Busca el hospital por el <code>hospitalId</code> que viene en el DTO. <code>findById</code> devuelve un <code>Optional</code>: una cajita que puede venir con el hospital dentro o vacía. Si está vacía (<code>isEmpty()</code>), el hospital no existe y devuelve <code>null</code>. Si existe, crea el <code>Medico</code> a partir de los datos del DTO (DTO → Entity), lo añade al hospital con <code>addMedico</code> (que rellena los dos lados de la relación), lo guarda con <code>save</code> y convierte lo guardado en <code>MedicoResponseDTO</code> (Entity → DTO). Lleva <code>@Transactional</code> porque escribe en la base.</li>
+<li><b><code>obtener</code>.</b> Busca el médico por id. Si no está, <code>null</code>; si está, lo convierte a DTO. Lleva <code>@Transactional(readOnly = true)</code>: solo lee, pero al convertir llama a <code>m.getHospital().getNombre()</code>, y el hospital es <code>LAZY</code>, así que la sesión tiene que seguir abierta.</li>
+<li><b><code>listarPorHospital</code>.</b> Primero comprueba con <code>existsById</code> que el hospital existe; si no, <code>null</code> (para que el controlador responda 404 y no una lista vacía, que significaría «el hospital existe pero no tiene médicos»). Después recorre los médicos de ese hospital con un <code>for</code>, convierte cada uno a DTO y lo añade a una lista nueva. También es <code>readOnly</code>.</li>
+<li><b><code>tieneConsultas</code>.</b> Cuenta las consultas del médico con <code>countByMedicoId</code> y devuelve <code>true</code> si hay más de cero. No lleva <code>@Transactional</code>: solo hace una llamada al repositorio, que ya trae su propia transacción, y no recorre relaciones.</li>
+<li><b><code>eliminar</code>.</b> Una sola línea: <code>deleteById(id)</code> borra la fila del médico. Tampoco necesita <code>@Transactional</code>, por el mismo motivo.</li>
+<li><b><code>mapearADTO</code>.</b> Es <code>private</code> porque solo lo usa este servicio. Recibe un <code>Medico</code> (entidad) y fabrica un <code>MedicoResponseDTO</code> con lo que el cliente necesita: id, nombre, especialidad y <b>el nombre</b> del hospital (no el objeto <code>Hospital</code> entero). Así es como la entidad nunca sale del servicio.</li>
+</ul>
+<div class="why"><b>Sobre <code>@Transactional</code> y <code>readOnly</code>:</b> <code>@Transactional</code> agrupa todo lo que hace el método en una transacción (o se guarda todo o nada) y mantiene abierta la conexión con la base mientras dura, para poder recorrer relaciones <code>LAZY</code>. <code>readOnly = true</code> avisa de que el método solo lee: va algo más rápido y deja claro que no cambia nada. Lo tienes explicado con calma en el paso 25 de la guía.</div>
+
+<p class="paso"><b>18.</b> <b>El controlador.</b> Solo conoce el <code>IMedicoService</code> y los DTO. No tiene lógica de negocio: mira lo que devuelve el servicio y elige el código HTTP.</p>
 <pre data-f="controller/MedicoController.java">package com.hospital.examen.controller;
 
 import java.net.URI;
@@ -782,7 +793,18 @@ public class MedicoController {
 <tr><td><code>DELETE /api/medicos/{id}</code></td><td><b>204</b></td><td><b>404</b> · <b>409</b> si tiene consultas</td></tr>
 </table>
 
-<p class="paso"><b>20.</b> <b>Registrar una consulta</b> (<code>POST /api/pacientes/{id}/consultas</code>):</p>
+<h4>El controlador, pieza a pieza</h4>
+<ul>
+<li><b><code>@RestController</code></b> indica que esta clase atiende peticiones HTTP y que lo que devuelven sus métodos se convierte en JSON. <b><code>@RequestMapping("/api/medicos")</code></b> es el principio de la dirección de todos sus métodos. <b><code>@Autowired IMedicoService</code></b>: el controlador pide <b>la interfaz</b> del servicio, no la clase; Spring le da la implementación.</li>
+<li><b><code>ResponseEntity&lt;...&gt;</code></b> es la respuesta HTTP completa: el código (200, 404…), las cabeceras y el cuerpo. Lo que va entre <code>&lt; &gt;</code> es el tipo del cuerpo. Se fabrica con métodos cortos: <code>ResponseEntity.ok(x)</code> es un 200 con <code>x</code> en el cuerpo; <code>notFound().build()</code>, un 404 sin cuerpo; <code>noContent().build()</code>, un 204 sin cuerpo; <code>status(HttpStatus.CONFLICT).build()</code>, un 409; <code>created(location).body(x)</code>, un 201 con la cabecera <code>Location</code>.</li>
+<li><b><code>crear</code></b> (<code>@PostMapping</code>). <code>@RequestBody</code> convierte el JSON del cuerpo en un <code>MedicoRequestDTO</code>, y <code>@Valid</code> comprueba sus anotaciones (<code>@NotBlank</code>, <code>@NotNull</code>): si alguna falla, Spring responde 400 sin entrar en el método. Si el servicio devuelve <code>null</code>, el hospital no existe: 404. Si no, construye la dirección del médico nuevo (<code>/api/medicos/7</code>) con <code>ServletUriComponentsBuilder</code> y responde 201 con esa dirección en <code>Location</code> y el médico en el cuerpo.</li>
+<li><b><code>obtener</code></b> (<code>@GetMapping("/{id}")</code>). <code>@PathVariable</code> saca el <code>7</code> de <code>/api/medicos/7</code> y lo mete en <code>id</code>. Si el servicio devuelve <code>null</code>, 404; si no, 200 con el médico.</li>
+<li><b><code>listarPorHospital</code></b> (<code>@GetMapping</code>). <code>@RequestParam</code> saca el valor de <code>?hospitalId=1</code>. Es obligatorio: si falta, Spring responde 400. <code>null</code> significa que el hospital no existe (404); una lista, aunque esté vacía, es un 200.</li>
+<li><b><code>eliminar</code></b> (<code>@DeleteMapping("/{id}")</code>). Hace las comprobaciones en orden: primero si existe (si <code>obtener</code> da <code>null</code>, 404), después si tiene consultas (409), y solo entonces borra y responde 204. El orden importa: no tiene sentido decir «tiene consultas» de un médico que no existe.</li>
+</ul>
+<div class="ok">El controlador no busca en la base ni convierte entidades: solo pregunta al servicio y elige el código. Por eso decimos que no tiene lógica de negocio.</div>
+
+<p class="paso"><b>19.</b> <b>Registrar una consulta</b> (<code>POST /api/pacientes/{id}/consultas</code>):</p>
 <ul>
 <li><b>a)</b> Hay que buscar <b>dos</b> entidades antes de crear la consulta: el <code>Paciente</code> (el <code>{id}</code> de la dirección) y el <code>Medico</code> (el <code>medicoId</code> del cuerpo). La consulta apunta a las dos.</li>
 <li><b>b)</b> Si falta cualquiera de las dos, <b>404</b>. Si el cuerpo es inválido (falta algún campo o el coste es negativo), <b>400</b>.</li>
@@ -854,7 +876,7 @@ public class PacienteService implements IPacienteService {
             return null;   // falta alguna de las dos
         }
 
-        Consulta consulta = new Consulta(medicoOpt.get(), dto.fecha(), dto.coste(), dto.tipo(), false);
+        Consulta consulta = new Consulta(medicoOpt.get(), pacienteOpt.get(), dto.fecha(), dto.coste(), dto.tipo(), false);
         pacienteOpt.get().addConsulta(consulta);
         return mapearConsulta(consultaRepository.save(consulta));
     }
@@ -923,20 +945,20 @@ public class PacienteController {
 
 <h3>Parte 5: preguntas de comprensión</h3>
 
-<p class="paso"><b>21.</b> <b>LazyInitializationException.</b> Ocurre al leer una relación <code>LAZY</code> (aquí, las consultas del paciente, o el médico de cada consulta) <b>cuando la sesión de Hibernate ya se ha cerrado</b>: por ejemplo, si el servicio devuelve la entidad y es el controlador quien intenta recorrerla. Se evita convirtiendo a DTO <b>dentro</b> del servicio y anotándolo con <code>@Transactional</code> (<code>readOnly = true</code> si solo lee), para que la sesión siga abierta mientras se recorren las relaciones.</p>
+<p class="paso"><b>20.</b> <b>LazyInitializationException.</b> Ocurre al leer una relación <code>LAZY</code> (aquí, las consultas del paciente, o el médico de cada consulta) <b>cuando la sesión de Hibernate ya se ha cerrado</b>: por ejemplo, si el servicio devuelve la entidad y es el controlador quien intenta recorrerla. Se evita convirtiendo a DTO <b>dentro</b> del servicio y anotándolo con <code>@Transactional</code> (<code>readOnly = true</code> si solo lee), para que la sesión siga abierta mientras se recorren las relaciones.</p>
 
-<p class="paso"><b>22.</b> <b>El bucle infinito.</b> La causa es que la relación es <b>bidireccional</b>: <code>Hospital</code> tiene la lista de médicos y cada <code>Medico</code> apunta a su <code>Hospital</code>. Al convertir a JSON, Jackson recorre hospital → médicos → hospital → médicos… sin fin. Dos soluciones:</p>
+<p class="paso"><b>21.</b> <b>El bucle infinito.</b> La causa es que la relación es <b>bidireccional</b>: <code>Hospital</code> tiene la lista de médicos y cada <code>Medico</code> apunta a su <code>Hospital</code>. Al convertir a JSON, Jackson recorre hospital → médicos → hospital → médicos… sin fin. Dos soluciones:</p>
 <ul>
 <li><b>Usar DTO</b> en vez de entidades (la buena): el DTO de salida no tiene referencia de vuelta, o solo un resumen (<code>nombreHospital</code>).</li>
 <li><b>Anotaciones de Jackson</b> sobre las entidades: <code>@JsonIgnore</code> en el lado que no queremos serializar, o la pareja <code>@JsonManagedReference</code> / <code>@JsonBackReference</code>. Funciona, pero ata la entidad al formato JSON, por eso no es lo recomendable.</li>
 </ul>
 
-<p class="paso"><b>23.</b> <b>Borrar un hospital con médicos.</b> El 500 viene de la base de datos (violación de clave foránea: los médicos siguen apuntando al hospital). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa, igual que con las consultas de un médico: el servicio la ofrece y el controlador responde 409 si hay médicos:</p>
+<p class="paso"><b>22.</b> <b>Borrar un hospital con médicos.</b> El 500 viene de la base de datos (violación de clave foránea: los médicos siguen apuntando al hospital). Debería devolver <b>409 Conflict</b>. Falta la comprobación previa, igual que con las consultas de un médico: el servicio la ofrece y el controlador responde 409 si hay médicos:</p>
 <pre data-f="HospitalService (idea)">public boolean tieneMedicos(Long id) {
     return medicoRepository.countByHospitalId(id) &gt; 0;
 }</pre>
 
-<p class="paso"><b>24.</b> <b>El esquema de tablas.</b> Las claves foráneas (FK) están siempre en el lado propietario:</p>
+<p class="paso"><b>23.</b> <b>El esquema de tablas.</b> Las claves foráneas (FK) están siempre en el lado propietario:</p>
 <pre data-f="esquema de tablas">hospitales   (id_hospital PK, nombre, ciudad)
 medicos      (id_medico PK, nombre, salario, especialidad, activo,
               id_hospital FK -&gt; hospitales)                    1:N

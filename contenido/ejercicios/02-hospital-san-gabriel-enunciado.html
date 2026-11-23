@@ -82,32 +82,49 @@
 <p class="paso"><b>12.</b> En <code>ConsultaRepository</code>, escribe:</p>
 <ul>
 <li>a) Consultas de un paciente ordenadas por fecha descendente.</li>
-<li>b) Suma del coste de todas las consultas de un médico (<code>@Query</code> con <code>SUM</code>).</li>
-<li>c) Consultas de tipo <code>URGENCIA</code> con seguimiento activo.</li>
+<li>b) Consultas de tipo <code>URGENCIA</code> con seguimiento activo.</li>
 </ul>
-<p class="paso"><b>13.</b> En <code>PacienteRepository</code>, escribe una consulta que devuelva los pacientes que han sido atendidos por un médico concreto, sin repetidos (<code>JOIN</code> y <code>DISTINCT</code>).</p>
 
 <h3>Parte 3: datos iniciales (1 punto)</h3>
-<p class="paso"><b>14.</b> Escribe un <code>data.sql</code> (o las instrucciones equivalentes en el <code>CommandLineRunner</code>) con:</p>
-<ul>
-<li>2 hospitales</li>
-<li>4 médicos repartidos entre ellos, con especialidades distintas</li>
-<li>3 pacientes, cada uno con su historial</li>
-<li>5 consultas, con al menos un médico que atienda a dos pacientes y un paciente atendido por dos médicos</li>
-</ul>
-<p>Respeta el orden de inserción y los textos exactos de los enums.</p>
-<p class="paso"><b>15.</b> Desde <code>run()</code>, crea y guarda un paciente nuevo con su historial y una consulta suya con un médico ya existente. Indica en qué orden guardas cada objeto y por qué.</p>
+<p class="paso"><b>13.</b> Copia este <code>data.sql</code> en <code>src/main/resources</code>. Revisa que tus nombres de tabla y de columna coinciden con los de tus entidades, y añade lo que haga falta en <code>application.properties</code> para que Spring lo ejecute al arrancar.</p>
+<pre data-f="src/main/resources/data.sql">INSERT INTO hospitales (id_hospital, nombre, ciudad)
+VALUES (1, 'San Gabriel Centro', 'Madrid'),
+       (2, 'San Gabriel Norte', 'Bilbao');
+
+INSERT INTO medicos (id_medico, nombre, salario, especialidad, activo, id_hospital)
+VALUES (1, 'Dra. Ana Lozano', 4200.00, 'CARDIOLOGIA', true, 1),
+       (2, 'Dr. Pablo Marín', 3800.00, 'PEDIATRIA', true, 1),
+       (3, 'Dra. Eva Ruiz', 4500.00, 'TRAUMATOLOGIA', false, 2),
+       (4, 'Dr. Hugo Vega', 4000.00, 'NEUROLOGIA', true, 2);
+
+INSERT INTO historiales (id_historial, numero_historial, grupo_sanguineo, alergias)
+VALUES (1, 'H-0001', 'A+', NULL),
+       (2, 'H-0002', 'O-', 'Penicilina'),
+       (3, 'H-0003', 'B+', NULL);
+
+INSERT INTO pacientes (id_paciente, nombre, fecha_nacimiento, id_historial)
+VALUES (1, 'Carmen Díaz', '1985-04-12', 1),
+       (2, 'Iván Torres', '2015-09-30', 2),
+       (3, 'Rosa Campos', '1960-01-25', 3);
+
+INSERT INTO consultas (id_consulta, id_medico, id_paciente, fecha, coste, tipo, seguimiento)
+VALUES (1, 1, 1, '2026-10-01 09:30:00', 120.00, 'PRESENCIAL', true),
+       (2, 1, 3, '2026-10-03 11:00:00', 120.00, 'TELEMATICA', false),
+       (3, 2, 2, '2026-10-05 16:15:00', 80.00, 'PRESENCIAL', false),
+       (4, 4, 1, '2026-10-08 18:40:00', 200.00, 'URGENCIA', true),
+       (5, 3, 3, '2026-10-10 08:00:00', 150.00, 'URGENCIA', false);</pre>
+<p class="paso"><b>14.</b> Desde <code>run()</code>, crea y guarda un paciente nuevo con su historial y una consulta suya con un médico ya existente. Indica en qué orden guardas cada objeto y por qué.</p>
 
 <h3>Parte 4: API REST por capas (3 puntos)</h3>
-<p class="paso"><b>16.</b> <b>DTO.</b> Crea:</p>
+<p class="paso"><b>15.</b> <b>DTO.</b> Crea:</p>
 <ul>
-<li><code>MedicoRequestDTO</code>: <code>nombre</code>, <code>salario</code>, <code>especialidad</code>, <code>hospitalId</code>. Añade validaciones con <code>@Valid</code>: nombre no vacío, salario positivo y todos los campos obligatorios.</li>
+<li><code>MedicoRequestDTO</code>: <code>nombre</code>, <code>salario</code>, <code>especialidad</code>, <code>hospitalId</code>. Añade validaciones con <code>@Valid</code>: nombre no vacío y todos los campos obligatorios.</li>
 <li><code>MedicoResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>especialidad</code>, <code>nombreHospital</code>.</li>
 <li><code>ConsultaResumenDTO</code>: <code>fecha</code>, <code>nombreMedico</code>, <code>tipo</code>, <code>coste</code>.</li>
 <li><code>PacienteResponseDTO</code>: <code>id</code>, <code>nombre</code>, <code>numeroHistorial</code>, <code>grupoSanguineo</code> y una lista de <code>ConsultaResumenDTO</code>.</li>
 </ul>
-<p class="paso"><b>17.</b> Justifica por qué no devuelves directamente las entidades en el controlador. Da dos motivos (por ejemplo, la recursión infinita en las relaciones bidireccionales).</p>
-<p class="paso"><b>18.</b> <b>Servicio.</b> Crea la interfaz <code>IMedicoService</code> y su implementación <code>MedicoService</code>, con <code>@Autowired</code> en los repositorios necesarios. Implementa:</p>
+<p class="paso"><b>16.</b> Justifica por qué no devuelves directamente las entidades en el controlador. Da dos motivos (por ejemplo, la recursión infinita en las relaciones bidireccionales).</p>
+<p class="paso"><b>17.</b> <b>Servicio.</b> Crea la interfaz <code>IMedicoService</code> y su implementación <code>MedicoService</code>, con <code>@Autowired</code> en los repositorios necesarios. Implementa:</p>
 <ul>
 <li><code>crear(MedicoRequestDTO)</code>. Si no existe el hospital, el controlador tiene que poder responder 404.</li>
 <li><code>obtener(Long id)</code>. Si no existe el médico, 404.</li>
@@ -116,7 +133,7 @@
 <li>Un método privado de conversión <code>Medico → MedicoResponseDTO</code>.</li>
 </ul>
 <p>Explica cómo comunica tu servicio cada uno de esos resultados al controlador.</p>
-<p class="paso"><b>19.</b> <b>Controlador.</b> Crea <code>MedicoController</code> con estos endpoints. Indica el código HTTP de éxito y los de error.</p>
+<p class="paso"><b>18.</b> <b>Controlador.</b> Crea <code>MedicoController</code> con estos endpoints. Indica el código HTTP de éxito y los de error.</p>
 <table>
 <tr><th>Endpoint</th><th>Éxito</th><th>Errores</th></tr>
 <tr><td><code>POST /api/medicos</code></td><td>¿?</td><td>¿?</td></tr>
@@ -125,7 +142,7 @@
 <tr><td><code>DELETE /api/medicos/{id}</code></td><td>¿?</td><td>¿?</td></tr>
 </table>
 <p>El <code>POST</code> debe devolver la cabecera <code>Location</code> con la URI del recurso creado.</p>
-<p class="paso"><b>20.</b> Añade el endpoint <code>POST /api/pacientes/{id}/consultas</code>, que registra una consulta recibiendo <code>medicoId</code>, <code>fecha</code>, <code>coste</code> y <code>tipo</code>. Indica:</p>
+<p class="paso"><b>19.</b> Añade el endpoint <code>POST /api/pacientes/{id}/consultas</code>, que registra una consulta recibiendo <code>medicoId</code>, <code>fecha</code>, <code>coste</code> y <code>tipo</code>. Indica:</p>
 <ul>
 <li>a) qué entidades hay que buscar antes de crear la consulta,</li>
 <li>b) qué códigos devuelves si falta alguna,</li>
@@ -133,10 +150,10 @@
 </ul>
 
 <h3>Parte 5: preguntas de comprensión (1,5 puntos)</h3>
-<p class="paso"><b>21.</b> Una petición <code>GET /api/pacientes/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo lo evitarías.</p>
-<p class="paso"><b>22.</b> Al serializar un <code>Hospital</code> con su lista de médicos, el JSON entra en un bucle infinito. Explica la causa y da dos soluciones.</p>
-<p class="paso"><b>23.</b> <code>DELETE /api/hospitales/1</code> devuelve 500 por una violación de clave foránea. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
-<p class="paso"><b>24.</b> Dibuja el esquema de tablas (con claves primarias y foráneas) que genera todo el modelo y marca dónde está cada clave foránea.</p>
+<p class="paso"><b>20.</b> Una petición <code>GET /api/pacientes/3</code> lanza <code>LazyInitializationException</code>. Explica por qué puede ocurrir y cómo lo evitarías.</p>
+<p class="paso"><b>21.</b> Al serializar un <code>Hospital</code> con su lista de médicos, el JSON entra en un bucle infinito. Explica la causa y da dos soluciones.</p>
+<p class="paso"><b>22.</b> <code>DELETE /api/hospitales/1</code> devuelve 500 por una violación de clave foránea. ¿Qué código debería devolver y qué comprobación falta en el servicio?</p>
+<p class="paso"><b>23.</b> Dibuja el esquema de tablas (con claves primarias y foráneas) que genera todo el modelo y marca dónde está cada clave foránea.</p>
 
 <div class="why">Intenta hacerlo tú primero y no abras el solucionario hasta terminar: lo que más enseña es comparar tus fallos con la solución.</div>
 </article>

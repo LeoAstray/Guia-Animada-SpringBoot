@@ -1,6 +1,19 @@
 <section id="s22">
 <h2>24 Misión 2: los DTO como contrato de la API</h2>
 <p>El cliente <b>nunca</b> ve una Entity ni sabe que existe JPA. Cada DTO responde a una pregunta: <b>¿qué necesita el cliente para esta operación?</b> Se crean como <code>record</code>, sin ninguna librería externa, y se dividen en entrada, salida y resúmenes.</p>
+
+<h3 id="s22-que-es" data-indice="¿Qué es un DTO? Request, Response y Resumen">¿Qué es un DTO? Los tres tipos: Request, Response y Resumen</h3>
+<p><b>DTO</b> significa <i>Data Transfer Object</i>: «objeto para transportar datos». Es una clase muy simple, sin anotaciones de JPA y sin lógica, que solo sirve para llevar datos entre el cliente y tu API. La entidad es cómo guardas los datos en la base; el DTO es <b>lo que enseñas y lo que pides</b> por la red. Los separamos para que el cliente no vea campos internos y para que cambiar la base no rompa la API.</p>
+<div class="kid">La entidad es la ficha completa que guarda el médico en su archivo. El DTO es el papel que te da en recepción: solo pone lo que tú necesitas saber, y el formulario que rellenas solo pide lo que tú puedes decidir.</div>
+<table>
+<tr><th>Tipo</th><th>Dirección</th><th>Para qué sirve</th><th>Ejemplo (hospital)</th></tr>
+<tr><td><b>RequestDTO</b></td><td>Entra: del cliente a la API</td><td>Lo que el cliente <b>envía</b> en el cuerpo de un <code>POST</code> o <code>PUT</code>. Solo lleva lo que el cliente puede decidir: <b>sin <code>id</code></b> (lo pone MySQL) y con las relaciones como ids (<code>hospitalId</code>), no como objetos. Es el que lleva las validaciones (<code>@NotBlank</code>, <code>@NotNull</code>…).</td><td><code>MedicoRequestDTO(nombre, salario, especialidad, hospitalId)</code></td></tr>
+<tr><td><b>ResponseDTO</b></td><td>Sale: de la API al cliente</td><td>Lo que la API <b>devuelve</b>. Lleva el <code>id</code> (para que el cliente pueda pedir ese recurso después) y los datos ya «masticados»: en vez del objeto <code>Hospital</code> entero, solo su nombre.</td><td><code>MedicoResponseDTO(id, nombre, especialidad, nombreHospital)</code></td></tr>
+<tr><td><b>ResumenDTO</b></td><td>Sale, dentro de otro DTO</td><td>Una versión <b>reducida</b> de algo que va anidado en otra respuesta, con lo justo. Sirve para no meter el árbol completo de relaciones y, sobre todo, para <b>cortar los bucles</b>: el resumen no vuelve a apuntar al objeto que lo contiene.</td><td><code>ConsultaResumenDTO(fecha, nombreMedico, tipo, coste)</code> dentro de <code>PacienteResponseDTO</code></td></tr>
+</table>
+<p>Para decidir qué campos lleva cada uno, hazte una pregunta: <b>¿qué necesita el cliente en esta operación?</b> Para crear un médico necesita decir su nombre, salario, especialidad y en qué hospital trabaja: eso es el Request. Al recibirlo de vuelta quiere su id y saber el nombre del hospital: eso es el Response. Y cuando ve un paciente con sus consultas, de cada consulta le basta la fecha, el médico, el tipo y el coste: eso es el Resumen.</p>
+<div class="why">Por convenio, se nombran como la entidad más su tipo: <code>MedicoRequestDTO</code>, <code>MedicoResponseDTO</code>, <code>ConsultaResumenDTO</code>. No todos los recursos necesitan los tres: si nunca se crea por la API, no hace falta Request; si nunca va anidado, no hace falta Resumen.</div>
+
 <figure class="fig">
 <svg viewBox="0 0 860 200" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
   <rect x="20" y="30" width="230" height="140" rx="14" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/>

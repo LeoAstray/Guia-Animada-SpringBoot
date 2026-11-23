@@ -103,8 +103,52 @@ public void setEquipo(Equipo equipo) {
 <pre data-f="entity/Equipo.java (lista estadios)">@OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL,
     orphanRemoval = true)
 private List&lt;Estadio&gt; estadios = new ArrayList&lt;&gt;();</pre>
+<p class="paso">5. En el mismo <code>Equipo.java</code>, <b>sustituye el método <code>addEstadio</code></b> por este, que ahora rellena también el lado del estadio:</p>
+<pre data-f="entity/Equipo.java (addEstadio)">public void addEstadio(Estadio estadio) {
+    estadios.add(estadio);
+    estadio.setEquipo(this);
+}</pre>
 <p>Ahora puedes ir de equipo a estadios y de estadio a equipo: es <b>bidireccional</b>. En la base sigue habiendo una sola columna <code>estadios.id_equipo</code>. <code>mappedBy = "equipo"</code> señala el campo Java <code>equipo</code> de <code>Estadio</code>; no se escribe <code>id_equipo</code> porque ese es el nombre SQL.</p>
-<p><code>orphanRemoval = true</code> significa que quitar un estadio de esta relación puede borrar su fila al sincronizar los cambios con la base. Úsalo cuando el hijo deba desaparecer al separarlo del padre. <code>cascade = ALL</code> incluye borrar los estadios al borrar su equipo; no es lo mismo que quitar un elemento de la lista.</p>
+
+<h3 id="paso-12-propietario" data-indice="¿Quién es el propietario?">¿Quién es el propietario de la relación, y por qué uno sí y el otro no?</h3>
+<p>En la base de datos la relación es <b>una sola columna</b>: <code>estadios.id_equipo</code>. En Java, en cambio, la has escrito dos veces: la lista <code>estadios</code> de <code>Equipo</code> y el campo <code>equipo</code> de <code>Estadio</code>. Si las dos mandaran sobre la columna, JPA no sabría qué hacer cuando no coinciden. Por eso uno de los dos lados es el que manda: el <b>propietario</b>.</p>
+<ul>
+<li><b>El propietario</b> es el lado que lleva <code>@JoinColumn</code>. Al guardar, JPA mira <b>su</b> campo para rellenar la columna. Aquí es <code>Estadio</code>, con su campo <code>equipo</code>.</li>
+<li><b>El lado inverso</b> es el que lleva <code>mappedBy</code>. No tiene columna propia: <code>mappedBy = "equipo"</code> significa «esta relación ya está descrita en el campo <code>equipo</code> del otro lado». JPA lo usa para leer (rellenar la lista al consultar), pero <b>no lo mira</b> para escribir la clave foránea.</li>
+</ul>
+<p><b>¿Por qué el propietario es <code>Estadio</code> y no <code>Equipo</code>?</b> Porque el propietario tiene que ser el lado cuya tabla guarda la columna, y la columna solo cabe en la tabla de estadios (lo verás en la siguiente pregunta). En una relación uno a muchos el propietario es <b>siempre el lado «muchos»</b>, el que lleva <code>@ManyToOne</code>. En el ejercicio del hospital es lo mismo: el propietario es <code>Medico</code>, que guarda <code>id_hospital</code>.</p>
+<div class="kid">Piensa en un colegio. Cada alumno tiene en su ficha «soy de la clase 3B». La clase no guarda una lista fija en ningún sitio: para saber quién está en 3B, miras las fichas de los alumnos. Manda la ficha del alumno, no la clase.</div>
+<div class="warn"><b>Consecuencia práctica:</b> si solo hicieras <code>equipo.getEstadios().add(estadio)</code> sin <code>estadio.setEquipo(equipo)</code>, al guardar la columna <code>id_equipo</code> quedaría vacía (y aquí fallaría por <code>nullable = false</code>), porque JPA solo mira el lado propietario. Por eso <code>addEstadio</code> rellena los dos lados.</div>
+
+<h3 id="paso-12-manytoone" data-indice="¿Por qué el @ManyToOne va ahí?">¿Por qué el <code>@ManyToOne</code> va en <code>Estadio</code> (y en <code>Medico</code>)?</h3>
+<p>Una columna de una fila solo puede guardar <b>un</b> valor. Un estadio es de un solo equipo, así que en su fila cabe sin problema <code>id_equipo = 1</code>. Al revés no se puede: un equipo tiene varios estadios, y no hay forma de meter «2, 5 y 7» en una sola columna de la fila del equipo. Por eso la clave foránea va en la tabla del lado «muchos», y el campo Java que la representa es el <code>@ManyToOne</code>.</p>
+<pre data-f="cómo queda en MySQL">equipos   (id_equipo PK, nombre, ciudad, presupuesto)
+estadios  (id_estadio PK, nombre, capacidad, id_equipo FK)   &lt;- la clave foránea vive aquí</pre>
+<p>El nombre se lee <b>desde la clase en la que está escrito</b>. En <code>Estadio</code>: «muchos estadios → un equipo», <code>@ManyToOne</code>. En <code>Equipo</code>: «un equipo → muchos estadios», <code>@OneToMany</code>. En el hospital: muchos médicos trabajan en un hospital, así que <code>Medico</code> lleva <code>@ManyToOne private Hospital hospital;</code> y <code>Hospital</code> lleva <code>@OneToMany(mappedBy = "hospital") private List&lt;Medico&gt; medicos;</code>.</p>
+
+<h3 id="paso-12-lazy" data-indice="¿Qué hace fetch = LAZY?">¿Qué hace <code>fetch = FetchType.LAZY</code>?</h3>
+<p>Decide <b>cuándo</b> se carga el objeto relacionado. Con <code>LAZY</code> (perezoso), al leer un estadio JPA trae solo sus columnas y deja en <code>equipo</code> un «sustituto» (un <i>proxy</i>) que conoce el id del equipo pero todavía no tiene sus datos. La consulta del equipo solo se lanza <b>si de verdad lo usas</b>, por ejemplo al llamar a <code>estadio.getEquipo().getNombre()</code>.</p>
+<p>Con <code>EAGER</code> (ansioso) es al revés: trae el equipo siempre, lo uses o no. Si no escribes nada, <code>@ManyToOne</code> y <code>@OneToOne</code> son <code>EAGER</code>, y <code>@OneToMany</code> y <code>@ManyToMany</code> son <code>LAZY</code>. Por eso escribimos <code>LAZY</code> a mano en el <code>@ManyToOne</code>: si listas 100 estadios, no queremos 100 consultas extra para traer equipos que quizá ni miras.</p>
+<div class="kid">Es como un regalo envuelto: sabes que está ahí, pero no lo abres (no se lanza la consulta) hasta que lo necesitas.</div>
+<div class="warn">La pega: el sustituto solo se puede «abrir» mientras la conexión con la base sigue abierta. Si lo usas después, salta <code>LazyInitializationException</code>. Lo verás en la Parte 3 (paso 27), y se evita con <code>@Transactional</code> en el servicio (paso 25).</div>
+
+<h3 id="paso-12-joincolumn" data-indice="¿@ManyToOne lleva siempre @JoinColumn?">¿El <code>@ManyToOne</code> lleva siempre <code>@JoinColumn</code>?</h3>
+<p>No es obligatorio, pero <b>conviene ponerlo siempre</b>. Sin <code>@JoinColumn</code>, JPA se inventa el nombre de la columna juntando el nombre del campo y el de la clave primaria a la que apunta: aquí sería <code>equipo_id_equipo</code>. Funcionaría, pero ese nombre no coincide con el que pide el enunciado ni con el de tu <code>data.sql</code>, y los <code>INSERT</code> fallarían.</p>
+<p>Con <code>@JoinColumn(name = "id_equipo", nullable = false)</code> eliges tú el nombre de la columna y, con <code>nullable = false</code>, impides que quede vacía. Lo que <b>nunca</b> lleva <code>@JoinColumn</code> es el lado inverso, el del <code>mappedBy</code>: ese lado no tiene columna.</p>
+
+<h3 id="paso-12-cascade" data-indice="cascade y orphanRemoval">¿Qué es <code>orphanRemoval</code> y en qué se diferencia de <code>cascade</code>?</h3>
+<p><code>cascade = CascadeType.ALL</code> significa: <b>lo que le hagas al padre, házselo también a sus hijos</b>. Si guardas el equipo, se guardan sus estadios nuevos; si borras el equipo, se borran sus estadios.</p>
+<p><code>orphanRemoval = true</code> significa: <b>el hijo que se queda sin padre se borra</b>. Si quitas un estadio de la lista (<code>equipo.getEstadios().remove(estadio)</code>), ese estadio queda «huérfano» y JPA borra su fila al guardar los cambios. Sin <code>orphanRemoval</code>, quitarlo de la lista no borraría nada.</p>
+<table>
+<tr><th>Lo que haces</th><th>Solo <code>cascade = ALL</code></th><th>Solo <code>orphanRemoval = true</code></th></tr>
+<tr><td>Guardar un equipo nuevo con estadios nuevos</td><td>Se guardan también los estadios</td><td>Los estadios no se guardan solos: hay que guardarlos aparte</td></tr>
+<tr><td>Borrar el equipo</td><td>Se borran sus estadios</td><td>Se borran sus estadios (se quedan huérfanos)</td></tr>
+<tr><td>Quitar un estadio de la lista</td><td>No se borra nada</td><td>Se borra ese estadio</td></tr>
+</table>
+<p>En resumen: <b>cascade</b> se fija en lo que le pasa al <b>padre</b>; <b>orphanRemoval</b> se fija en lo que le pasa a la <b>relación</b> (si el hijo sale de la lista). Se ponen juntos cuando el hijo no tiene sentido sin su padre: un estadio sin equipo, una consulta sin paciente. No se ponen cuando el hijo vive por su cuenta: en el hospital, borrar un hospital <b>no</b> debe borrar a sus médicos, así que <code>Hospital</code> no lleva ninguno de los dos.</p>
+<div class="kid"><b>cascade:</b> si tiras la caja de juguetes a la basura, los juguetes van dentro. <b>orphanRemoval:</b> si sacas un juguete de la caja, ese juguete se tira.</div>
+
+<h3>Probarlo</h3>
 <p>Un ejemplo de creación, para usar dentro de <code>run</code> si el ejercicio lo pide, sería:</p>
 <pre data-f="ExamenApplication.java (ejemplo)">Equipo equipo = new Equipo(
     "Estrellas", "Madrid", new BigDecimal("100000.00"));

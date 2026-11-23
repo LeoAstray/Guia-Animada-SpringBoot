@@ -100,9 +100,9 @@
   <button type="button" class="drawer-close" id="drawer-close" aria-label="Cerrar índice">Cerrar</button>
   <div class="brand">Spring Boot de cero a REST<small>Data JPA, el puente y la API completa</small></div>
   <nav class="menu" id="menu" aria-label="Índice de la guía">
-<details class="group g1" open><summary><span class="n">1</span>El tutorial de JPA</summary><ul><li><a href="#paso-1">1 Crear el proyecto en Spring Initializr</a></li><li><a href="#paso-2">2 Abrir el proyecto en VS Code</a></li><li><a href="#paso-3">3 Configurar la conexión y las tablas</a></li><li class="sub"><a href="#paso-3A">Añadir el servidor web (paso 3A)</a></li><li><a href="#paso-4">4 Crear los paquetes y distinguir los tipos Java</a></li><li><a href="#paso-5">5 Crear el enum Posicion</a></li><li><a href="#paso-6">6 Crear la entidad Jugador</a></li><li><a href="#paso-7">7 Crear la interfaz del repositorio</a></li><li><a href="#paso-8">8 Ejecutar la primera prueba desde ExamenApplication</a></li><li><a href="#paso-9">9 Practicar buscar, cambiar y borrar desde ExamenApplication</a></li><li><a href="#paso-10">10 Escribir consultas en la interfaz</a></li><li><a href="#paso-11">11 Añadir una relación uno a uno</a></li><li><a href="#paso-12">12 Crear una relación uno a muchos</a></li><li><a href="#paso-13">13 Representar una relación muchos a muchos</a></li><li><a href="#paso-14">14 Cargar los datos iniciales</a></li><li><a href="#paso-15">15 Escribir consultas en el repositorio y ejecutarlas en la aplicación</a></li><li><a href="#paso-16">16 Corregir errores y terminar el proyecto</a></li><li><a href="#paso-17">17 Materiales utilizados y documentación de apoyo</a></li></ul></details>
+<details class="group g1" open><summary><span class="n">1</span>El tutorial de JPA</summary><ul><li><a href="#paso-1">1 Crear el proyecto en Spring Initializr</a></li><li><a href="#paso-2">2 Abrir el proyecto en VS Code</a></li><li><a href="#paso-3">3 Configurar la conexión y las tablas</a></li><li class="sub"><a href="#paso-3A">Añadir el servidor web (paso 3A)</a></li><li><a href="#paso-4">4 Crear los paquetes y distinguir los tipos Java</a></li><li><a href="#paso-5">5 Crear el enum Posicion</a></li><li><a href="#paso-6">6 Crear la entidad Jugador</a></li><li><a href="#paso-7">7 Crear la interfaz del repositorio</a></li><li><a href="#paso-8">8 Ejecutar la primera prueba desde ExamenApplication</a></li><li><a href="#paso-9">9 Practicar buscar, cambiar y borrar desde ExamenApplication</a></li><li><a href="#paso-10">10 Escribir consultas en la interfaz</a></li><li><a href="#paso-11">11 Añadir una relación uno a uno</a></li><li><a href="#paso-12">12 Crear una relación uno a muchos</a></li><li class="sub"><a href="#paso-12-propietario">¿Quién es el propietario?</a></li><li class="sub"><a href="#paso-12-manytoone">¿Por qué el @ManyToOne va ahí?</a></li><li class="sub"><a href="#paso-12-lazy">¿Qué hace fetch = LAZY?</a></li><li class="sub"><a href="#paso-12-joincolumn">¿@ManyToOne lleva siempre @JoinColumn?</a></li><li class="sub"><a href="#paso-12-cascade">cascade y orphanRemoval</a></li><li><a href="#paso-13">13 Representar una relación muchos a muchos</a></li><li class="sub"><a href="#paso-13-constructor">¿Por qué el constructor lleva los dos lados?</a></li><li><a href="#paso-14">14 Cargar los datos iniciales</a></li><li><a href="#paso-15">15 Escribir consultas en el repositorio y ejecutarlas en la aplicación</a></li><li><a href="#paso-16">16 Corregir errores y terminar el proyecto</a></li><li><a href="#paso-17">17 Materiales utilizados y documentación de apoyo</a></li></ul></details>
 <details class="group g2" open><summary><span class="n">2</span>El puente a REST</summary><ul><li><a href="#s16">18 Qué cambia al pasar a REST (y por qué)</a></li><li><a href="#s17">19 El puente paso a paso, con el proyecto de fútbol</a></li></ul></details>
-<details class="group g3" open><summary><span class="n">3</span>La API completa</summary><ul><li><a href="#s18">20 El ejercicio: qué se pide y cómo se resuelve</a></li><li><a href="#s19">21 Crear y configurar el proyecto</a></li><li><a href="#s20">22 Misión 1: decisiones de diseño y entidades</a></li><li><a href="#s21">23 Los repositorios</a></li><li><a href="#s22">24 Misión 2: los DTO como contrato de la API</a></li><li><a href="#s23">25 Los servicios: interfaces, implementaciones y conversión</a></li><li><a href="#s24">26 Los controladores y los códigos de estado</a></li><li><a href="#s25">27 Misión 5: las trampas de comprensión</a></li><li><a href="#s26">28 Ampliación: validación declarativa con @Valid</a></li><li><a href="#s27">29 Probar con Postman o curl</a></li><li><a href="#s28">30 Cómo explicar el ejercicio</a></li><li><a href="#s29">31 Entregables y rúbrica</a></li><li><a href="#s30">32 Chuleta final</a></li></ul></details>
+<details class="group g3" open><summary><span class="n">3</span>La API completa</summary><ul><li><a href="#s18">20 El ejercicio: qué se pide y cómo se resuelve</a></li><li><a href="#s19">21 Crear y configurar el proyecto</a></li><li><a href="#s20">22 Misión 1: decisiones de diseño y entidades</a></li><li><a href="#s21">23 Los repositorios</a></li><li><a href="#s22">24 Misión 2: los DTO como contrato de la API</a></li><li class="sub"><a href="#s22-que-es">¿Qué es un DTO? Request, Response y Resumen</a></li><li><a href="#s23">25 Los servicios: interfaces, implementaciones y conversión</a></li><li class="sub"><a href="#s23-firma">Cómo se escribe un método de la interfaz</a></li><li class="sub"><a href="#s23-transactional">@Transactional y readOnly</a></li><li><a href="#s24">26 Los controladores y los códigos de estado</a></li><li><a href="#s25">27 Misión 5: las trampas de comprensión</a></li><li><a href="#s26">28 Ampliación: validación declarativa con @Valid</a></li><li><a href="#s27">29 Probar con Postman o curl</a></li><li><a href="#s28">30 Cómo explicar el ejercicio</a></li><li><a href="#s29">31 Entregables y rúbrica</a></li><li><a href="#s30">32 Chuleta final</a></li></ul></details>
 <details class="group g4" open><summary><span class="n">4</span>Ejercicios de práctica</summary><ul><li><a href="#ejercicios">33 Ejercicios de práctica</a></li></ul></details>
   </nav>
 </aside>
@@ -817,8 +817,52 @@ public void setEquipo(Equipo equipo) {
 <pre data-f="entity/Equipo.java (lista estadios)">@OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL,
     orphanRemoval = true)
 private List&lt;Estadio&gt; estadios = new ArrayList&lt;&gt;();</pre>
+<p class="paso">5. En el mismo <code>Equipo.java</code>, <b>sustituye el método <code>addEstadio</code></b> por este, que ahora rellena también el lado del estadio:</p>
+<pre data-f="entity/Equipo.java (addEstadio)">public void addEstadio(Estadio estadio) {
+    estadios.add(estadio);
+    estadio.setEquipo(this);
+}</pre>
 <p>Ahora puedes ir de equipo a estadios y de estadio a equipo: es <b>bidireccional</b>. En la base sigue habiendo una sola columna <code>estadios.id_equipo</code>. <code>mappedBy = "equipo"</code> señala el campo Java <code>equipo</code> de <code>Estadio</code>; no se escribe <code>id_equipo</code> porque ese es el nombre SQL.</p>
-<p><code>orphanRemoval = true</code> significa que quitar un estadio de esta relación puede borrar su fila al sincronizar los cambios con la base. Úsalo cuando el hijo deba desaparecer al separarlo del padre. <code>cascade = ALL</code> incluye borrar los estadios al borrar su equipo; no es lo mismo que quitar un elemento de la lista.</p>
+
+<h3 id="paso-12-propietario" data-indice="¿Quién es el propietario?">¿Quién es el propietario de la relación, y por qué uno sí y el otro no?</h3>
+<p>En la base de datos la relación es <b>una sola columna</b>: <code>estadios.id_equipo</code>. En Java, en cambio, la has escrito dos veces: la lista <code>estadios</code> de <code>Equipo</code> y el campo <code>equipo</code> de <code>Estadio</code>. Si las dos mandaran sobre la columna, JPA no sabría qué hacer cuando no coinciden. Por eso uno de los dos lados es el que manda: el <b>propietario</b>.</p>
+<ul>
+<li><b>El propietario</b> es el lado que lleva <code>@JoinColumn</code>. Al guardar, JPA mira <b>su</b> campo para rellenar la columna. Aquí es <code>Estadio</code>, con su campo <code>equipo</code>.</li>
+<li><b>El lado inverso</b> es el que lleva <code>mappedBy</code>. No tiene columna propia: <code>mappedBy = "equipo"</code> significa «esta relación ya está descrita en el campo <code>equipo</code> del otro lado». JPA lo usa para leer (rellenar la lista al consultar), pero <b>no lo mira</b> para escribir la clave foránea.</li>
+</ul>
+<p><b>¿Por qué el propietario es <code>Estadio</code> y no <code>Equipo</code>?</b> Porque el propietario tiene que ser el lado cuya tabla guarda la columna, y la columna solo cabe en la tabla de estadios (lo verás en la siguiente pregunta). En una relación uno a muchos el propietario es <b>siempre el lado «muchos»</b>, el que lleva <code>@ManyToOne</code>. En el ejercicio del hospital es lo mismo: el propietario es <code>Medico</code>, que guarda <code>id_hospital</code>.</p>
+<div class="kid">Piensa en un colegio. Cada alumno tiene en su ficha «soy de la clase 3B». La clase no guarda una lista fija en ningún sitio: para saber quién está en 3B, miras las fichas de los alumnos. Manda la ficha del alumno, no la clase.</div>
+<div class="warn"><b>Consecuencia práctica:</b> si solo hicieras <code>equipo.getEstadios().add(estadio)</code> sin <code>estadio.setEquipo(equipo)</code>, al guardar la columna <code>id_equipo</code> quedaría vacía (y aquí fallaría por <code>nullable = false</code>), porque JPA solo mira el lado propietario. Por eso <code>addEstadio</code> rellena los dos lados.</div>
+
+<h3 id="paso-12-manytoone" data-indice="¿Por qué el @ManyToOne va ahí?">¿Por qué el <code>@ManyToOne</code> va en <code>Estadio</code> (y en <code>Medico</code>)?</h3>
+<p>Una columna de una fila solo puede guardar <b>un</b> valor. Un estadio es de un solo equipo, así que en su fila cabe sin problema <code>id_equipo = 1</code>. Al revés no se puede: un equipo tiene varios estadios, y no hay forma de meter «2, 5 y 7» en una sola columna de la fila del equipo. Por eso la clave foránea va en la tabla del lado «muchos», y el campo Java que la representa es el <code>@ManyToOne</code>.</p>
+<pre data-f="cómo queda en MySQL">equipos   (id_equipo PK, nombre, ciudad, presupuesto)
+estadios  (id_estadio PK, nombre, capacidad, id_equipo FK)   &lt;- la clave foránea vive aquí</pre>
+<p>El nombre se lee <b>desde la clase en la que está escrito</b>. En <code>Estadio</code>: «muchos estadios → un equipo», <code>@ManyToOne</code>. En <code>Equipo</code>: «un equipo → muchos estadios», <code>@OneToMany</code>. En el hospital: muchos médicos trabajan en un hospital, así que <code>Medico</code> lleva <code>@ManyToOne private Hospital hospital;</code> y <code>Hospital</code> lleva <code>@OneToMany(mappedBy = "hospital") private List&lt;Medico&gt; medicos;</code>.</p>
+
+<h3 id="paso-12-lazy" data-indice="¿Qué hace fetch = LAZY?">¿Qué hace <code>fetch = FetchType.LAZY</code>?</h3>
+<p>Decide <b>cuándo</b> se carga el objeto relacionado. Con <code>LAZY</code> (perezoso), al leer un estadio JPA trae solo sus columnas y deja en <code>equipo</code> un «sustituto» (un <i>proxy</i>) que conoce el id del equipo pero todavía no tiene sus datos. La consulta del equipo solo se lanza <b>si de verdad lo usas</b>, por ejemplo al llamar a <code>estadio.getEquipo().getNombre()</code>.</p>
+<p>Con <code>EAGER</code> (ansioso) es al revés: trae el equipo siempre, lo uses o no. Si no escribes nada, <code>@ManyToOne</code> y <code>@OneToOne</code> son <code>EAGER</code>, y <code>@OneToMany</code> y <code>@ManyToMany</code> son <code>LAZY</code>. Por eso escribimos <code>LAZY</code> a mano en el <code>@ManyToOne</code>: si listas 100 estadios, no queremos 100 consultas extra para traer equipos que quizá ni miras.</p>
+<div class="kid">Es como un regalo envuelto: sabes que está ahí, pero no lo abres (no se lanza la consulta) hasta que lo necesitas.</div>
+<div class="warn">La pega: el sustituto solo se puede «abrir» mientras la conexión con la base sigue abierta. Si lo usas después, salta <code>LazyInitializationException</code>. Lo verás en la Parte 3 (paso 27), y se evita con <code>@Transactional</code> en el servicio (paso 25).</div>
+
+<h3 id="paso-12-joincolumn" data-indice="¿@ManyToOne lleva siempre @JoinColumn?">¿El <code>@ManyToOne</code> lleva siempre <code>@JoinColumn</code>?</h3>
+<p>No es obligatorio, pero <b>conviene ponerlo siempre</b>. Sin <code>@JoinColumn</code>, JPA se inventa el nombre de la columna juntando el nombre del campo y el de la clave primaria a la que apunta: aquí sería <code>equipo_id_equipo</code>. Funcionaría, pero ese nombre no coincide con el que pide el enunciado ni con el de tu <code>data.sql</code>, y los <code>INSERT</code> fallarían.</p>
+<p>Con <code>@JoinColumn(name = "id_equipo", nullable = false)</code> eliges tú el nombre de la columna y, con <code>nullable = false</code>, impides que quede vacía. Lo que <b>nunca</b> lleva <code>@JoinColumn</code> es el lado inverso, el del <code>mappedBy</code>: ese lado no tiene columna.</p>
+
+<h3 id="paso-12-cascade" data-indice="cascade y orphanRemoval">¿Qué es <code>orphanRemoval</code> y en qué se diferencia de <code>cascade</code>?</h3>
+<p><code>cascade = CascadeType.ALL</code> significa: <b>lo que le hagas al padre, házselo también a sus hijos</b>. Si guardas el equipo, se guardan sus estadios nuevos; si borras el equipo, se borran sus estadios.</p>
+<p><code>orphanRemoval = true</code> significa: <b>el hijo que se queda sin padre se borra</b>. Si quitas un estadio de la lista (<code>equipo.getEstadios().remove(estadio)</code>), ese estadio queda «huérfano» y JPA borra su fila al guardar los cambios. Sin <code>orphanRemoval</code>, quitarlo de la lista no borraría nada.</p>
+<table>
+<tr><th>Lo que haces</th><th>Solo <code>cascade = ALL</code></th><th>Solo <code>orphanRemoval = true</code></th></tr>
+<tr><td>Guardar un equipo nuevo con estadios nuevos</td><td>Se guardan también los estadios</td><td>Los estadios no se guardan solos: hay que guardarlos aparte</td></tr>
+<tr><td>Borrar el equipo</td><td>Se borran sus estadios</td><td>Se borran sus estadios (se quedan huérfanos)</td></tr>
+<tr><td>Quitar un estadio de la lista</td><td>No se borra nada</td><td>Se borra ese estadio</td></tr>
+</table>
+<p>En resumen: <b>cascade</b> se fija en lo que le pasa al <b>padre</b>; <b>orphanRemoval</b> se fija en lo que le pasa a la <b>relación</b> (si el hijo sale de la lista). Se ponen juntos cuando el hijo no tiene sentido sin su padre: un estadio sin equipo, una consulta sin paciente. No se ponen cuando el hijo vive por su cuenta: en el hospital, borrar un hospital <b>no</b> debe borrar a sus médicos, así que <code>Hospital</code> no lleva ninguno de los dos.</p>
+<div class="kid"><b>cascade:</b> si tiras la caja de juguetes a la basura, los juguetes van dentro. <b>orphanRemoval:</b> si sacas un juguete de la caja, ese juguete se tira.</div>
+
+<h3>Probarlo</h3>
 <p>Un ejemplo de creación, para usar dentro de <code>run</code> si el ejercicio lo pide, sería:</p>
 <pre data-f="ExamenApplication.java (ejemplo)">Equipo equipo = new Equipo(
     "Estrellas", "Madrid", new BigDecimal("100000.00"));
@@ -949,6 +993,12 @@ public class Fichaje {
 }</pre>
 <div class="kid">Un fichaje es como un recibo que dice «este jugador ha fichado por este equipo, en esta temporada y por este precio».</div>
 <p>Por eso tiene <b>dos relaciones muchos a uno</b>: muchos fichajes pueden apuntar al mismo jugador y muchos al mismo equipo.</p>
+
+<h3 id="paso-13-constructor" data-indice="¿Por qué el constructor lleva los dos lados?">¿Por qué el constructor de <code>Fichaje</code> recibe al jugador y al equipo?</h3>
+<p>Porque un fichaje <b>no existe sin sus dos extremos</b>. Sus dos <code>@ManyToOne</code> son obligatorios (<code>optional = false</code> y <code>nullable = false</code>): en la tabla <code>fichajes</code>, las columnas <code>id_jugador</code> e <code>id_equipo</code> no pueden quedar vacías. Si el constructor no los pidiera, podrías crear un <code>new Fichaje(...)</code> sin jugador o sin equipo, y el error solo aparecería al guardar, como un fallo de la base de datos.</p>
+<p>Al pedirlos en el constructor pasa lo mismo que con el perfil del jugador en el paso 11: <b>el compilador no te deja crear un fichaje incompleto</b>, y el error sale en rojo en VS Code, antes de ejecutar. Además se lee como una frase: <code>new Fichaje(jugador, equipo, "26/27", precio, ...)</code> es «este jugador ficha por este equipo, en esta temporada, por este precio».</p>
+<p>Fíjate en que los otros datos (temporada, precio, mercado, tipo) también van en el constructor, pero el <code>id</code> no: lo pone MySQL al guardar. Y el constructor vacío sigue existiendo solo porque JPA lo necesita al leer filas.</p>
+<div class="why">En el ejercicio del hospital pasa lo mismo con <code>Consulta</code>: una consulta es «este médico atiende a este paciente, en esta fecha, por este coste». Por eso su constructor recibe <code>Medico medico, Paciente paciente</code> antes que el resto de datos. Después, <code>paciente.addConsulta(consulta)</code> la añade también a la lista del paciente, para que los dos lados queden sincronizados en memoria.</div>
 <div class="warn"><code>@Enumerated(EnumType.STRING)</code> guarda el nombre del valor, por ejemplo <code>VERANO</code>. El SQL debe usar ese mismo texto. No escribas <code>verano</code> o <code>CESIÓN</code> si tus constantes son <code>VERANO</code> y <code>CESION</code>.</div>
 <p class="paso">5. Abre <code>Jugador.java</code>. Añade los imports <code>java.util.List</code> y <code>java.util.ArrayList</code> debajo de los demás imports. Dentro de la clase añade este campo, su getter y el método de ayuda:</p>
 <pre data-f="entity/Jugador.java (fichajes)">@OneToMany(mappedBy = "jugador", cascade = CascadeType.ALL,
@@ -2268,6 +2318,19 @@ public interface IFichaLibroRepository extends JpaRepository&lt;FichaLibro, Long
 <section id="s22">
 <header class="opener r3"><h2>Misión 2: los DTO como contrato de la API</h2><div class="set"><b>024</b>/033 <span class="rar">HOLO</span></div></header>
 <p>El cliente <b>nunca</b> ve una Entity ni sabe que existe JPA. Cada DTO responde a una pregunta: <b>¿qué necesita el cliente para esta operación?</b> Se crean como <code>record</code>, sin ninguna librería externa, y se dividen en entrada, salida y resúmenes.</p>
+
+<h3 id="s22-que-es" data-indice="¿Qué es un DTO? Request, Response y Resumen">¿Qué es un DTO? Los tres tipos: Request, Response y Resumen</h3>
+<p><b>DTO</b> significa <i>Data Transfer Object</i>: «objeto para transportar datos». Es una clase muy simple, sin anotaciones de JPA y sin lógica, que solo sirve para llevar datos entre el cliente y tu API. La entidad es cómo guardas los datos en la base; el DTO es <b>lo que enseñas y lo que pides</b> por la red. Los separamos para que el cliente no vea campos internos y para que cambiar la base no rompa la API.</p>
+<div class="kid">La entidad es la ficha completa que guarda el médico en su archivo. El DTO es el papel que te da en recepción: solo pone lo que tú necesitas saber, y el formulario que rellenas solo pide lo que tú puedes decidir.</div>
+<table>
+<tr><th>Tipo</th><th>Dirección</th><th>Para qué sirve</th><th>Ejemplo (hospital)</th></tr>
+<tr><td><b>RequestDTO</b></td><td>Entra: del cliente a la API</td><td>Lo que el cliente <b>envía</b> en el cuerpo de un <code>POST</code> o <code>PUT</code>. Solo lleva lo que el cliente puede decidir: <b>sin <code>id</code></b> (lo pone MySQL) y con las relaciones como ids (<code>hospitalId</code>), no como objetos. Es el que lleva las validaciones (<code>@NotBlank</code>, <code>@NotNull</code>…).</td><td><code>MedicoRequestDTO(nombre, salario, especialidad, hospitalId)</code></td></tr>
+<tr><td><b>ResponseDTO</b></td><td>Sale: de la API al cliente</td><td>Lo que la API <b>devuelve</b>. Lleva el <code>id</code> (para que el cliente pueda pedir ese recurso después) y los datos ya «masticados»: en vez del objeto <code>Hospital</code> entero, solo su nombre.</td><td><code>MedicoResponseDTO(id, nombre, especialidad, nombreHospital)</code></td></tr>
+<tr><td><b>ResumenDTO</b></td><td>Sale, dentro de otro DTO</td><td>Una versión <b>reducida</b> de algo que va anidado en otra respuesta, con lo justo. Sirve para no meter el árbol completo de relaciones y, sobre todo, para <b>cortar los bucles</b>: el resumen no vuelve a apuntar al objeto que lo contiene.</td><td><code>ConsultaResumenDTO(fecha, nombreMedico, tipo, coste)</code> dentro de <code>PacienteResponseDTO</code></td></tr>
+</table>
+<p>Para decidir qué campos lleva cada uno, hazte una pregunta: <b>¿qué necesita el cliente en esta operación?</b> Para crear un médico necesita decir su nombre, salario, especialidad y en qué hospital trabaja: eso es el Request. Al recibirlo de vuelta quiere su id y saber el nombre del hospital: eso es el Response. Y cuando ve un paciente con sus consultas, de cada consulta le basta la fecha, el médico, el tipo y el coste: eso es el Resumen.</p>
+<div class="why">Por convenio, se nombran como la entidad más su tipo: <code>MedicoRequestDTO</code>, <code>MedicoResponseDTO</code>, <code>ConsultaResumenDTO</code>. No todos los recursos necesitan los tres: si nunca se crea por la API, no hace falta Request; si nunca va anidado, no hace falta Resumen.</div>
+
 <figure class="fig">
 <svg viewBox="0 0 860 200" xmlns="http://www.w3.org/2000/svg" text-anchor="middle">
   <rect x="20" y="30" width="230" height="140" rx="14" fill="#e1ebf5" stroke="#2c5f8f" stroke-width="3"/>
@@ -2383,6 +2446,31 @@ public record LibroResponseDTO(Long id, String titulo, EditorialResumenDTO edito
 <h3>¿Por qué <code>LibroServiceImpl</code> inyecta tres repositorios y no llama a <code>IEditorialService</code>?</h3>
 <p><code>LibroServiceImpl</code> necesita transformar claves foráneas (<code>editorialId</code>, <code>autoresIds</code>) en <b>instancias de entidades persistentes</b> (<code>Editorial</code>, <code>Autor</code>) para establecer las relaciones en la base de datos. Si llamáramos a <code>IEditorialService</code>, solo nos entregaría un <code>EditorialResponseDTO</code> (por la regla que prohíbe exponer entidades en los contratos de servicio), y <b>un DTO no puede asociarse a una relación JPA de Libro</b>. Por eso el servicio accede directamente a los repositorios.</p>
 <div class="kid">El cocinero necesita el tomate de verdad, no una foto del tomate. Va a la nevera (el repositorio), no al camarero.</div>
+
+<h3 id="s23-firma" data-indice="Cómo se escribe un método de la interfaz">Cómo se escribe un método de la interfaz del servicio</h3>
+<p>La interfaz (<code>IMedicoService</code>, <code>ILibroService</code>…) es el <b>contrato</b>: la lista de cosas que el servicio sabe hacer, sin decir cómo. Cada línea es un método sin cuerpo, que termina en <code>;</code>. El cuerpo lo escribe después la clase que la implementa (<code>MedicoService</code>, <code>LibroServiceImpl</code>), con <code>@Override</code> encima de cada método. El controlador solo conoce la interfaz.</p>
+<p>Tomemos un método del ejercicio del hospital y leámoslo por partes:</p>
+<pre data-f="IMedicoService.java (un método)">MedicoResponseDTO crear(MedicoRequestDTO dto);</pre>
+<table>
+<tr><th>Parte</th><th>Qué es</th><th>Cómo se decide</th></tr>
+<tr><td><code>MedicoResponseDTO</code></td><td>El <b>tipo de retorno</b>: lo que el servicio le devuelve al controlador.</td><td>¿Qué tiene que enseñar el controlador al cliente? Al crear, el médico recién creado (con su id), así que su <b>ResponseDTO</b>.</td></tr>
+<tr><td><code>crear</code></td><td>El <b>nombre</b> del método.</td><td>Un verbo que diga la acción: <code>crear</code>, <code>obtener</code>, <code>listarPorHospital</code>, <code>eliminar</code>.</td></tr>
+<tr><td><code>(MedicoRequestDTO dto)</code></td><td>Los <b>parámetros</b>: lo que el servicio necesita recibir para hacer su trabajo.</td><td>Para crear, los datos que manda el cliente: su <b>RequestDTO</b>. Para buscar o borrar, basta el <code>Long id</code>.</td></tr>
+<tr><td><code>;</code></td><td>Fin del método, sin llaves ni cuerpo.</td><td>En una interfaz solo se declara. El código va en la implementación.</td></tr>
+</table>
+<p>La regla de oro: <b>en la interfaz solo aparecen DTO y tipos simples</b> (<code>Long</code>, <code>boolean</code>, <code>List</code>…), <b>nunca entidades</b>. Así el controlador no llega a tocar JPA. Casi todos los servicios siguen este patrón:</p>
+<table>
+<tr><th>Operación</th><th>Firma típica</th><th>Por qué así</th></tr>
+<tr><td>Crear</td><td><code>XResponseDTO crear(XRequestDTO dto);</code></td><td>Entra lo que manda el cliente, sale lo creado con su id.</td></tr>
+<tr><td>Buscar uno</td><td><code>XResponseDTO obtener(Long id);</code></td><td>Basta el id. Si no existe, el servicio lo indica (por ejemplo, devolviendo <code>null</code> u <code>Optional.empty()</code>).</td></tr>
+<tr><td>Listar</td><td><code>List&lt;XResponseDTO&gt; listarPorHospital(Long hospitalId);</code></td><td>Varios resultados: una lista, que puede estar vacía.</td></tr>
+<tr><td>Comprobar algo</td><td><code>boolean tieneConsultas(Long id);</code></td><td>Una pregunta de sí o no, que el controlador usa para decidir el código (por ejemplo, 409).</td></tr>
+<tr><td>Borrar</td><td><code>void eliminar(Long id);</code></td><td>No hay nada que devolver (ver más abajo).</td></tr>
+</table>
+
+<h4>¿Por qué <code>eliminar</code> puede ser <code>void</code>?</h4>
+<p><code>void</code> significa que el método <b>no devuelve nada</b>. Al borrar no hay ningún dato que enseñar: el recurso ya no existe, y la respuesta HTTP correcta es <b>204 No Content</b>, que va sin cuerpo. Así que el servicio no necesita devolver un DTO.</p>
+<p>¿Y cómo sabe entonces el controlador si había que responder 404 o 409? Preguntándolo <b>antes</b> de borrar: primero comprueba si existe (si no, 404), después si se puede borrar (si no, 409), y solo entonces llama a <code>eliminar</code>. Es lo que hace el ejercicio del hospital. La solución de la biblioteca de este paso elige otra forma: su <code>eliminar</code> devuelve un <code>int</code> que cuenta qué pasó (1, 0 o -1). Las dos valen; la de <code>void</code> es la más sencilla de leer.</p>
 
 <h3>El «idioma» entre el servicio y el controlador</h3>
 <p>En esta solución los servicios no lanzan excepciones para los casos normales: <b>devuelven un valor que cuenta qué pasó</b>, y el controlador lo traduce a un código HTTP.</p>
@@ -2768,6 +2856,24 @@ public class AutorServiceImpl implements IAutorService {
         return Optional.of(resumenes);
     }
 }</pre></details>
+
+<h3 id="s23-transactional" data-indice="@Transactional y readOnly">Qué hacen <code>@Transactional</code> y <code>readOnly = true</code></h3>
+<p>Una <b>transacción</b> es un grupo de operaciones con la base de datos que se hacen <b>todas o ninguna</b>. Al crear un libro se guardan el libro, su ficha y sus relaciones con los autores; si algo falla a mitad, no queremos un libro a medias en la base. Con una transacción, o se confirma todo al final (<i>commit</i>) o se deshace todo (<i>rollback</i>).</p>
+<p>Al poner <code>@Transactional</code> encima de un método del servicio, Spring hace tres cosas por ti:</p>
+<ol>
+<li><b>Abre la transacción al entrar</b> en el método y la cierra al salir.</li>
+<li>Si el método termina bien, <b>confirma</b> los cambios. Si lanza una excepción, los <b>deshace</b> todos.</li>
+<li><b>Mantiene abierta la conexión con la base</b> (la sesión de Hibernate) mientras dura el método. Por eso, dentro, puedes recorrer las relaciones <code>LAZY</code> del paso 12 (<code>medico.getHospital().getNombre()</code>) sin que salte <code>LazyInitializationException</code>. Y por eso la conversión a DTO se hace <b>dentro</b> del servicio: fuera, la sesión ya está cerrada.</li>
+</ol>
+<div class="kid">Es como una compra en el súper: o pagas todo el carro y te lo llevas, o no pagas nada y lo dejas todo. Nunca sales con media compra.</div>
+<p><code>@Transactional(readOnly = true)</code> es la misma transacción, pero avisando de que el método <b>solo lee</b>. Hibernate no tiene que vigilar si cambias algo para guardarlo al final, así que va algo más rápido, y quien lea el código sabe de un vistazo que ese método no modifica nada. Se pone en los métodos que solo consultan (<code>obtener</code>, <code>listar…</code>); los que guardan, cambian o borran llevan <code>@Transactional</code> normal.</p>
+<table>
+<tr><th>Método</th><th>Anotación</th><th>Por qué</th></tr>
+<tr><td><code>crear</code>, <code>actualizar</code></td><td><code>@Transactional</code></td><td>Escriben en la base: si algo falla, que se deshaga todo.</td></tr>
+<tr><td><code>obtener</code>, <code>listar…</code></td><td><code>@Transactional(readOnly = true)</code></td><td>Solo leen, pero recorren relaciones LAZY al convertir a DTO: necesitan la sesión abierta.</td></tr>
+<tr><td>Uno que solo llama a <b>un</b> método del repositorio (<code>deleteById</code>, <code>countBy…</code>, <code>existsBy…</code>)</td><td>Puede no llevarla</td><td>Los métodos del repositorio ya traen su propia transacción, y no hay relaciones LAZY que recorrer.</td></tr>
+</table>
+<div class="warn">Importa <code>org.springframework.transaction.annotation.Transactional</code>, la de Spring. Existe otra con el mismo nombre en <code>jakarta.transaction</code>, y esa <b>no</b> tiene <code>readOnly</code>: si VS Code te ofrece las dos, elige la de Spring.</div>
 
 <h3>Decisiones que conviene saber justificar</h3>
 <table>
