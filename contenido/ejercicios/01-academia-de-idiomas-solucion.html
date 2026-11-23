@@ -406,27 +406,19 @@ public interface IAcademiaRepository extends JpaRepository&lt;Academia, Long&gt;
 }</pre>
 <pre data-f="repository/IProfesorRepository.java">package com.academia.babel.repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.academia.babel.entity.Profesor;
-import com.academia.babel.enums.Idioma;
 
 public interface IProfesorRepository extends JpaRepository&lt;Profesor, Long&gt; {
 
-    // a) Profesores de un idioma
-    List&lt;Profesor&gt; findByIdioma(Idioma idioma);
-
-    // b) Activos de una academia: "AcademiaId" navega por profesor.academia.id
+    // a) Activos de una academia: "AcademiaId" navega por profesor.academia.id
     List&lt;Profesor&gt; findByAcademiaIdAndActivoTrue(Long academiaId);
 
-    // c) Salario mayor que X, de mayor a menor
-    List&lt;Profesor&gt; findBySalarioHoraGreaterThanOrderBySalarioHoraDesc(BigDecimal salario);
-
-    // d) Cuántos profesores tiene cada academia: cada fila es [nombre de la academia, cantidad]
+    // b) Cuántos profesores tiene cada academia: cada fila es [nombre de la academia, cantidad]
     @Query("SELECT a.nombre, COUNT(p) FROM Profesor p JOIN p.academia a GROUP BY a.id, a.nombre")
     List&lt;Object[]&gt; contarPorAcademia();
 
@@ -454,9 +446,6 @@ public interface IMatriculaRepository extends JpaRepository&lt;Matricula, Long&g
     // b) Nota media de un curso. AVG ignora las notas nulas, que es lo que pide el enunciado
     @Query("SELECT AVG(m.nota) FROM Matricula m WHERE m.curso.id = :cursoId")
     Double notaMedia(@Param("cursoId") Long cursoId);
-
-    // c) Activas sin pagar: findByEstadoAndPagadaFalse(EstadoMatricula.ACTIVA)
-    List&lt;Matricula&gt; findByEstadoAndPagadaFalse(EstadoMatricula estado);
 
     // Los usa el servicio
     boolean existsByAlumnoIdAndCursoIdAndEstado(Long alumnoId, Long cursoId, EstadoMatricula estado);
@@ -493,7 +482,6 @@ public interface IAlumnoRepository extends JpaRepository&lt;Alumno, Long&gt; {
 <p class="paso"><b>15.</b> Cursos:</p>
 <pre data-f="repository/ICursoRepository.java">package com.academia.babel.repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -505,18 +493,15 @@ import com.academia.babel.enums.Nivel;
 public interface ICursoRepository extends JpaRepository&lt;Curso, Long&gt; {
 
     List&lt;Curso&gt; findByIdiomaAndNivel(Idioma idioma, Nivel nivel);
-
-    // "no supera" significa menor o igual
-    List&lt;Curso&gt; findByPrecioLessThanEqual(BigDecimal precio);
 }</pre>
 
 <h3>Parte 3: datos iniciales</h3>
 
-<p class="paso"><b>16.</b> En <code>application.properties</code> (además de la conexión a MySQL de siempre):</p>
+<p class="paso"><b>16.</b> El <code>data.sql</code> ya viene dado en el enunciado: se copia tal cual en <code>src/main/resources</code>. Para que Spring lo ejecute al arrancar hace falta esto en <code>application.properties</code> (además de la conexión a MySQL de siempre):</p>
 <pre data-f="src/main/resources/application.properties (añadir)">spring.jpa.hibernate.ddl-auto=create-drop
 spring.sql.init.mode=always
 spring.jpa.defer-datasource-initialization=true</pre>
-<p>Y el <code>data.sql</code>. <b>El orden importa:</b> primero lo que otros van a apuntar (academias, expedientes, cursos) y después lo que apunta (profesores, alumnos, matrículas). Los nombres de columna son los de las anotaciones.</p>
+<p>El <code>data.sql</code> (el mismo del enunciado). <b>Fíjate en el orden:</b> primero lo que otros van a apuntar (academias, expedientes, cursos) y después lo que apunta (profesores, alumnos, matrículas). Los nombres de columna son los de las anotaciones, y por eso tus entidades tienen que usar exactamente esos nombres.</p>
 <pre data-f="src/main/resources/data.sql">INSERT INTO academias (id_academia, nombre, ciudad)
 VALUES (1, 'Babel Madrid', 'Madrid'),
        (2, 'Babel Sevilla', 'Sevilla');

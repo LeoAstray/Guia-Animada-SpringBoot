@@ -35,29 +35,51 @@
 <p class="paso"><b>11.</b> Crea los repositorios de las cinco entidades (<code>JpaRepository</code>), con la convención <code>I</code> + entidad + <code>Repository</code>.</p>
 <p class="paso"><b>12.</b> En <code>IProfesorRepository</code>, escribe estos métodos (consulta derivada donde se pueda, <code>@Query</code> donde haga falta):</p>
 <ul>
-<li>a) Profesores de un idioma dado.</li>
-<li>b) Profesores activos de una academia (por el id de la academia).</li>
-<li>c) Profesores con <code>salarioHora</code> mayor que una cantidad, de mayor a menor.</li>
-<li>d) Número de profesores de cada academia (JPQL con <code>GROUP BY</code>).</li>
+<li>a) Profesores activos de una academia (por el id de la academia).</li>
+<li>b) Número de profesores de cada academia (JPQL con <code>GROUP BY</code>).</li>
 </ul>
 <p class="paso"><b>13.</b> En <code>IMatriculaRepository</code>, escribe:</p>
 <ul>
 <li>a) Matrículas de un alumno, de la más reciente a la más antigua.</li>
 <li>b) Nota media de un curso (<code>@Query</code> con <code>AVG</code>). Las matrículas sin nota no cuentan.</li>
-<li>c) Matrículas <code>ACTIVA</code> que todavía no están pagadas.</li>
 </ul>
 <p class="paso"><b>14.</b> En <code>IAlumnoRepository</code>, escribe una consulta que devuelva los alumnos matriculados en un curso concreto, sin repetidos (<code>JOIN</code> y <code>DISTINCT</code>), y un método que diga si ya existe un alumno con un email dado.</p>
-<p class="paso"><b>15.</b> En <code>ICursoRepository</code>, escribe los cursos de un idioma y un nivel dados, y los cursos cuyo precio no supera una cantidad.</p>
+<p class="paso"><b>15.</b> En <code>ICursoRepository</code>, escribe los cursos de un idioma y un nivel dados.</p>
 
 <h3>Parte 3: datos iniciales (1 punto)</h3>
-<p class="paso"><b>16.</b> Configura la aplicación para que cargue los datos al arrancar (<code>create-drop</code>) y escribe el <code>data.sql</code> con:</p>
-<ul>
-<li>2 academias,</li>
-<li>4 profesores, de idiomas distintos y repartidos entre las academias,</li>
-<li>4 cursos,</li>
-<li>3 alumnos, cada uno con su expediente,</li>
-<li>5 matrículas, de modo que un alumno esté en dos cursos, un curso tenga dos alumnos, una matrícula tenga la nota nula y otra esté <code>ABANDONADA</code>.</li>
-</ul>
+<p class="paso"><b>16.</b> Copia el data.sql y añade el archivo en <code>src/main/resources</code>.</p>
+<pre data-f="src/main/resources/data.sql">INSERT INTO academias (id_academia, nombre, ciudad)
+VALUES (1, 'Babel Madrid', 'Madrid'),
+       (2, 'Babel Sevilla', 'Sevilla');
+
+INSERT INTO profesores (id_profesor, nombre, salario_hora, idioma, activo, id_academia)
+VALUES (1, 'Helen Clarke', 28.50, 'INGLES', true, 1),
+       (2, 'Pierre Dubois', 26.00, 'FRANCES', true, 1),
+       (3, 'Anke Vogel', 30.00, 'ALEMAN', false, 2),
+       (4, 'Giulia Rossi', 25.00, 'ITALIANO', true, 2);
+
+INSERT INTO expedientes (id_expediente, numero_matricula, nivel_inicial, observaciones)
+VALUES (1, 'AL-0001', 'A1', NULL),
+       (2, 'AL-0002', 'B1', 'Necesita reforzar la expresión oral'),
+       (3, 'AL-0003', 'B2', NULL);
+
+INSERT INTO alumnos (id_alumno, nombre, email, fecha_nacimiento, id_expediente)
+VALUES (1, 'Lucía Pérez', 'lucia@mail.com', '2000-05-14', 1),
+       (2, 'Marcos Ruiz', 'marcos@mail.com', '1998-11-02', 2),
+       (3, 'Sara Gómez', 'sara@mail.com', '2003-02-27', 3);
+
+INSERT INTO cursos (id_curso, titulo, idioma, nivel, precio)
+VALUES (1, 'Inglés conversación', 'INGLES', 'B1', 250.00),
+       (2, 'Francés inicial', 'FRANCES', 'A1', 180.00),
+       (3, 'Alemán intensivo', 'ALEMAN', 'A2', 320.00),
+       (4, 'Inglés avanzado', 'INGLES', 'C1', 300.00);
+
+INSERT INTO matriculas (id_matricula, id_alumno, id_curso, fecha, nota, estado, pagada)
+VALUES (1, 1, 2, '2026-09-15', NULL, 'ACTIVA', true),
+       (2, 1, 1, '2026-09-20', 7.5, 'FINALIZADA', true),
+       (3, 2, 1, '2026-09-18', 8.0, 'FINALIZADA', true),
+       (4, 2, 3, '2026-10-01', NULL, 'ABANDONADA', false),
+       (5, 3, 4, '2026-10-05', NULL, 'ACTIVA', false);</pre>
 <p>Respeta el orden de inserción y los textos exactos de los enums.</p>
 <p class="paso"><b>17.</b> Desde <code>run()</code>, crea y guarda un alumno nuevo con su expediente y matrícúlalo en un curso que ya exista. Indica en qué orden creas y guardas cada objeto, y por qué.</p>
 
